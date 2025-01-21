@@ -10,6 +10,7 @@ struct Lexer
 
 struct Lexer *createLexer();
 void freeLexer(struct Lexer *lexer);
+void clearLexer(struct Lexer *lexer);
 struct Token *nextToken(struct Lexer *lexer);
 char nextChar(struct Lexer *lexer);
 char peekChar(struct Lexer *lexer);

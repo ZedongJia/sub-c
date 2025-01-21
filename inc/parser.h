@@ -11,6 +11,7 @@ struct Parser
 };
 struct Parser *createParser();
 void freeParser(struct Parser *parser);
+void clearParser(struct Parser *parser);
 void parse(struct Parser *parser);
 struct Node *parseExpression(struct Parser *parser, int parentPriority);
 struct Node *parsePrimaryExpression(struct Parser *parser);

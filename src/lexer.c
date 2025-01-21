@@ -5,13 +5,18 @@
 struct Lexer *createLexer()
 {
     struct Lexer *lexer = (struct Lexer *)malloc(sizeof(struct Lexer));
-    lexer->currentChar = '\0';
     lexer->peekChar = '\0';
+    lexer->currentChar = '\0';
     return lexer;
 }
 void freeLexer(struct Lexer *lexer)
 {
     free(lexer);
+}
+void clearLexer(struct Lexer *lexer)
+{
+    lexer->peekChar = '\0';
+    lexer->currentChar = '\0';
 }
 struct Token *nextToken(struct Lexer *lexer)
 {

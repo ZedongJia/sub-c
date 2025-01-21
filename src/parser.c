@@ -20,7 +20,7 @@ void freeParser(struct Parser *parser)
     free(parser);
 }
 
-void parse(struct Parser *parser)
+void clearParser(struct Parser *parser)
 {
     if (parser->currentToken != NULL)
     {
@@ -32,6 +32,12 @@ void parse(struct Parser *parser)
         freeToken(parser->peekToken);
         parser->peekToken = NULL;
     }
+}
+
+void parse(struct Parser *parser)
+{
+    clearLexer(parser->lexer);
+    clearParser(parser);
     parser->root = parseExpression(parser, 0);
 }
 
