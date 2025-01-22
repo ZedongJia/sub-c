@@ -22,6 +22,20 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "StarToken";
     case SlashToken:
         return "SlashToken";
+    case EqualToken:
+        return "EqualToken";
+    case GreaterToken:
+        return "GreaterToken";
+    case GreaterEqualToken:
+        return "GreaterEqualToken";
+    case LessToken:
+        return "LessToken";
+    case LessEqualToken:
+        return "LessEqualToken";
+    case DoubleEqualToken:
+        return "DoubleEqualToken";
+    case NotEqualToken:
+        return "NotEqualToken";
     case DoubleLogicAndToken:
         return "DoubleLogicAndToken";
     case DoubleLogicOrToken:
@@ -51,7 +65,7 @@ int getUnaryTokenPriority(enum TokenType tokenType)
     case PlusToken:
     case MinusToken:
     case LogicNotToken:
-        return 5;
+        return 8;
     default:
         return 0;
     }
@@ -62,15 +76,25 @@ int getBinaryTokenPriority(enum TokenType tokenType)
     {
     case StarToken:
     case SlashToken:
-        return 4;
+        return 7;
     case PlusToken:
     case MinusToken:
-        return 3;
+        return 6;
+    case GreaterToken:
+    case GreaterEqualToken:
+    case LessToken:
+    case LessEqualToken:
+        return 5;
+    case DoubleEqualToken:
+    case NotEqualToken:
+        return 4;
     case LogicAndToken:
     case LogicOrToken:
-        return 2;
+        return 3;
     case DoubleLogicAndToken:
     case DoubleLogicOrToken:
+        return 2;
+    case EqualToken:
         return 1;
     default:
         return 0;

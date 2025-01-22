@@ -39,22 +39,49 @@ struct Token *nextToken(struct Lexer *lexer)
         bufLength++;
         return createToken(LiteralToken, lexer->text, bufLength);
     }
-    if (ch == '(')
-        return createSymbolToken(LeftBracket);
-    if (ch == ')')
-        return createSymbolToken(RightBracket);
-    if (ch == '+')
-        return createSymbolToken(PlusToken);
-    if (ch == '-')
-        return createSymbolToken(MinusToken);
-    if (ch == '*')
-        return createSymbolToken(StarToken);
-    if (ch == '/')
-        return createSymbolToken(SlashToken);
-    if (ch == '&')
+    switch (ch)
     {
-        char postCh = peekChar(lexer);
-        if (postCh == '&')
+    case '+':
+        return createSymbolToken(PlusToken);
+    case '-':
+        return createSymbolToken(MinusToken);
+    case '*':
+        return createSymbolToken(StarToken);
+    case '/':
+        return createSymbolToken(SlashToken);
+    case '>': {
+        char postChar = peekChar(lexer);
+        if (postChar == '=')
+        {
+            nextChar(lexer);
+            return createSymbolToken(GreaterEqualToken);
+        }
+        else
+            return createSymbolToken(GreaterToken);
+    }
+    case '<': {
+        char postChar = peekChar(lexer);
+        if (postChar == '=')
+        {
+            nextChar(lexer);
+            return createSymbolToken(LessEqualToken);
+        }
+        else
+            return createSymbolToken(LessToken);
+    }
+    case '=': {
+        char postChar = peekChar(lexer);
+        if (postChar == '=')
+        {
+            nextChar(lexer);
+            return createSymbolToken(DoubleEqualToken);
+        }
+        else
+            return createSymbolToken(EqualToken);
+    }
+    case '&': {
+        char postChar = peekChar(lexer);
+        if (postChar == '&')
         {
             nextChar(lexer);
             return createSymbolToken(DoubleLogicAndToken);
@@ -62,10 +89,9 @@ struct Token *nextToken(struct Lexer *lexer)
         else
             return createSymbolToken(LogicAndToken);
     }
-    if (ch == '|')
-    {
-        char postCh = peekChar(lexer);
-        if (postCh == '|')
+    case '|': {
+        char postChar = peekChar(lexer);
+        if (postChar == '|')
         {
             nextChar(lexer);
             return createSymbolToken(DoubleLogicOrToken);
@@ -73,15 +99,30 @@ struct Token *nextToken(struct Lexer *lexer)
         else
             return createSymbolToken(LogicOrToken);
     }
-    if (ch == '!')
-        return createSymbolToken(LogicNotToken);
-    if (ch == ' ')
+    case '!': {
+
+        char postChar = peekChar(lexer);
+        if (postChar == '=')
+        {
+            nextChar(lexer);
+            return createSymbolToken(NotEqualToken);
+        }
+        else
+            return createSymbolToken(LogicNotToken);
+    }
+    case '(':
+        return createSymbolToken(LeftBracket);
+    case ')':
+        return createSymbolToken(RightBracket);
+    case ' ':
         return nextToken(lexer);
-    if (ch == '\n')
+    case '\n':
         return createSymbolToken(EndOfLineToken);
-    // error skip
-    printf("\033[35mError: unexpected token %c\033[0m\n", ch);
-    return createSymbolToken(ErrToken);
+    default:
+        // error skip
+        printf("\033[35mError: unexpected token %c\033[0m\n", ch);
+        return createSymbolToken(ErrToken);
+    }
 }
 char nextChar(struct Lexer *lexer)
 {
