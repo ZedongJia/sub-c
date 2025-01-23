@@ -4,10 +4,12 @@
 enum NodeType
 {
     Err,
+    KeywordExpression,
     LiteralExpression,
     BinaryOperatorExpression,
     UnaryOperatorExpression,
     Statement,
+    Declaration,
     Compound,
     Program
 };
@@ -19,12 +21,19 @@ struct Node
 };
 struct Node *createNode(enum NodeType nodeType, void *data);
 void freeNode(struct Node *node);
+struct KeywordExpressionNode
+{
+    enum TokenType keywordType;
+};
+struct Node *createKeywordExpressionNode(enum TokenType keywordType);
+void freeKeywordExpressionNode(struct KeywordExpressionNode *node);
 struct LiteralExpressionNode
 {
     enum TokenType literalType;
     char *value;
+    int length;
 };
-struct Node *createLiteralExpressionNode(enum TokenType literalType, char *value, int valueLength);
+struct Node *createLiteralExpressionNode(enum TokenType literalType, char *value, int length);
 void freeLiteralExpressionNode(struct LiteralExpressionNode *node);
 struct BinaryOperatorExpressionNode
 {
@@ -48,6 +57,14 @@ struct StatementNode
 };
 struct Node *createStatementNode(struct Node *expression, enum TokenType delimiter);
 void freeStatementNode(struct StatementNode *node);
+struct DeclarationNode
+{
+    struct Node *type;
+    struct Node *expression;
+    enum TokenType delimiter;
+};
+struct Node *createDeclarationNode(struct Node *type, struct Node *expression, enum TokenType delimiter);
+void freeDeclarationNode(struct DeclarationNode *node);
 struct CompoundNode
 {
     struct Node **statements; // allow NULL

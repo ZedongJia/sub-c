@@ -10,12 +10,16 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "ErrToken";
     case IntLiteralToken:
         return "IntLiteralToken";
+    // keywords
     case IdentifierToken:
         return "IdentifierToken";
     case TrueToken:
         return "TrueToken";
     case FalseToken:
         return "FalseToken";
+    case IntToken:
+        return "IntToken";
+    // scope
     case LeftBracket:
         return "LeftBracket";
     case RightBracket:
@@ -24,6 +28,7 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "LeftBrace";
     case RightBrace:
         return "RightBrace";
+    // binary operator
     case PlusToken:
         return "PlusToken";
     case MinusToken:
@@ -34,6 +39,7 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "SlashToken";
     case EqualToken:
         return "EqualToken";
+    // logic
     case GreaterToken:
         return "GreaterToken";
     case GreaterEqualToken:
@@ -56,10 +62,12 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "LogicOrToken";
     case LogicNotToken:
         return "LogicNotToken";
+    // separator
     case CommaToken:
         return "CommaToken";
     case SemiColon:
         return "SemiColon";
+    // other
     case WhiteSpaceToken:
         return "WhiteSpaceToken";
     case EndOfFileToken:
@@ -115,6 +123,17 @@ int getBinaryTokenPriority(enum TokenType tokenType)
     case EqualToken:
         return 2;
     case CommaToken:
+        return 1;
+    default:
+        return 0;
+    }
+}
+int getAssociation(enum TokenType tokenType)
+{
+    // 0 means left, 1 means right
+    switch (tokenType)
+    {
+    case EqualToken:
         return 1;
     default:
         return 0;

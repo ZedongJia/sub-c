@@ -4,10 +4,11 @@ enum TokenType
 {
     ErrToken,
     IntLiteralToken,
-    // keyword
+    // keywords
     IdentifierToken,
     TrueToken,
     FalseToken,
+    IntToken,
     // scope
     LeftBracket,
     RightBracket,
@@ -31,7 +32,7 @@ enum TokenType
     LogicAndToken,
     LogicOrToken,
     LogicNotToken,
-    // seprator
+    // separator
     CommaToken,
     SemiColon,
     // other
@@ -52,6 +53,7 @@ int isDigit(int ch);
 int isLetter(int ch);
 int getUnaryTokenPriority(enum TokenType tokenType);
 int getBinaryTokenPriority(enum TokenType tokenType);
+int getAssociation(enum TokenType tokenType);
 struct Token *createToken(enum TokenType tokenType, char *value, int valueLength);
 struct Token *createSymbolToken(enum TokenType tokenType);
 void freeToken(struct Token *token);

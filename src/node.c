@@ -8,16 +8,20 @@ char *getNodeTypeValue(enum NodeType nodeType)
     {
     case Err:
         return "Err";
+    case KeywordExpression:
+        return "KeywordExpression";
     case LiteralExpression:
         return "LiteralExpression";
     case BinaryOperatorExpression:
         return "BinaryOperatorExpression";
     case UnaryOperatorExpression:
         return "UnaryOperatorExpression";
-    case Compound:
-        return "Compound";
     case Statement:
         return "Statement";
+    case Declaration:
+        return "Declaration";
+    case Compound:
+        return "Compound";
     case Program:
         return "Program";
     default:
@@ -35,6 +39,9 @@ void freeNode(struct Node *node)
 {
     switch (node->nodeType)
     {
+    case KeywordExpression:
+        freeKeywordExpressionNode((struct KeywordExpressionNode *)node->data);
+        break;
     case LiteralExpression:
         freeLiteralExpressionNode((struct LiteralExpressionNode *)node->data);
         break;
@@ -46,6 +53,9 @@ void freeNode(struct Node *node)
         break;
     case Statement:
         freeStatementNode((struct StatementNode *)node->data);
+        break;
+    case Declaration:
+        freeDeclarationNode((struct DeclarationNode *)node->data);
         break;
     case Compound:
         freeCompoundNode((struct CompoundNode *)node->data);
@@ -63,13 +73,25 @@ void freeNode(struct Node *node)
     }
     free(node);
 }
-struct Node *createLiteralExpressionNode(enum TokenType literalType, char *value, int valueLength)
+struct Node *createKeywordExpressionNode(enum TokenType keywordType)
+{
+    struct KeywordExpressionNode *keywordNode =
+        (struct KeywordExpressionNode *)malloc(sizeof(struct KeywordExpressionNode));
+    keywordNode->keywordType = keywordType;
+    return createNode(KeywordExpression, (void *)keywordNode);
+}
+void freeKeywordExpressionNode(struct KeywordExpressionNode *node)
+{
+    return;
+}
+struct Node *createLiteralExpressionNode(enum TokenType literalType, char *value, int length)
 {
     struct LiteralExpressionNode *literalNode =
         (struct LiteralExpressionNode *)malloc(sizeof(struct LiteralExpressionNode));
     literalNode->literalType = literalType;
-    literalNode->value = (char *)malloc(valueLength * sizeof(char));
+    literalNode->value = (char *)malloc(length * sizeof(char));
     strcpy(literalNode->value, value);
+    literalNode->length = length;
     return createNode(LiteralExpression, (void *)literalNode);
 }
 void freeLiteralExpressionNode(struct LiteralExpressionNode *node)
@@ -115,10 +137,27 @@ struct Node *createStatementNode(struct Node *expression, enum TokenType delimit
     struct StatementNode *statementNode = (struct StatementNode *)malloc(sizeof(struct StatementNode));
     statementNode->expression = expression;
     statementNode->delimiter = delimiter;
-    return createNode(Statement, (struct StatementNode *)statementNode);
+    return createNode(Statement, (void *)statementNode);
 }
 void freeStatementNode(struct StatementNode *node)
 {
+    if (node->expression != NULL)
+        freeNode(node->expression);
+    node->expression = NULL;
+}
+struct Node *createDeclarationNode(struct Node *type, struct Node *expression, enum TokenType delimiter)
+{
+    struct DeclarationNode *declarationNode = (struct DeclarationNode *)malloc(sizeof(struct DeclarationNode));
+    declarationNode->type = type;
+    declarationNode->expression = expression;
+    declarationNode->delimiter = delimiter;
+    return createNode(Declaration, (void *)declarationNode);
+}
+void freeDeclarationNode(struct DeclarationNode *node)
+{
+    if (node->type != NULL)
+        freeNode(node->type);
+    node->type = NULL;
     if (node->expression != NULL)
         freeNode(node->expression);
     node->expression = NULL;
@@ -143,7 +182,6 @@ void freeCompoundNode(struct CompoundNode *node)
     }
     node->statements = NULL;
 }
-
 struct Node *createProgramNode(struct Node **statements, int size)
 {
     struct ProgramNode *programNode = (struct ProgramNode *)malloc(sizeof(struct ProgramNode));
@@ -151,7 +189,6 @@ struct Node *createProgramNode(struct Node **statements, int size)
     programNode->size = size;
     return createNode(Program, (void *)programNode);
 }
-
 void freeProgramNode(struct ProgramNode *node)
 {
     if (node->statements != NULL)

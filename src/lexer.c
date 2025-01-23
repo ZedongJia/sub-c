@@ -90,9 +90,11 @@ struct Token *lex(struct Lexer *lexer)
         lexer->buffer[length] = '\0';
         length++;
         if (strcmp(lexer->buffer, "true") == 0)
-            return createToken(TrueToken, lexer->buffer, length);
+            return createSymbolToken(TrueToken);
         else if (strcmp(lexer->buffer, "false") == 0)
-            return createToken(FalseToken, lexer->buffer, length);
+            return createSymbolToken(FalseToken);
+        else if (strcmp(lexer->buffer, "int") == 0)
+            return createSymbolToken(IntToken);
         else
             return createToken(IdentifierToken, lexer->buffer, length);
     }

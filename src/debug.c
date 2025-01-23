@@ -21,10 +21,15 @@ void __prettyTree(struct Node *node, int *parr, int indent, int isLast)
         printf("%s\n", getNodeTypeValue(node->nodeType));
         break;
     }
+    case KeywordExpression: {
+        struct KeywordExpressionNode *keywordNode = (struct KeywordExpressionNode *)node->data;
+        printf("%s:%s\n", getNodeTypeValue(node->nodeType), getTokenTypeValue(keywordNode->keywordType));
+        break;
+    }
     case LiteralExpression: {
         struct LiteralExpressionNode *literalNode = (struct LiteralExpressionNode *)node->data;
-        printf("(%s)%s:%s\n", getTokenTypeValue(literalNode->literalType), getNodeTypeValue(node->nodeType),
-               literalNode->value);
+        printf("(%s)%s", getTokenTypeValue(literalNode->literalType), getNodeTypeValue(node->nodeType));
+        printf(":%s\n", literalNode->value);
         break;
     }
     case BinaryOperatorExpression: {
@@ -44,6 +49,13 @@ void __prettyTree(struct Node *node, int *parr, int indent, int isLast)
         struct StatementNode *statementNode = (struct StatementNode *)node->data;
         printf("%s\n", getNodeTypeValue(node->nodeType));
         __prettyTree(statementNode->expression, parr, indent + 1, 1);
+        break;
+    }
+    case Declaration: {
+        struct DeclarationNode *declarationNode = (struct DeclarationNode *)node->data;
+        printf("%s\n", getNodeTypeValue(node->nodeType));
+        __prettyTree(declarationNode->type, parr, indent + 1, 0);
+        __prettyTree(declarationNode->expression, parr, indent + 1, 1);
         break;
     }
     case Compound: {
