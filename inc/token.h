@@ -3,10 +3,16 @@
 enum TokenType
 {
     ErrToken,
-    LiteralToken,
+    IntLiteralToken,
+    // keyword
+    IdentifierToken,
+    TrueToken,
+    FalseToken,
     // scope
     LeftBracket,
     RightBracket,
+    LeftBrace,
+    RightBrace,
     // operator
     PlusToken,
     MinusToken,
@@ -26,6 +32,7 @@ enum TokenType
     LogicOrToken,
     LogicNotToken,
     // other
+    SemiColon,
     WhiteSpaceToken,
     EndOfLineToken
 };
@@ -40,6 +47,7 @@ struct Token
 };
 
 int isDigit(int ch);
+int isLetter(int ch);
 int getUnaryTokenPriority(enum TokenType tokenType);
 int getBinaryTokenPriority(enum TokenType tokenType);
 struct Token *createToken(enum TokenType tokenType, char *value, int valueLength);

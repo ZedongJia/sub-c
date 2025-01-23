@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct Lexer *createLexer()
 {
@@ -23,21 +24,44 @@ struct Token *nextToken(struct Lexer *lexer)
     char ch = nextChar(lexer);
     if (isDigit(ch))
     {
-        int bufLength = 0;
-        lexer->text[bufLength] = ch;
-        bufLength++;
+        int length = 0;
+        lexer->text[length] = ch;
+        length++;
         ch = peekChar(lexer);
         // parse digits
         while (isDigit(ch))
         {
             nextChar(lexer);
-            lexer->text[bufLength] = ch;
-            bufLength++;
+            lexer->text[length] = ch;
+            length++;
             ch = peekChar(lexer);
         }
-        lexer->text[bufLength] = '\0';
-        bufLength++;
-        return createToken(LiteralToken, lexer->text, bufLength);
+        lexer->text[length] = '\0';
+        length++;
+        return createToken(IntLiteralToken, lexer->text, length);
+    }
+    if (isLetter(ch) || ch == '_')
+    {
+        int length = 0;
+        lexer->text[length] = ch;
+        length++;
+        ch = peekChar(lexer);
+        // parse text
+        while (isLetter(ch) || ch == '_')
+        {
+            nextChar(lexer);
+            lexer->text[length] = ch;
+            length++;
+            ch = peekChar(lexer);
+        }
+        lexer->text[length] = '\0';
+        length++;
+        if (strcmp(lexer->text, "true") == 0)
+            return createToken(TrueToken, lexer->text, length);
+        else if (strcmp(lexer->text, "false") == 0)
+            return createToken(FalseToken, lexer->text, length);
+        else
+            return createToken(IdentifierToken, lexer->text, length);
     }
     switch (ch)
     {
@@ -114,6 +138,12 @@ struct Token *nextToken(struct Lexer *lexer)
         return createSymbolToken(LeftBracket);
     case ')':
         return createSymbolToken(RightBracket);
+    case '{':
+        return createSymbolToken(LeftBrace);
+    case '}':
+        return createSymbolToken(RightBrace);
+    case ';':
+        return createSymbolToken(SemiColon);
     case ' ':
         return nextToken(lexer);
     case '\n':

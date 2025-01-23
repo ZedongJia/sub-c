@@ -8,12 +8,22 @@ char *getTokenTypeValue(enum TokenType tokenType)
     {
     case ErrToken:
         return "ErrToken";
-    case LiteralToken:
-        return "LiteralToken";
+    case IntLiteralToken:
+        return "IntLiteralToken";
+    case IdentifierToken:
+        return "IdentifierToken";
+    case TrueToken:
+        return "TrueToken";
+    case FalseToken:
+        return "FalseToken";
     case LeftBracket:
         return "LeftBracket";
     case RightBracket:
         return "RightBracket";
+    case LeftBrace:
+        return "LeftBrace";
+    case RightBrace:
+        return "RightBrace";
     case PlusToken:
         return "PlusToken";
     case MinusToken:
@@ -46,6 +56,8 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "LogicOrToken";
     case LogicNotToken:
         return "LogicNotToken";
+    case SemiColon:
+        return "SemiColon";
     case WhiteSpaceToken:
         return "WhiteSpaceToken";
     case EndOfLineToken:
@@ -57,6 +69,10 @@ char *getTokenTypeValue(enum TokenType tokenType)
 int isDigit(int ch)
 {
     return ch >= '0' && ch <= '9';
+}
+int isLetter(int ch)
+{
+    return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z';
 }
 int getUnaryTokenPriority(enum TokenType tokenType)
 {
