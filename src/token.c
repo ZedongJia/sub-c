@@ -56,12 +56,14 @@ char *getTokenTypeValue(enum TokenType tokenType)
         return "LogicOrToken";
     case LogicNotToken:
         return "LogicNotToken";
+    case CommaToken:
+        return "CommaToken";
     case SemiColon:
         return "SemiColon";
     case WhiteSpaceToken:
         return "WhiteSpaceToken";
-    case EndOfLineToken:
-        return "EndOfLineToken";
+    case EndOfFileToken:
+        return "EndOfFileToken";
     default:
         return "UnexpectToken";
     }
@@ -81,7 +83,7 @@ int getUnaryTokenPriority(enum TokenType tokenType)
     case PlusToken:
     case MinusToken:
     case LogicNotToken:
-        return 8;
+        return 9;
     default:
         return 0;
     }
@@ -92,25 +94,27 @@ int getBinaryTokenPriority(enum TokenType tokenType)
     {
     case StarToken:
     case SlashToken:
-        return 7;
+        return 8;
     case PlusToken:
     case MinusToken:
-        return 6;
+        return 7;
     case GreaterToken:
     case GreaterEqualToken:
     case LessToken:
     case LessEqualToken:
-        return 5;
+        return 6;
     case DoubleEqualToken:
     case NotEqualToken:
-        return 4;
+        return 5;
     case LogicAndToken:
     case LogicOrToken:
-        return 3;
+        return 4;
     case DoubleLogicAndToken:
     case DoubleLogicOrToken:
-        return 2;
+        return 3;
     case EqualToken:
+        return 2;
+    case CommaToken:
         return 1;
     default:
         return 0;

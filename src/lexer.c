@@ -31,7 +31,7 @@ void clearLexer(struct Lexer *lexer)
         lexer->peekToken = NULL;
     }
 }
-char peekChar(struct Lexer *lexer)
+const char peekChar(struct Lexer *lexer)
 {
     if (lexer->peekChar == '\0')
     {
@@ -39,7 +39,7 @@ char peekChar(struct Lexer *lexer)
     }
     return lexer->peekChar;
 }
-char nextChar(struct Lexer *lexer)
+const char nextChar(struct Lexer *lexer)
 {
     if (lexer->peekChar != '\0')
     {
@@ -58,43 +58,43 @@ struct Token *lex(struct Lexer *lexer)
     if (isDigit(ch))
     {
         int length = 0;
-        lexer->text[length] = ch;
+        lexer->buffer[length] = ch;
         length++;
         ch = peekChar(lexer);
         // parse digits
         while (isDigit(ch))
         {
             nextChar(lexer);
-            lexer->text[length] = ch;
+            lexer->buffer[length] = ch;
             length++;
             ch = peekChar(lexer);
         }
-        lexer->text[length] = '\0';
+        lexer->buffer[length] = '\0';
         length++;
-        return createToken(IntLiteralToken, lexer->text, length);
+        return createToken(IntLiteralToken, lexer->buffer, length);
     }
     if (isLetter(ch) || ch == '_')
     {
         int length = 0;
-        lexer->text[length] = ch;
+        lexer->buffer[length] = ch;
         length++;
         ch = peekChar(lexer);
         // parse text
         while (isLetter(ch) || ch == '_')
         {
             nextChar(lexer);
-            lexer->text[length] = ch;
+            lexer->buffer[length] = ch;
             length++;
             ch = peekChar(lexer);
         }
-        lexer->text[length] = '\0';
+        lexer->buffer[length] = '\0';
         length++;
-        if (strcmp(lexer->text, "true") == 0)
-            return createToken(TrueToken, lexer->text, length);
-        else if (strcmp(lexer->text, "false") == 0)
-            return createToken(FalseToken, lexer->text, length);
+        if (strcmp(lexer->buffer, "true") == 0)
+            return createToken(TrueToken, lexer->buffer, length);
+        else if (strcmp(lexer->buffer, "false") == 0)
+            return createToken(FalseToken, lexer->buffer, length);
         else
-            return createToken(IdentifierToken, lexer->text, length);
+            return createToken(IdentifierToken, lexer->buffer, length);
     }
     switch (ch)
     {
@@ -175,19 +175,21 @@ struct Token *lex(struct Lexer *lexer)
         return createSymbolToken(LeftBrace);
     case '}':
         return createSymbolToken(RightBrace);
+    case ',':
+        return createSymbolToken(CommaToken);
     case ';':
         return createSymbolToken(SemiColon);
     case ' ':
         return lex(lexer);
     case '\n':
-        return createSymbolToken(EndOfLineToken);
+        return createSymbolToken(EndOfFileToken);
     default:
         // error skip
         printf("\033[35mError: unexpected token %c\033[0m\n", ch);
         return createSymbolToken(ErrToken);
     }
 }
-struct Token *peekToken(struct Lexer *lexer)
+const struct Token *peekToken(struct Lexer *lexer)
 {
     if (lexer->peekToken == NULL)
     {
@@ -196,7 +198,7 @@ struct Token *peekToken(struct Lexer *lexer)
     }
     return lexer->peekToken;
 }
-struct Token *nextToken(struct Lexer *lexer)
+const struct Token *nextToken(struct Lexer *lexer)
 {
     if (lexer->currentToken != NULL)
     {

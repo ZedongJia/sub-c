@@ -3,7 +3,7 @@
 #include "token.h"
 struct Lexer
 {
-    char text[256];
+    char buffer[256];
     char peekChar;
     char currentChar;
     struct Token *peekToken;
@@ -13,9 +13,9 @@ struct Lexer
 struct Lexer *createLexer();
 void freeLexer(struct Lexer *lexer);
 void clearLexer(struct Lexer *lexer);
+const char peekChar(struct Lexer *lexer);
+const char nextChar(struct Lexer *lexer);
 struct Token *lex(struct Lexer *lexer);
-char peekChar(struct Lexer *lexer);
-char nextChar(struct Lexer *lexer);
-struct Token *peekToken(struct Lexer *lexer);
-struct Token *nextToken(struct Lexer *lexer);
+const struct Token *peekToken(struct Lexer *lexer);
+const struct Token *nextToken(struct Lexer *lexer);
 #endif

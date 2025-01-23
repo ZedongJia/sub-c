@@ -13,7 +13,7 @@ enum TokenType
     RightBracket,
     LeftBrace,
     RightBrace,
-    // operator
+    // binary operator
     PlusToken,
     MinusToken,
     StarToken,
@@ -31,10 +31,12 @@ enum TokenType
     LogicAndToken,
     LogicOrToken,
     LogicNotToken,
-    // other
+    // seprator
+    CommaToken,
     SemiColon,
+    // other
     WhiteSpaceToken,
-    EndOfLineToken
+    EndOfFileToken
 };
 
 char *getTokenTypeValue(enum TokenType tokenType);
@@ -52,5 +54,5 @@ int getUnaryTokenPriority(enum TokenType tokenType);
 int getBinaryTokenPriority(enum TokenType tokenType);
 struct Token *createToken(enum TokenType tokenType, char *value, int valueLength);
 struct Token *createSymbolToken(enum TokenType tokenType);
-void freeToken(struct Token *);
+void freeToken(struct Token *token);
 #endif
