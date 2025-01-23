@@ -8,6 +8,8 @@ struct Lexer *createLexer()
     struct Lexer *lexer = (struct Lexer *)malloc(sizeof(struct Lexer));
     lexer->peekChar = '\0';
     lexer->currentChar = '\0';
+    lexer->peekToken = NULL;
+    lexer->currentToken = NULL;
     return lexer;
 }
 void freeLexer(struct Lexer *lexer)
@@ -18,8 +20,39 @@ void clearLexer(struct Lexer *lexer)
 {
     lexer->peekChar = '\0';
     lexer->currentChar = '\0';
+    if (lexer->currentToken != NULL)
+    {
+        freeToken(lexer->currentToken);
+        lexer->currentToken = NULL;
+    }
+    if (lexer->peekToken != NULL)
+    {
+        freeToken(lexer->peekToken);
+        lexer->peekToken = NULL;
+    }
 }
-struct Token *nextToken(struct Lexer *lexer)
+char peekChar(struct Lexer *lexer)
+{
+    if (lexer->peekChar == '\0')
+    {
+        lexer->peekChar = getchar();
+    }
+    return lexer->peekChar;
+}
+char nextChar(struct Lexer *lexer)
+{
+    if (lexer->peekChar != '\0')
+    {
+        lexer->currentChar = lexer->peekChar;
+        lexer->peekChar = '\0';
+    }
+    else
+    {
+        lexer->currentChar = getchar();
+    }
+    return lexer->currentChar;
+}
+struct Token *lex(struct Lexer *lexer)
 {
     char ch = nextChar(lexer);
     if (isDigit(ch))
@@ -145,7 +178,7 @@ struct Token *nextToken(struct Lexer *lexer)
     case ';':
         return createSymbolToken(SemiColon);
     case ' ':
-        return nextToken(lexer);
+        return lex(lexer);
     case '\n':
         return createSymbolToken(EndOfLineToken);
     default:
@@ -154,25 +187,33 @@ struct Token *nextToken(struct Lexer *lexer)
         return createSymbolToken(ErrToken);
     }
 }
-char nextChar(struct Lexer *lexer)
+struct Token *peekToken(struct Lexer *lexer)
 {
-    if (lexer->peekChar != '\0')
+    if (lexer->peekToken == NULL)
     {
-        lexer->currentChar = lexer->peekChar;
-        lexer->peekChar = '\0';
+        // peek next Token
+        lexer->peekToken = lex(lexer);
+    }
+    return lexer->peekToken;
+}
+struct Token *nextToken(struct Lexer *lexer)
+{
+    if (lexer->currentToken != NULL)
+    {
+        // clear currentToken
+        freeToken(lexer->currentToken);
+        lexer->currentToken = NULL;
+    }
+    if (lexer->peekToken != NULL)
+    {
+        // load from peekToken
+        lexer->currentToken = lexer->peekToken;
+        lexer->peekToken = NULL;
     }
     else
     {
-        lexer->currentChar = getchar();
+        // load new Token
+        lexer->currentToken = lex(lexer);
     }
-    return lexer->currentChar;
-}
-
-char peekChar(struct Lexer *lexer)
-{
-    if (lexer->peekChar == '\0')
-    {
-        lexer->peekChar = getchar();
-    }
-    return lexer->peekChar;
+    return lexer->currentToken;
 }

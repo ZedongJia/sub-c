@@ -6,8 +6,6 @@ struct Parser *createParser()
     struct Parser *parser = (struct Parser *)malloc(sizeof(struct Parser));
     parser->lexer = createLexer();
     parser->root = NULL;
-    parser->currentToken = NULL;
-    parser->peekToken = NULL;
     return parser;
 }
 void freeParser(struct Parser *parser)
@@ -19,19 +17,6 @@ void freeParser(struct Parser *parser)
     parser->root = NULL;
     free(parser);
 }
-void clearParser(struct Parser *parser)
-{
-    if (parser->currentToken != NULL)
-    {
-        freeToken(parser->currentToken);
-        parser->currentToken = NULL;
-    }
-    if (parser->peekToken != NULL)
-    {
-        freeToken(parser->peekToken);
-        parser->peekToken = NULL;
-    }
-}
 void parse(struct Parser *parser)
 {
     parser->root = parseProgram(parser, 0);
@@ -40,147 +25,103 @@ struct Node *parseProgram(struct Parser *parser, int parentPriority)
 {
     struct Node **statements = NULL;
     int size = 0;
-    struct Token *token;
-    struct Node *statement;
-    while (1)
+    while (peekToken(parser->lexer)->tokenType != EndOfLineToken)
     {
-        token = peek(parser);
-        if (token->tokenType == EndOfLineToken)
-        {
-            clearLexer(parser->lexer);
-            clearParser(parser);
-            break;
-        }
         if (statements == NULL)
             statements = (struct Node **)malloc(256 * sizeof(struct Node *));
         statements[size] = parseStatement(parser, parentPriority);
-        ;
         size++;
     }
+    nextToken(parser->lexer); // end of line
+    clearLexer(parser->lexer);
     return createProgramNode(statements, size);
 }
 struct Node *parseCompound(struct Parser *parser, int parentPriority)
 {
     struct Node **statements = NULL;
     int size = 0;
-    struct Token *token;
-    struct Node *statement;
-    while (1)
+    while (peekToken(parser->lexer)->tokenType == LeftBrace)
     {
-        token = peek(parser);
-        if (token->tokenType != LeftBrace)
-            break;
-        step(parser);
+        nextToken(parser->lexer);
         if (statements == NULL)
             statements = (struct Node **)malloc(256 * sizeof(struct Node *));
-        statement = parseStatement(parser, parentPriority);
-        token = peek(parser);
-        if (token->tokenType == RightBrace)
-            step(parser);
-        else
-            printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(token->tokenType),
-                   getTokenTypeValue(RightBrace));
-        statements[size] = statement;
+        statements[size] = parseStatement(parser, parentPriority);
         size++;
+        if (peekToken(parser->lexer)->tokenType == RightBrace)
+            nextToken(parser->lexer);
+        else
+            printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
+                   getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(RightBrace));
     }
     return createCompoundNode(statements, size);
 }
 struct Node *parseStatement(struct Parser *parser, int parentPriority)
 {
     struct Node *expression = parseExpression(parser, parentPriority);
-    struct Token *token = peek(parser);
-    if (token->tokenType == SemiColon)
-        step(parser);
+    if (peekToken(parser->lexer)->tokenType == SemiColon)
+        nextToken(parser->lexer);
     else
-        printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(token->tokenType),
-               getTokenTypeValue(SemiColon));
+        printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
+               getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(SemiColon));
     return createStatementNode(expression, SemiColon);
+}
+struct Node *parseUnaryExpression(struct Parser *parser, int parentPriority)
+{
+    struct Node *expression;
+    int priority = getUnaryTokenPriority(peekToken(parser->lexer)->tokenType);
+    if (priority != 0 && priority >= parentPriority)
+    {
+        enum TokenType opType = nextToken(parser->lexer)->tokenType;
+        struct Node *operand = parseExpression(parser, priority);
+        expression = createUnaryOperatorExpressionNode(opType, operand);
+    }
+    else
+        expression = parsePrimaryExpression(parser);
+    return expression;
 }
 struct Node *parseExpression(struct Parser *parser, int parentPriority)
 {
-    struct Node *left;
-    struct Token *token = peek(parser);
-    int priority = getUnaryTokenPriority(token->tokenType);
-    if (priority != 0 && priority >= parentPriority)
-    {
-        enum TokenType opType = token->tokenType;
-        step(parser);
-        struct Node *operand = parseExpression(parser, priority);
-        left = createUnaryOperatorExpressionNode(opType, operand);
-    }
-    else
-    {
-        left = parsePrimaryExpression(parser);
-    }
-
-    struct Token *opToken = peek(parser);
-    enum TokenType opType = opToken->tokenType;
+    struct Node *left = parseUnaryExpression(parser, parentPriority);
+    enum TokenType opType = peekToken(parser->lexer)->tokenType;
+    int priority;
     while (1)
     {
-        int priority = getBinaryTokenPriority(opType);
+        priority = getBinaryTokenPriority(opType);
         if (priority == 0 || priority <= parentPriority)
             break;
-        step(parser); // to this peekToken
+        opType = nextToken(parser->lexer)->tokenType;
         struct Node *right = parseExpression(parser, priority);
         left = createBinaryOperatorExpressionNode(left, opType, right); // here use opType, so we store opType
-        opToken = peek(parser);
-        opType = opToken->tokenType;
+        opType = peekToken(parser->lexer)->tokenType;
     }
     return left;
 }
 struct Node *parsePrimaryExpression(struct Parser *parser)
 {
-    struct Token *token = peek(parser);
-    switch (token->tokenType)
+    switch (peekToken(parser->lexer)->tokenType)
     {
     case LeftBracket: {
-        step(parser);
+        // ( expression )
+        nextToken(parser->lexer);
         struct Node *expression = parseExpression(parser, 0);
-        token = peek(parser);
-        if (token->tokenType == RightBracket)
-            step(parser);
+        if (peekToken(parser->lexer)->tokenType == RightBracket)
+            nextToken(parser->lexer);
         else
-            printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(token->tokenType),
-                   getTokenTypeValue(RightBracket));
+            printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
+                   getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(RightBracket));
         return expression;
     }
     case IntLiteralToken:
     case IdentifierToken:
     case TrueToken:
     case FalseToken: {
-        token = step(parser);
+        struct Token *token = nextToken(parser->lexer);
         return createLiteralExpressionNode(token->tokenType, token->value, token->valueLength);
     }
     default: {
-        printf("\033[35mError: unexpected %s, expect expression\033[0m\n", getTokenTypeValue(token->tokenType));
+        printf("\033[35mError: unexpected %s, expect expression\033[0m\n",
+               getTokenTypeValue(peekToken(parser->lexer)->tokenType));
         return createNode(Err, NULL);
     }
     }
-}
-struct Token *step(struct Parser *parser)
-{
-    if (parser->currentToken != NULL)
-    {
-        // clear currentToken
-        freeToken(parser->currentToken);
-        parser->currentToken = NULL;
-    }
-    if (parser->peekToken != NULL)
-    {
-        // load from peekToken
-        parser->currentToken = parser->peekToken;
-        parser->peekToken = NULL;
-    }
-    else
-    {
-        // load new Token
-        parser->currentToken = nextToken(parser->lexer);
-    }
-    return parser->currentToken;
-}
-struct Token *peek(struct Parser *parser)
-{
-    if (parser->peekToken == NULL)
-        parser->peekToken = nextToken(parser->lexer);
-    return parser->peekToken;
 }
