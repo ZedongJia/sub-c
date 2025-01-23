@@ -3,7 +3,7 @@
 #include <stdio.h>
 int main()
 {
-    struct Parser *parser = createParser();
+    Parser *parser = createParser();
     while (1)
     {
         printf("\033[33;1m>>\033[0m ");

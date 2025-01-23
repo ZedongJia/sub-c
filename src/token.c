@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *getTokenTypeValue(enum TokenType tokenType)
+char *getTokenTypeValue(TokenType tokenType)
 {
     switch (tokenType)
     {
@@ -84,7 +84,7 @@ int isLetter(int ch)
 {
     return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z';
 }
-int getUnaryTokenPriority(enum TokenType tokenType)
+int getUnaryTokenPriority(TokenType tokenType)
 {
     switch (tokenType)
     {
@@ -96,7 +96,7 @@ int getUnaryTokenPriority(enum TokenType tokenType)
         return 0;
     }
 }
-int getBinaryTokenPriority(enum TokenType tokenType)
+int getBinaryTokenPriority(TokenType tokenType)
 {
     switch (tokenType)
     {
@@ -128,7 +128,7 @@ int getBinaryTokenPriority(enum TokenType tokenType)
         return 0;
     }
 }
-int getAssociation(enum TokenType tokenType)
+int getAssociation(TokenType tokenType)
 {
     // 0 means left, 1 means right
     switch (tokenType)
@@ -139,24 +139,24 @@ int getAssociation(enum TokenType tokenType)
         return 0;
     }
 }
-struct Token *createToken(enum TokenType tokenType, char *value, int valueLength)
+Token *createToken(TokenType tokenType, char *value, int valueLength)
 {
-    struct Token *token = (struct Token *)malloc(sizeof(struct Token));
+    Token *token = (Token *)malloc(sizeof(Token));
     token->tokenType = tokenType;
     token->value = (char *)malloc(valueLength * sizeof(char));
     strcpy(token->value, value);
     token->valueLength = valueLength;
     return token;
 }
-struct Token *createSymbolToken(enum TokenType tokenType)
+Token *createSymbolToken(TokenType tokenType)
 {
-    struct Token *token = (struct Token *)malloc(sizeof(struct Token));
+    Token *token = (Token *)malloc(sizeof(Token));
     token->tokenType = tokenType;
     token->value = NULL;
     token->valueLength = 0;
     return token;
 }
-void freeToken(struct Token *token)
+void freeToken(Token *token)
 {
     if (token->value != NULL)
         free(token->value);

@@ -1,7 +1,7 @@
 #ifndef NODE
 #define NODE
 #include "token.h"
-enum NodeType
+typedef enum NodeType
 {
     Err,
     KeywordExpression,
@@ -12,71 +12,71 @@ enum NodeType
     Declaration,
     Compound,
     Program
-};
-char *getNodeTypeValue(enum NodeType nodeType);
-struct Node
+} NodeType;
+char *getNodeTypeValue(NodeType nodeType);
+typedef struct Node
 {
-    enum NodeType nodeType;
+    NodeType nodeType;
     void *data; // allow NULL
-};
-struct Node *createNode(enum NodeType nodeType, void *data);
-void freeNode(struct Node *node);
-struct KeywordExpressionNode
+} Node;
+Node *createNode(NodeType nodeType, void *data);
+void freeNode(Node *node);
+typedef struct KeywordExpressionNode
 {
-    enum TokenType keywordType;
-};
-struct Node *createKeywordExpressionNode(enum TokenType keywordType);
-void freeKeywordExpressionNode(struct KeywordExpressionNode *node);
-struct LiteralExpressionNode
+    TokenType keywordType;
+} KeywordExpressionNode;
+Node *createKeywordExpressionNode(TokenType keywordType);
+void freeKeywordExpressionNode(KeywordExpressionNode *node);
+typedef struct LiteralExpressionNode
 {
-    enum TokenType literalType;
+    TokenType literalType;
     char *value;
     int length;
-};
-struct Node *createLiteralExpressionNode(enum TokenType literalType, char *value, int length);
-void freeLiteralExpressionNode(struct LiteralExpressionNode *node);
-struct BinaryOperatorExpressionNode
+} LiteralExpressionNode;
+Node *createLiteralExpressionNode(TokenType literalType, char *value, int length);
+void freeLiteralExpressionNode(LiteralExpressionNode *node);
+typedef struct BinaryOperatorExpressionNode
 {
-    enum TokenType op;
-    struct Node *left;
-    struct Node *right;
-};
-struct Node *createBinaryOperatorExpressionNode(struct Node *left, enum TokenType op, struct Node *right);
-void freeBinaryOperatorExpressionNode(struct BinaryOperatorExpressionNode *node);
-struct UnaryOperatorExpressionNode
+    TokenType op;
+    Node *left;
+    Node *right;
+} BinaryOperatorExpressionNode;
+Node *createBinaryOperatorExpressionNode(Node *left, TokenType op, Node *right);
+void freeBinaryOperatorExpressionNode(BinaryOperatorExpressionNode *node);
+typedef struct UnaryOperatorExpressionNode
 {
-    enum TokenType op;
-    struct Node *operand;
-};
-struct Node *createUnaryOperatorExpressionNode(enum TokenType op, struct Node *operand);
-void freeUnaryOperatorExpressionNode(struct UnaryOperatorExpressionNode *node);
-struct StatementNode
+    TokenType op;
+    Node *operand;
+} UnaryOperatorExpressionNode;
+Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand);
+void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node);
+typedef struct StatementNode
 {
-    struct Node *expression;
-    enum TokenType delimiter;
-};
-struct Node *createStatementNode(struct Node *expression, enum TokenType delimiter);
-void freeStatementNode(struct StatementNode *node);
-struct DeclarationNode
+    Node *expression;
+    TokenType delimiter;
+} StatementNode;
+Node *createStatementNode(Node *expression, TokenType delimiter);
+void freeStatementNode(StatementNode *node);
+typedef struct DeclarationNode
 {
-    struct Node *type;
-    struct Node *expression;
-    enum TokenType delimiter;
-};
-struct Node *createDeclarationNode(struct Node *type, struct Node *expression, enum TokenType delimiter);
-void freeDeclarationNode(struct DeclarationNode *node);
-struct CompoundNode
+    Node *type;
+    Node *expression;
+    TokenType delimiter;
+} DeclarationNode;
+Node *createDeclarationNode(Node *type, Node *expression, TokenType delimiter);
+void freeDeclarationNode(DeclarationNode *node);
+typedef struct CompoundNode
 {
-    struct Node **statements; // allow NULL
+    Node **statements; // allow NULL
     int size;
-};
-struct Node *createCompoundNode(struct Node **statements, int size);
-void freeCompoundNode(struct CompoundNode *node);
-struct ProgramNode
+} CompoundNode;
+Node *createCompoundNode(Node **statements, int size);
+void freeCompoundNode(CompoundNode *node);
+typedef struct ProgramNode
 {
-    struct Node **statements; // allow NULL
+    Node **statements; // allow NULL
     int size;
-};
-struct Node *createProgramNode(struct Node **statements, int size);
-void freeProgramNode(struct ProgramNode *node);
+} ProgramNode;
+Node *createProgramNode(Node **statements, int size);
+void freeProgramNode(ProgramNode *node);
 #endif

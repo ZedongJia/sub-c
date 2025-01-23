@@ -2,19 +2,19 @@
 #define PARSER
 #include "lexer.h"
 #include "node.h"
-struct Parser
+typedef struct Parser
 {
-    struct Lexer *lexer;
-    struct Node *root;
-};
-struct Parser *createParser();
-void freeParser(struct Parser *parser);
-struct Node *parseUnaryExpression(struct Parser *parser, int parentPriority);
-struct Node *parsePrimaryExpression(struct Parser *parser);
-struct Node *parseExpression(struct Parser *parser, int parentPriority);
-struct Node *parseStatement(struct Parser *parser, int parentPriority);
-struct Node *parseDeclarationStatement(struct Parser *parser, int parentPriority);
-struct Node *parseCompound(struct Parser *parser, int parentPriority);
-struct Node *parseProgram(struct Parser *parser, int parentPriority);
-void parse(struct Parser *parser);
+    Lexer *lexer;
+    Node *root;
+} Parser;
+Parser *createParser();
+void freeParser(Parser *parser);
+Node *parseUnaryExpression(Parser *parser, int parentPriority);
+Node *parsePrimaryExpression(Parser *parser);
+Node *parseExpression(Parser *parser, int parentPriority);
+Node *parseStatement(Parser *parser, int parentPriority);
+Node *parseDeclarationStatement(Parser *parser, int parentPriority);
+Node *parseCompound(Parser *parser, int parentPriority);
+Node *parseProgram(Parser *parser, int parentPriority);
+void parse(Parser *parser);
 #endif

@@ -3,20 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct Lexer *createLexer()
+Lexer *createLexer()
 {
-    struct Lexer *lexer = (struct Lexer *)malloc(sizeof(struct Lexer));
+    Lexer *lexer = (Lexer *)malloc(sizeof(Lexer));
     lexer->peekChar = '\0';
     lexer->currentChar = '\0';
     lexer->peekToken = NULL;
     lexer->currentToken = NULL;
     return lexer;
 }
-void freeLexer(struct Lexer *lexer)
+void freeLexer(Lexer *lexer)
 {
     free(lexer);
 }
-void clearLexer(struct Lexer *lexer)
+void clearLexer(Lexer *lexer)
 {
     lexer->peekChar = '\0';
     lexer->currentChar = '\0';
@@ -31,7 +31,7 @@ void clearLexer(struct Lexer *lexer)
         lexer->peekToken = NULL;
     }
 }
-const char peekChar(struct Lexer *lexer)
+const char peekChar(Lexer *lexer)
 {
     if (lexer->peekChar == '\0')
     {
@@ -39,7 +39,7 @@ const char peekChar(struct Lexer *lexer)
     }
     return lexer->peekChar;
 }
-const char nextChar(struct Lexer *lexer)
+const char nextChar(Lexer *lexer)
 {
     if (lexer->peekChar != '\0')
     {
@@ -52,7 +52,7 @@ const char nextChar(struct Lexer *lexer)
     }
     return lexer->currentChar;
 }
-struct Token *lex(struct Lexer *lexer)
+Token *lex(Lexer *lexer)
 {
     char ch = nextChar(lexer);
     if (isDigit(ch))
@@ -191,7 +191,7 @@ struct Token *lex(struct Lexer *lexer)
         return createSymbolToken(ErrToken);
     }
 }
-const struct Token *peekToken(struct Lexer *lexer)
+const Token *peekToken(Lexer *lexer)
 {
     if (lexer->peekToken == NULL)
     {
@@ -200,7 +200,7 @@ const struct Token *peekToken(struct Lexer *lexer)
     }
     return lexer->peekToken;
 }
-const struct Token *nextToken(struct Lexer *lexer)
+const Token *nextToken(Lexer *lexer)
 {
     if (lexer->currentToken != NULL)
     {

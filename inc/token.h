@@ -1,6 +1,6 @@
 #ifndef TOKEN
 #define TOKEN
-enum TokenType
+typedef enum TokenType
 {
     ErrToken,
     IntLiteralToken,
@@ -38,23 +38,23 @@ enum TokenType
     // other
     WhiteSpaceToken,
     EndOfFileToken
-};
+} TokenType;
 
-char *getTokenTypeValue(enum TokenType tokenType);
+char *getTokenTypeValue(TokenType tokenType);
 
-struct Token
+typedef struct Token
 {
-    enum TokenType tokenType;
+    TokenType tokenType;
     char *value;
     int valueLength;
-};
+} Token;
 
 int isDigit(int ch);
 int isLetter(int ch);
-int getUnaryTokenPriority(enum TokenType tokenType);
-int getBinaryTokenPriority(enum TokenType tokenType);
-int getAssociation(enum TokenType tokenType);
-struct Token *createToken(enum TokenType tokenType, char *value, int valueLength);
-struct Token *createSymbolToken(enum TokenType tokenType);
-void freeToken(struct Token *token);
+int getUnaryTokenPriority(TokenType tokenType);
+int getBinaryTokenPriority(TokenType tokenType);
+int getAssociation(TokenType tokenType);
+Token *createToken(TokenType tokenType, char *value, int valueLength);
+Token *createSymbolToken(TokenType tokenType);
+void freeToken(Token *token);
 #endif
