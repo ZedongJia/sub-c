@@ -38,13 +38,9 @@ Node *parsePrimaryExpression(Parser *parser)
     {
     case LeftBracket: {
         // ( expression )
-        nextToken(parser->lexer);
+        matchToken(parser->lexer, LeftBracket);
         Node *expression = parseExpression(parser, 0);
-        if (peekToken(parser->lexer)->tokenType == RightBracket)
-            nextToken(parser->lexer);
-        else
-            printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
-                   getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(RightBracket));
+        matchToken(parser->lexer, RightBracket);
         return expression;
     }
     case TrueToken:
@@ -68,40 +64,31 @@ Node *parseExpression(Parser *parser, int parentPriority)
 {
     Node *left = parseUnaryExpression(parser, parentPriority);
     TokenType opType = peekToken(parser->lexer)->tokenType;
-    int priority;
-    int association;
-    while (1)
+    int priority = getBinaryTokenPriority(opType);
+    int association = getAssociation(opType);
+    while ((priority != 0) && (association ? priority >= parentPriority : priority > parentPriority))
     {
-        priority = getBinaryTokenPriority(opType);
-        association = getAssociation(opType);
-        if (priority == 0 || (association ? priority < parentPriority : priority <= parentPriority))
-            break;
         opType = nextToken(parser->lexer)->tokenType;
         Node *right = parseExpression(parser, priority);
         left = createBinaryOperatorExpressionNode(left, opType, right); // here use opType, so we store opType
+        // peek next token
         opType = peekToken(parser->lexer)->tokenType;
+        priority = getBinaryTokenPriority(opType);
+        association = getAssociation(opType);
     }
     return left;
 }
 Node *parseStatement(Parser *parser, int parentPriority)
 {
     Node *expression = parseExpression(parser, parentPriority);
-    if (peekToken(parser->lexer)->tokenType == SemiColon)
-        nextToken(parser->lexer);
-    else
-        printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
-               getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(SemiColon));
+    matchToken(parser->lexer, SemiColon);
     return createStatementNode(expression, SemiColon);
 }
 Node *parseDeclarationStatement(Parser *parser, int parentPriority)
 {
     Node *type = createKeywordExpressionNode(nextToken(parser->lexer)->tokenType);
     Node *expression = parseExpression(parser, parentPriority);
-    if (peekToken(parser->lexer)->tokenType == SemiColon)
-        nextToken(parser->lexer);
-    else
-        printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
-               getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(SemiColon));
+    matchToken(parser->lexer, SemiColon);
     return createDeclarationNode(type, expression, SemiColon);
 }
 Node *parseCompound(Parser *parser, int parentPriority)
@@ -109,7 +96,7 @@ Node *parseCompound(Parser *parser, int parentPriority)
     Node **statements = NULL;
     int size = 0;
     Node *statement;
-    nextToken(parser->lexer);
+    matchToken(parser->lexer, LeftBrace);
     while (peekToken(parser->lexer)->tokenType != LeftBrace || peekToken(parser->lexer)->tokenType != EndOfFileToken)
     {
         if (statements == NULL)
@@ -126,13 +113,8 @@ Node *parseCompound(Parser *parser, int parentPriority)
         statements[size] = statement;
         size++;
     }
-    // check rightbrace
-    if (peekToken(parser->lexer)->tokenType == RightBrace)
-        nextToken(parser->lexer);
-    else
-        printf("\033[35mError: unexpected %s, expect %s\033[0m\n",
-               getTokenTypeValue(peekToken(parser->lexer)->tokenType), getTokenTypeValue(RightBrace));
-    return createCompoundNode(statements, size);
+    matchToken(parser->lexer, RightBrace);
+    return createCompoundNode(LeftBrace, statements, size, RightBrace);
 }
 Node *parseProgram(Parser *parser, int parentPriority)
 {
@@ -155,8 +137,8 @@ Node *parseProgram(Parser *parser, int parentPriority)
         statements[size] = statement;
         size++;
     }
-    nextToken(parser->lexer); // end of line
-    return createProgramNode(statements, size);
+    matchToken(parser->lexer, EndOfFileToken);
+    return createProgramNode(statements, size, EndOfFileToken);
 }
 void parse(Parser *parser)
 {

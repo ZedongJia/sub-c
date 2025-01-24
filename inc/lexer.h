@@ -18,4 +18,5 @@ const char nextChar(Lexer *lexer);
 Token *lex(Lexer *lexer);
 const Token *peekToken(Lexer *lexer);
 const Token *nextToken(Lexer *lexer);
+int matchToken(Lexer *lexer, TokenType expectedType);
 #endif

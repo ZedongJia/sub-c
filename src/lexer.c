@@ -221,3 +221,18 @@ const Token *nextToken(Lexer *lexer)
     }
     return lexer->currentToken;
 }
+
+int matchToken(Lexer *lexer, TokenType expectedType)
+{
+    if (peekToken(lexer)->tokenType == expectedType)
+    {
+        nextToken(lexer);
+        return 1;
+    }
+    else
+    {
+        printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(peekToken(lexer)->tokenType),
+               getTokenTypeValue(expectedType));
+        return 0;
+    }
+}

@@ -75,8 +75,7 @@ void freeNode(Node *node)
 }
 Node *createKeywordExpressionNode(TokenType keywordType)
 {
-    KeywordExpressionNode *keywordNode =
-        (KeywordExpressionNode *)malloc(sizeof(KeywordExpressionNode));
+    KeywordExpressionNode *keywordNode = (KeywordExpressionNode *)malloc(sizeof(KeywordExpressionNode));
     keywordNode->keywordType = keywordType;
     return createNode(KeywordExpression, (void *)keywordNode);
 }
@@ -86,8 +85,7 @@ void freeKeywordExpressionNode(KeywordExpressionNode *node)
 }
 Node *createLiteralExpressionNode(TokenType literalType, char *value, int length)
 {
-    LiteralExpressionNode *literalNode =
-        (LiteralExpressionNode *)malloc(sizeof(LiteralExpressionNode));
+    LiteralExpressionNode *literalNode = (LiteralExpressionNode *)malloc(sizeof(LiteralExpressionNode));
     literalNode->literalType = literalType;
     literalNode->value = (char *)malloc(length * sizeof(char));
     strcpy(literalNode->value, value);
@@ -162,11 +160,13 @@ void freeDeclarationNode(DeclarationNode *node)
         freeNode(node->expression);
     node->expression = NULL;
 }
-Node *createCompoundNode(Node **statements, int size)
+Node *createCompoundNode(TokenType openDelimiter, Node **statements, int size, TokenType closeDelimiter)
 {
     CompoundNode *compoundNode = (CompoundNode *)malloc(sizeof(CompoundNode));
+    compoundNode->openDelimiter = openDelimiter;
     compoundNode->statements = statements;
     compoundNode->size = size;
+    compoundNode->closeDelimiter = closeDelimiter;
     return createNode(Compound, (void *)compoundNode);
 }
 void freeCompoundNode(CompoundNode *node)
@@ -182,11 +182,12 @@ void freeCompoundNode(CompoundNode *node)
     }
     node->statements = NULL;
 }
-Node *createProgramNode(Node **statements, int size)
+Node *createProgramNode(Node **statements, int size, TokenType endDelimiter)
 {
     ProgramNode *programNode = (ProgramNode *)malloc(sizeof(ProgramNode));
     programNode->statements = statements;
     programNode->size = size;
+    programNode->endDelimiter = endDelimiter;
     return createNode(Program, (void *)programNode);
 }
 void freeProgramNode(ProgramNode *node)

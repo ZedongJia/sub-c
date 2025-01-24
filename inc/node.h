@@ -37,8 +37,8 @@ Node *createLiteralExpressionNode(TokenType literalType, char *value, int length
 void freeLiteralExpressionNode(LiteralExpressionNode *node);
 typedef struct BinaryOperatorExpressionNode
 {
-    TokenType op;
     Node *left;
+    TokenType op;
     Node *right;
 } BinaryOperatorExpressionNode;
 Node *createBinaryOperatorExpressionNode(Node *left, TokenType op, Node *right);
@@ -67,16 +67,19 @@ Node *createDeclarationNode(Node *type, Node *expression, TokenType delimiter);
 void freeDeclarationNode(DeclarationNode *node);
 typedef struct CompoundNode
 {
+    TokenType openDelimiter;
     Node **statements; // allow NULL
     int size;
+    TokenType closeDelimiter;
 } CompoundNode;
-Node *createCompoundNode(Node **statements, int size);
+Node *createCompoundNode(TokenType openDelimiter, Node **statements, int size, TokenType closeDelimiter);
 void freeCompoundNode(CompoundNode *node);
 typedef struct ProgramNode
 {
     Node **statements; // allow NULL
     int size;
+    TokenType endDelimiter;
 } ProgramNode;
-Node *createProgramNode(Node **statements, int size);
+Node *createProgramNode(Node **statements, int size, TokenType endDelimiter);
 void freeProgramNode(ProgramNode *node);
 #endif
