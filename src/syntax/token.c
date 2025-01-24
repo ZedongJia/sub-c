@@ -1,4 +1,4 @@
-#include "token.h"
+#include "syntax/token.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -82,7 +82,7 @@ int isDigit(int ch)
 }
 int isLetter(int ch)
 {
-    return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z';
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 }
 int getUnaryTokenPriority(TokenType tokenType)
 {

@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "syntax/parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 Parser *createParser()

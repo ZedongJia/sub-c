@@ -1,6 +1,6 @@
 #ifndef NODE
 #define NODE
-#include "token.h"
+#include "syntax/token.h"
 typedef enum NodeType
 {
     Err,

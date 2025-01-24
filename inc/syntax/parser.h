@@ -1,7 +1,7 @@
 #ifndef PARSER
 #define PARSER
-#include "lexer.h"
-#include "node.h"
+#include "syntax/lexer.h"
+#include "syntax/node.h"
 typedef struct Parser
 {
     Lexer *lexer;

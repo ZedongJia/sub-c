@@ -1,5 +1,5 @@
 #include "debug.h"
-#include "parser.h"
+#include "syntax/parser.h"
 #include <stdio.h>
 int main()
 {

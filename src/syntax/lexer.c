@@ -1,4 +1,4 @@
-#include "lexer.h"
+#include "syntax/lexer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -182,8 +182,11 @@ Token *lex(Lexer *lexer)
     case ';':
         return createSymbolToken(SemiColon);
     case ' ':
-        return lex(lexer);
     case '\n':
+    case '\r':
+    case '\t':
+        return lex(lexer);
+    case -1:
         return createSymbolToken(EndOfFileToken);
     default:
         // error skip

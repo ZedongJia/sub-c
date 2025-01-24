@@ -1,6 +1,6 @@
 #ifndef LEXER
 #define LEXER
-#include "token.h"
+#include "syntax/token.h"
 typedef struct Lexer
 {
     char buffer[256];
