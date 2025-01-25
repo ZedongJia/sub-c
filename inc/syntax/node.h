@@ -10,14 +10,13 @@ typedef enum NodeType
     UnaryOperatorExpression,
     Statement,
     Declaration,
-    Compound,
-    Program
 } NodeType;
 char *getNodeTypeValue(NodeType nodeType);
 typedef struct Node
 {
     NodeType nodeType;
     void *data; // allow NULL
+    struct Node *next;
 } Node;
 Node *createNode(NodeType nodeType, void *data);
 void freeNode(Node *node);
@@ -35,6 +34,13 @@ typedef struct LiteralExpressionNode
 } LiteralExpressionNode;
 Node *createLiteralExpressionNode(TokenType literalType, char *value, int length);
 void freeLiteralExpressionNode(LiteralExpressionNode *node);
+typedef struct UnaryOperatorExpressionNode
+{
+    TokenType op;
+    Node *operand;
+} UnaryOperatorExpressionNode;
+Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand);
+void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node);
 typedef struct BinaryOperatorExpressionNode
 {
     Node *left;
@@ -43,43 +49,17 @@ typedef struct BinaryOperatorExpressionNode
 } BinaryOperatorExpressionNode;
 Node *createBinaryOperatorExpressionNode(Node *left, TokenType op, Node *right);
 void freeBinaryOperatorExpressionNode(BinaryOperatorExpressionNode *node);
-typedef struct UnaryOperatorExpressionNode
-{
-    TokenType op;
-    Node *operand;
-} UnaryOperatorExpressionNode;
-Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand);
-void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node);
 typedef struct StatementNode
 {
     Node *expression;
-    TokenType delimiter;
 } StatementNode;
-Node *createStatementNode(Node *expression, TokenType delimiter);
+Node *createStatementNode(Node *expression);
 void freeStatementNode(StatementNode *node);
 typedef struct DeclarationNode
 {
     Node *type;
     Node *expression;
-    TokenType delimiter;
 } DeclarationNode;
-Node *createDeclarationNode(Node *type, Node *expression, TokenType delimiter);
+Node *createDeclarationNode(Node *type, Node *expression);
 void freeDeclarationNode(DeclarationNode *node);
-typedef struct CompoundNode
-{
-    TokenType openDelimiter;
-    Node **statements; // allow NULL
-    int size;
-    TokenType closeDelimiter;
-} CompoundNode;
-Node *createCompoundNode(TokenType openDelimiter, Node **statements, int size, TokenType closeDelimiter);
-void freeCompoundNode(CompoundNode *node);
-typedef struct ProgramNode
-{
-    Node **statements; // allow NULL
-    int size;
-    TokenType endDelimiter;
-} ProgramNode;
-Node *createProgramNode(Node **statements, int size, TokenType endDelimiter);
-void freeProgramNode(ProgramNode *node);
 #endif

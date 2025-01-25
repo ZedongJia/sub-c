@@ -20,10 +20,6 @@ char *getNodeTypeValue(NodeType nodeType)
         return "Statement";
     case Declaration:
         return "Declaration";
-    case Compound:
-        return "Compound";
-    case Program:
-        return "Program";
     default:
         return "UnexpectedNode";
     }
@@ -33,10 +29,16 @@ Node *createNode(NodeType nodeType, void *data)
     Node *node = (Node *)malloc(sizeof(Node));
     node->nodeType = nodeType;
     node->data = data;
+    node->next = NULL;
     return node;
 }
 void freeNode(Node *node)
 {
+    if (node->next != NULL)
+    {
+        freeNode(node->next);
+        node->next = NULL;
+    }
     switch (node->nodeType)
     {
     case KeywordExpression:
@@ -53,15 +55,8 @@ void freeNode(Node *node)
         break;
     case Statement:
         freeStatementNode((StatementNode *)node->data);
-        break;
     case Declaration:
         freeDeclarationNode((DeclarationNode *)node->data);
-        break;
-    case Compound:
-        freeCompoundNode((CompoundNode *)node->data);
-        break;
-    case Program:
-        freeProgramNode((ProgramNode *)node->data);
         break;
     default:
         break;
@@ -98,6 +93,20 @@ void freeLiteralExpressionNode(LiteralExpressionNode *node)
         free(node->value);
     node->value = NULL;
 }
+Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand)
+{
+    UnaryOperatorExpressionNode *unaryOperatorNode =
+        (UnaryOperatorExpressionNode *)malloc(sizeof(UnaryOperatorExpressionNode));
+    unaryOperatorNode->op = op;
+    unaryOperatorNode->operand = operand;
+    return createNode(UnaryOperatorExpression, (void *)unaryOperatorNode);
+}
+void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node)
+{
+    if (node->operand != NULL)
+        freeNode(node->operand);
+    node->operand = NULL;
+}
 Node *createBinaryOperatorExpressionNode(Node *left, TokenType op, Node *right)
 {
     BinaryOperatorExpressionNode *binaryOperatorNode =
@@ -116,25 +125,10 @@ void freeBinaryOperatorExpressionNode(BinaryOperatorExpressionNode *node)
         freeNode(node->right);
     node->right = NULL;
 }
-Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand)
-{
-    UnaryOperatorExpressionNode *unaryOperatorNode =
-        (UnaryOperatorExpressionNode *)malloc(sizeof(UnaryOperatorExpressionNode));
-    unaryOperatorNode->op = op;
-    unaryOperatorNode->operand = operand;
-    return createNode(UnaryOperatorExpression, (void *)unaryOperatorNode);
-}
-void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node)
-{
-    if (node->operand != NULL)
-        freeNode(node->operand);
-    node->operand = NULL;
-}
-Node *createStatementNode(Node *expression, TokenType delimiter)
+Node *createStatementNode(Node *expression)
 {
     StatementNode *statementNode = (StatementNode *)malloc(sizeof(StatementNode));
     statementNode->expression = expression;
-    statementNode->delimiter = delimiter;
     return createNode(Statement, (void *)statementNode);
 }
 void freeStatementNode(StatementNode *node)
@@ -143,12 +137,11 @@ void freeStatementNode(StatementNode *node)
         freeNode(node->expression);
     node->expression = NULL;
 }
-Node *createDeclarationNode(Node *type, Node *expression, TokenType delimiter)
+Node *createDeclarationNode(Node *type, Node *expression)
 {
     DeclarationNode *declarationNode = (DeclarationNode *)malloc(sizeof(DeclarationNode));
     declarationNode->type = type;
     declarationNode->expression = expression;
-    declarationNode->delimiter = delimiter;
     return createNode(Declaration, (void *)declarationNode);
 }
 void freeDeclarationNode(DeclarationNode *node)
@@ -159,47 +152,4 @@ void freeDeclarationNode(DeclarationNode *node)
     if (node->expression != NULL)
         freeNode(node->expression);
     node->expression = NULL;
-}
-Node *createCompoundNode(TokenType openDelimiter, Node **statements, int size, TokenType closeDelimiter)
-{
-    CompoundNode *compoundNode = (CompoundNode *)malloc(sizeof(CompoundNode));
-    compoundNode->openDelimiter = openDelimiter;
-    compoundNode->statements = statements;
-    compoundNode->size = size;
-    compoundNode->closeDelimiter = closeDelimiter;
-    return createNode(Compound, (void *)compoundNode);
-}
-void freeCompoundNode(CompoundNode *node)
-{
-    if (node->statements != NULL)
-    {
-        for (int i = 0; i < node->size; i++)
-        {
-            freeNode(node->statements[i]);
-            node->statements[i] = NULL;
-        }
-        free(node->statements);
-    }
-    node->statements = NULL;
-}
-Node *createProgramNode(Node **statements, int size, TokenType endDelimiter)
-{
-    ProgramNode *programNode = (ProgramNode *)malloc(sizeof(ProgramNode));
-    programNode->statements = statements;
-    programNode->size = size;
-    programNode->endDelimiter = endDelimiter;
-    return createNode(Program, (void *)programNode);
-}
-void freeProgramNode(ProgramNode *node)
-{
-    if (node->statements != NULL)
-    {
-        for (int i = 0; i < node->size; i++)
-        {
-            freeNode(node->statements[i]);
-            node->statements[i] = NULL;
-        }
-        free(node->statements);
-    }
-    node->statements = NULL;
 }

@@ -4,144 +4,133 @@
 Parser *createParser()
 {
     Parser *parser = (Parser *)malloc(sizeof(Parser));
-    parser->lexer = createLexer();
-    parser->root = NULL;
     return parser;
 }
 void freeParser(Parser *parser)
 {
-    free(parser->lexer);
-    parser->lexer = NULL;
-    if (parser->root != NULL)
-        freeNode(parser->root);
-    parser->root = NULL;
     free(parser);
 }
-Node *parseUnaryExpression(Parser *parser, int parentPriority)
+Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
 {
-    Node *expression;
-    int priority = getUnaryTokenPriority(peekToken(parser->lexer)->tokenType);
-    if (priority != 0 && priority >= parentPriority)
-    {
-        // right association
-        TokenType opType = nextToken(parser->lexer)->tokenType;
-        Node *operand = parseExpression(parser, priority);
-        expression = createUnaryOperatorExpressionNode(opType, operand);
-    }
-    else
-        expression = parsePrimaryExpression(parser);
-    return expression;
-}
-Node *parsePrimaryExpression(Parser *parser)
-{
-    switch (peekToken(parser->lexer)->tokenType)
+    peekToken(lexer);
+    switch (lexer->postToken->tokenType)
     {
     case LeftBracket: {
         // ( expression )
-        matchToken(parser->lexer, LeftBracket);
-        Node *expression = parseExpression(parser, 0);
-        matchToken(parser->lexer, RightBracket);
+        matchToken(lexer, LeftBracket);
+        Node *expression = parseExpression(parser, lexer, 0);
+        matchToken(lexer, RightBracket);
         return expression;
     }
     case TrueToken:
     case FalseToken: {
-        const Token *token = nextToken(parser->lexer);
-        return createKeywordExpressionNode(token->tokenType);
+        nextToken(lexer);
+        return createKeywordExpressionNode(lexer->currToken->tokenType);
     }
     case IntLiteralToken:
     case IdentifierToken: {
-        const Token *token = nextToken(parser->lexer);
-        return createLiteralExpressionNode(token->tokenType, token->value, token->valueLength);
+        nextToken(lexer);
+        return createLiteralExpressionNode(lexer->currToken->tokenType, lexer->currToken->value,
+                                           lexer->currToken->length);
     }
     default: {
         printf("\033[35mError: unexpected %s, expect expression\033[0m\n",
-               getTokenTypeValue(peekToken(parser->lexer)->tokenType));
+               getTokenTypeValue(lexer->postToken->tokenType));
         return createNode(Err, NULL);
     }
     }
 }
-Node *parseExpression(Parser *parser, int parentPriority)
+Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
 {
-    Node *left = parseUnaryExpression(parser, parentPriority);
-    TokenType opType = peekToken(parser->lexer)->tokenType;
+    Node *expression;
+    peekToken(lexer);
+    int priority = getUnaryTokenPriority(lexer->postToken->tokenType);
+    if (priority != 0 && priority >= parentPriority)
+    {
+        // right association
+        nextToken(lexer);
+        TokenType opType = lexer->currToken->tokenType;
+        Node *operand = parseExpression(parser, lexer, priority);
+        expression = createUnaryOperatorExpressionNode(opType, operand);
+    }
+    else
+        expression = parsePrimaryExpression(parser, lexer);
+    return expression;
+}
+Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
+{
+    Node *left = parseUnaryExpression(parser, lexer, parentPriority);
+    peekToken(lexer);
+    TokenType opType = lexer->postToken->tokenType;
     int priority = getBinaryTokenPriority(opType);
     int association = getAssociation(opType);
     while ((priority != 0) && (association ? priority >= parentPriority : priority > parentPriority))
     {
-        opType = nextToken(parser->lexer)->tokenType;
-        Node *right = parseExpression(parser, priority);
+        nextToken(lexer);
+        opType = lexer->currToken->tokenType;
+        Node *right = parseExpression(parser, lexer, priority);
         left = createBinaryOperatorExpressionNode(left, opType, right); // here use opType, so we store opType
         // peek next token
-        opType = peekToken(parser->lexer)->tokenType;
+        peekToken(lexer);
+        opType = lexer->postToken->tokenType;
         priority = getBinaryTokenPriority(opType);
         association = getAssociation(opType);
     }
     return left;
 }
-Node *parseStatement(Parser *parser, int parentPriority)
+Node *parseStatement(Parser *parser, Lexer *lexer, int parentPriority)
 {
-    Node *expression = parseExpression(parser, parentPriority);
-    matchToken(parser->lexer, SemiColon);
-    return createStatementNode(expression, SemiColon);
+    Node *expression = parseExpression(parser, lexer, parentPriority);
+    matchToken(lexer, SemiColon);
+    return createStatementNode(expression);
 }
-Node *parseDeclarationStatement(Parser *parser, int parentPriority)
+Node *parseDeclarationStatement(Parser *parser, Lexer *lexer, int parentPriority)
 {
-    Node *type = createKeywordExpressionNode(nextToken(parser->lexer)->tokenType);
-    Node *expression = parseExpression(parser, parentPriority);
-    matchToken(parser->lexer, SemiColon);
-    return createDeclarationNode(type, expression, SemiColon);
+    nextToken(lexer);
+    Node *type = createKeywordExpressionNode(lexer->currToken->tokenType);
+    Node *expression = parseExpression(parser, lexer, parentPriority);
+    matchToken(lexer, SemiColon);
+    return createDeclarationNode(type, expression);
 }
-Node *parseCompound(Parser *parser, int parentPriority)
+Node *parseStatements(Parser *parser, Lexer *lexer, int parentPriority, int isGlobal)
 {
-    Node **statements = NULL;
-    int size = 0;
+    Node *head = NULL;
+    Node *tail = NULL;
     Node *statement;
-    matchToken(parser->lexer, LeftBrace);
-    while (peekToken(parser->lexer)->tokenType != LeftBrace || peekToken(parser->lexer)->tokenType != EndOfFileToken)
+    if (!isGlobal)
+        matchToken(lexer, LeftBrace);
+    peekToken(lexer);
+    while ((lexer->postToken->tokenType != EndOfFileToken) &&
+           ((isGlobal) || (!isGlobal && lexer->postToken->tokenType != LeftBrace)))
     {
-        if (statements == NULL)
-            statements = (Node **)malloc(256 * sizeof(Node *));
-        switch (peekToken(parser->lexer)->tokenType)
+        peekToken(lexer);
+        switch (lexer->postToken->tokenType)
         {
         case IntToken:
-            statement = parseDeclarationStatement(parser, parentPriority);
+            statement = parseDeclarationStatement(parser, lexer, parentPriority);
             break;
         default:
-            statement = parseStatement(parser, parentPriority);
+            statement = parseStatement(parser, lexer, parentPriority);
             break;
         }
-        statements[size] = statement;
-        size++;
-    }
-    matchToken(parser->lexer, RightBrace);
-    return createCompoundNode(LeftBrace, statements, size, RightBrace);
-}
-Node *parseProgram(Parser *parser, int parentPriority)
-{
-    Node **statements = NULL;
-    int size = 0;
-    Node *statement;
-    while (peekToken(parser->lexer)->tokenType != EndOfFileToken)
-    {
-        if (statements == NULL)
-            statements = (Node **)malloc(256 * sizeof(Node *));
-        switch (peekToken(parser->lexer)->tokenType)
+        if (head == NULL)
         {
-        case IntToken:
-            statement = parseDeclarationStatement(parser, parentPriority);
-            break;
-        default:
-            statement = parseStatement(parser, parentPriority);
-            break;
+            head = tail = statement;
         }
-        statements[size] = statement;
-        size++;
+        else
+        {
+            tail->next = statement;
+            tail = tail->next;
+        }
+        peekToken(lexer);
     }
-    matchToken(parser->lexer, EndOfFileToken);
-    return createProgramNode(statements, size, EndOfFileToken);
+    isGlobal ? matchToken(lexer, EndOfFileToken) : matchToken(lexer, RightBrace);
+    return head;
 }
-void parse(Parser *parser)
+Node *parse(Parser *parser, FILE *file)
 {
-    parser->root = parseProgram(parser, 0);
-    clearLexer(parser->lexer);
+    Lexer *lexer = createLexer(file);
+    Node *root = parseStatements(parser, lexer, 0, 1);
+    freeLexer(lexer);
+    return root;
 }

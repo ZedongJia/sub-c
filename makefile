@@ -8,18 +8,18 @@ BIN=bin
 SRCS+=$(wildcard src/*.c)
 SRCS+=$(wildcard src/syntax/*.c)
 # obj files
-OBJS=$(SRCS:%.c=%.o)
+OBJS=$(addprefix $(BUILD)/, $(SRCS:%.c=%.o))
 
 all:$(BIN)/${TARGET}
 
 $(BIN)/${TARGET}: $(OBJS)
 	@mkdir -p "$(BIN)"
-	@$(CC) $(CFLAGS) $(addprefix $(BUILD)/, $^) -o $@
+	@$(CC) $(CFLAGS) $^ -o $@
 
-$(OBJS):%.o:%.c
-	@mkdir -p "$(dir $(BUILD)/$@)"
+$(BUILD)/%.o:%.c
+	@mkdir -p "$(dir $@)"
 	@echo "CC $<"
-	@$(CC) $(CFLAGS) -c $< -o $(BUILD)/$@ 
+	@$(CC) $(CFLAGS) -c $< -o $@ 
 
 clean:
 	rm -r "$(BUILD)"

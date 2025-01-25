@@ -46,7 +46,7 @@ typedef struct Token
 {
     TokenType tokenType;
     char *value;
-    int valueLength;
+    int length;
 } Token;
 
 int isDigit(int ch);
@@ -54,7 +54,7 @@ int isLetter(int ch);
 int getUnaryTokenPriority(TokenType tokenType);
 int getBinaryTokenPriority(TokenType tokenType);
 int getAssociation(TokenType tokenType);
-Token *createToken(TokenType tokenType, char *value, int valueLength);
+Token *createToken(TokenType tokenType, char *value, int length);
 Token *createSymbolToken(TokenType tokenType);
 void freeToken(Token *token);
 #endif

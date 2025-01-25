@@ -1,104 +1,98 @@
 #include "syntax/lexer.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-Lexer *createLexer()
+Lexer *createLexer(FILE *file)
 {
     Lexer *lexer = (Lexer *)malloc(sizeof(Lexer));
-    lexer->peekChar = '\0';
-    lexer->currentChar = '\0';
-    lexer->peekToken = NULL;
-    lexer->currentToken = NULL;
+    lexer->__postChar = '\0';
+    lexer->__currChar = '\0';
+    lexer->postToken = NULL;
+    lexer->currToken = NULL;
+    lexer->__file = file;
     return lexer;
 }
 void freeLexer(Lexer *lexer)
 {
+    if (lexer->currToken != NULL)
+    {
+        freeToken(lexer->currToken);
+        lexer->currToken = NULL;
+    }
+    if (lexer->postToken != NULL)
+    {
+        freeToken(lexer->postToken);
+        lexer->postToken = NULL;
+    }
+    lexer->__file = NULL;
     free(lexer);
 }
-void clearLexer(Lexer *lexer)
+void __peekChar(Lexer *lexer)
 {
-    lexer->peekChar = '\0';
-    lexer->currentChar = '\0';
-    if (lexer->currentToken != NULL)
-    {
-        freeToken(lexer->currentToken);
-        lexer->currentToken = NULL;
-    }
-    if (lexer->peekToken != NULL)
-    {
-        freeToken(lexer->peekToken);
-        lexer->peekToken = NULL;
-    }
+    if (lexer->__postChar == '\0')
+        lexer->__postChar = getc(lexer->__file);
 }
-const char peekChar(Lexer *lexer)
+void __nextChar(Lexer *lexer)
 {
-    if (lexer->peekChar == '\0')
+    if (lexer->__postChar != '\0')
     {
-        lexer->peekChar = getchar();
-    }
-    return lexer->peekChar;
-}
-const char nextChar(Lexer *lexer)
-{
-    if (lexer->peekChar != '\0')
-    {
-        lexer->currentChar = lexer->peekChar;
-        lexer->peekChar = '\0';
+        lexer->__currChar = lexer->__postChar;
+        lexer->__postChar = '\0';
     }
     else
     {
-        lexer->currentChar = getchar();
+        lexer->__currChar = getc(lexer->__file);
     }
-    return lexer->currentChar;
 }
-Token *lex(Lexer *lexer)
+Token *__lexNumber(Lexer *lexer)
 {
-    char ch = nextChar(lexer);
-    if (isDigit(ch))
+    int length = 0;
+    lexer->__buffer[length] = lexer->__currChar;
+    length++;
+    __peekChar(lexer);
+    while (isDigit(lexer->__postChar))
     {
-        int length = 0;
-        lexer->buffer[length] = ch;
+        __nextChar(lexer);
+        lexer->__buffer[length] = lexer->__currChar;
         length++;
-        ch = peekChar(lexer);
-        // parse digits
-        while (isDigit(ch))
-        {
-            nextChar(lexer);
-            lexer->buffer[length] = ch;
-            length++;
-            ch = peekChar(lexer);
-        }
-        lexer->buffer[length] = '\0';
-        length++;
-        return createToken(IntLiteralToken, lexer->buffer, length);
+        __peekChar(lexer);
     }
-    if (isLetter(ch) || ch == '_')
+    lexer->__buffer[length] = '\0';
+    length++;
+    return createToken(IntLiteralToken, lexer->__buffer, length);
+}
+Token *__lexLiteral(Lexer *lexer)
+{
+    int length = 0;
+    lexer->__buffer[length] = lexer->__currChar;
+    length++;
+    __peekChar(lexer);
+    while (isLetter(lexer->__postChar) || lexer->__postChar == '_')
     {
-        int length = 0;
-        lexer->buffer[length] = ch;
+        __nextChar(lexer);
+        lexer->__buffer[length] = lexer->__currChar;
         length++;
-        ch = peekChar(lexer);
-        // parse text
-        while (isLetter(ch) || ch == '_')
-        {
-            nextChar(lexer);
-            lexer->buffer[length] = ch;
-            length++;
-            ch = peekChar(lexer);
-        }
-        lexer->buffer[length] = '\0';
-        length++;
-        if (strcmp(lexer->buffer, "true") == 0)
-            return createSymbolToken(TrueToken);
-        else if (strcmp(lexer->buffer, "false") == 0)
-            return createSymbolToken(FalseToken);
-        else if (strcmp(lexer->buffer, "int") == 0)
-            return createSymbolToken(IntToken);
-        else
-            return createToken(IdentifierToken, lexer->buffer, length);
+        __peekChar(lexer);
     }
-    switch (ch)
+    lexer->__buffer[length] = '\0';
+    length++;
+    if (strcmp(lexer->__buffer, "true") == 0)
+        return createSymbolToken(TrueToken);
+    else if (strcmp(lexer->__buffer, "false") == 0)
+        return createSymbolToken(FalseToken);
+    else if (strcmp(lexer->__buffer, "int") == 0)
+        return createSymbolToken(IntToken);
+    else
+        return createToken(IdentifierToken, lexer->__buffer, length);
+}
+Token *__lex(Lexer *lexer)
+{
+    __nextChar(lexer);
+    if (isDigit(lexer->__currChar))
+        return __lexNumber(lexer);
+    if (isLetter(lexer->__currChar) || lexer->__currChar == '_')
+        return __lexLiteral(lexer);
+    switch (lexer->__currChar)
     {
     case '+':
         return createSymbolToken(PlusToken);
@@ -109,61 +103,60 @@ Token *lex(Lexer *lexer)
     case '/':
         return createSymbolToken(SlashToken);
     case '>': {
-        char postChar = peekChar(lexer);
-        if (postChar == '=')
+        __peekChar(lexer);
+        if (lexer->__postChar == '=')
         {
-            nextChar(lexer);
+            __nextChar(lexer);
             return createSymbolToken(GreaterEqualToken);
         }
         else
             return createSymbolToken(GreaterToken);
     }
     case '<': {
-        char postChar = peekChar(lexer);
-        if (postChar == '=')
+        __peekChar(lexer);
+        if (lexer->__postChar == '=')
         {
-            nextChar(lexer);
+            __nextChar(lexer);
             return createSymbolToken(LessEqualToken);
         }
         else
             return createSymbolToken(LessToken);
     }
     case '=': {
-        char postChar = peekChar(lexer);
-        if (postChar == '=')
+        __peekChar(lexer);
+        if (lexer->__postChar == '=')
         {
-            nextChar(lexer);
+            __nextChar(lexer);
             return createSymbolToken(DoubleEqualToken);
         }
         else
             return createSymbolToken(EqualToken);
     }
     case '&': {
-        char postChar = peekChar(lexer);
-        if (postChar == '&')
+        __peekChar(lexer);
+        if (lexer->__postChar == '&')
         {
-            nextChar(lexer);
+            __nextChar(lexer);
             return createSymbolToken(DoubleLogicAndToken);
         }
         else
             return createSymbolToken(LogicAndToken);
     }
     case '|': {
-        char postChar = peekChar(lexer);
-        if (postChar == '|')
+        __peekChar(lexer);
+        if (lexer->__postChar == '|')
         {
-            nextChar(lexer);
+            __nextChar(lexer);
             return createSymbolToken(DoubleLogicOrToken);
         }
         else
             return createSymbolToken(LogicOrToken);
     }
     case '!': {
-
-        char postChar = peekChar(lexer);
-        if (postChar == '=')
+        __peekChar(lexer);
+        if (lexer->__postChar == '=')
         {
-            nextChar(lexer);
+            __nextChar(lexer);
             return createSymbolToken(NotEqualToken);
         }
         else
@@ -185,57 +178,47 @@ Token *lex(Lexer *lexer)
     case '\n':
     case '\r':
     case '\t':
-        return lex(lexer);
+        return __lex(lexer);
     case -1:
         return createSymbolToken(EndOfFileToken);
     default:
         // error skip
-        printf("\033[35mError: unexpected token %c\033[0m\n", ch);
+        printf("\033[35mError: unexpected token %c\033[0m\n", lexer->__currChar);
         return createSymbolToken(ErrToken);
     }
 }
-const Token *peekToken(Lexer *lexer)
+void peekToken(Lexer *lexer)
 {
-    if (lexer->peekToken == NULL)
-    {
-        // peek next Token
-        lexer->peekToken = lex(lexer);
-    }
-    return lexer->peekToken;
+    if (lexer->postToken == NULL)
+        lexer->postToken = __lex(lexer);
 }
-const Token *nextToken(Lexer *lexer)
+void nextToken(Lexer *lexer)
 {
-    if (lexer->currentToken != NULL)
+    if (lexer->currToken != NULL)
     {
-        // clear currentToken
-        freeToken(lexer->currentToken);
-        lexer->currentToken = NULL;
+        freeToken(lexer->currToken);
+        lexer->currToken = NULL;
     }
-    if (lexer->peekToken != NULL)
+    if (lexer->postToken != NULL)
     {
-        // load from peekToken
-        lexer->currentToken = lexer->peekToken;
-        lexer->peekToken = NULL;
+        lexer->currToken = lexer->postToken;
+        lexer->postToken = NULL;
     }
     else
     {
-        // load new Token
-        lexer->currentToken = lex(lexer);
+        lexer->currToken = __lex(lexer);
     }
-    return lexer->currentToken;
 }
-
-int matchToken(Lexer *lexer, TokenType expectedType)
+void matchToken(Lexer *lexer, TokenType expectedType)
 {
-    if (peekToken(lexer)->tokenType == expectedType)
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == expectedType)
     {
         nextToken(lexer);
-        return 1;
     }
     else
     {
-        printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(peekToken(lexer)->tokenType),
+        printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(lexer->postToken->tokenType),
                getTokenTypeValue(expectedType));
-        return 0;
     }
 }

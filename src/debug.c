@@ -4,10 +4,12 @@
 
 void prettyTree(Node *node)
 {
+    if (node == NULL)
+        return;
     int parr[256];
     for (int i = 0; i < 256; i++)
         parr[i] = 0;
-    __prettyTree(node, parr, 0, 1);
+    __prettyTree(node, parr, 0, node->next != NULL ? 0 : 1);
 }
 void __prettyTree(Node *node, int *parr, int indent, int isLast)
 {
@@ -49,6 +51,8 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
         StatementNode *statementNode = (StatementNode *)node->data;
         printf("%s\n", getNodeTypeValue(node->nodeType));
         __prettyTree(statementNode->expression, parr, indent + 1, 1);
+        if (node->next != NULL)
+            __prettyTree(node->next, parr, indent, node->next->next != NULL ? 0 : 1);
         break;
     }
     case Declaration: {
@@ -56,28 +60,8 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
         printf("%s\n", getNodeTypeValue(node->nodeType));
         __prettyTree(declarationNode->type, parr, indent + 1, 0);
         __prettyTree(declarationNode->expression, parr, indent + 1, 1);
-        break;
-    }
-    case Compound: {
-        CompoundNode *compundNode = (CompoundNode *)node->data;
-        printf("%s\n", getNodeTypeValue(node->nodeType));
-        if (compundNode->statements != NULL)
-        {
-            for (int i = 0; i < compundNode->size - 1; i++)
-                __prettyTree(compundNode->statements[i], parr, indent + 1, 0);
-            __prettyTree(compundNode->statements[compundNode->size - 1], parr, indent + 1, 1);
-        }
-        break;
-    }
-    case Program: {
-        ProgramNode *programNode = (ProgramNode *)node->data;
-        printf("%s\n", getNodeTypeValue(node->nodeType));
-        if (programNode->statements != NULL)
-        {
-            for (int i = 0; i < programNode->size - 1; i++)
-                __prettyTree(programNode->statements[i], parr, indent + 1, 0);
-            __prettyTree(programNode->statements[programNode->size - 1], parr, indent + 1, 1);
-        }
+        if (node->next != NULL)
+            __prettyTree(node->next, parr, indent, node->next->next != NULL ? 0 : 1);
         break;
     }
     default:

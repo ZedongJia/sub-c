@@ -139,13 +139,13 @@ int getAssociation(TokenType tokenType)
         return 0;
     }
 }
-Token *createToken(TokenType tokenType, char *value, int valueLength)
+Token *createToken(TokenType tokenType, char *value, int length)
 {
     Token *token = (Token *)malloc(sizeof(Token));
     token->tokenType = tokenType;
-    token->value = (char *)malloc(valueLength * sizeof(char));
+    token->value = (char *)malloc(length * sizeof(char));
     strcpy(token->value, value);
-    token->valueLength = valueLength;
+    token->length = length;
     return token;
 }
 Token *createSymbolToken(TokenType tokenType)
@@ -153,7 +153,7 @@ Token *createSymbolToken(TokenType tokenType)
     Token *token = (Token *)malloc(sizeof(Token));
     token->tokenType = tokenType;
     token->value = NULL;
-    token->valueLength = 0;
+    token->length = 0;
     return token;
 }
 void freeToken(Token *token)
