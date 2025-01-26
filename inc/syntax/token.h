@@ -17,16 +17,21 @@ typedef enum TokenType
     ForToken,
     WhileToken,
     // scope
+    LeftParenthesis,
+    RightParenthesis,
     LeftBracket,
     RightBracket,
     LeftBrace,
     RightBrace,
-    // binary operator
+    // operator
     PlusToken,
     MinusToken,
     StarToken,
     SlashToken,
     EqualToken,
+    // operate
+    AccessToken,
+    AddressOfToken,
     // logic
     GreaterToken,
     GreaterEqualToken,

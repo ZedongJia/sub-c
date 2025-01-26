@@ -33,6 +33,10 @@ char *getTokenTypeValue(TokenType tokenType)
     case WhileToken:
         return "While";
     // scope
+    case LeftParenthesis:
+        return "LeftParenthesis";
+    case RightParenthesis:
+        return "RightParenthesis";
     case LeftBracket:
         return "LeftBracket";
     case RightBracket:
@@ -41,7 +45,7 @@ char *getTokenTypeValue(TokenType tokenType)
         return "LeftBrace";
     case RightBrace:
         return "RightBrace";
-    // binary operator
+    // operator
     case PlusToken:
         return "Plus";
     case MinusToken:
@@ -52,6 +56,11 @@ char *getTokenTypeValue(TokenType tokenType)
         return "Slash";
     case EqualToken:
         return "Equal";
+    // operate
+    case AccessToken:
+        return "Access";
+    case AddressOfToken:
+        return "AddressOf";
     // logic
     case GreaterToken:
         return "Greater";

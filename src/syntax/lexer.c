@@ -215,8 +215,12 @@ Token *__lex(Lexer *lexer)
             return createSymbolToken(LogicNotToken);
     }
     case '(':
-        return createSymbolToken(LeftBracket);
+        return createSymbolToken(LeftParenthesis);
     case ')':
+        return createSymbolToken(RightParenthesis);
+    case '[':
+        return createSymbolToken(LeftBracket);
+    case ']':
         return createSymbolToken(RightBracket);
     case '{':
         return createSymbolToken(LeftBrace);

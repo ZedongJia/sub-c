@@ -19,11 +19,11 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     peekToken(lexer);
     switch (lexer->postToken->tokenType)
     {
-    case LeftBracket: {
+    case LeftParenthesis: {
         // ( expression )
-        matchToken(lexer, LeftBracket);
+        matchToken(lexer, LeftParenthesis);
         Node *expression = parseExpression(parser, lexer, 0);
-        matchToken(lexer, RightBracket);
+        matchToken(lexer, RightParenthesis);
         return expression;
     }
     case TrueToken: {
@@ -60,6 +60,10 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
         nextToken(lexer);
         TokenType opType = lexer->currToken->tokenType;
         Node *operand = parseExpression(parser, lexer, priority);
+        if (opType == StarToken)
+            opType = AccessToken;
+        else if (opType == LogicAndToken)
+            opType = AddressOfToken;
         expression = createUnaryOperatorExpressionNode(opType, operand);
     }
     else
@@ -69,16 +73,34 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
 
 Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
 {
+    // op expression
     Node *left = parseUnaryExpression(parser, lexer, parentPriority);
+
+    // shared local variable
+    TokenType opType;
+    Node *right = NULL;
+
+    // expression[expression]
     peekToken(lexer);
-    TokenType opType = lexer->postToken->tokenType;
+    opType = lexer->postToken->tokenType;
+    if (opType == LeftBracket)
+    {
+        nextToken(lexer);
+        right = parseExpression(parser, lexer, 0);
+        matchToken(lexer, RightBracket);
+        left = createBinaryOperatorExpressionNode(left, AccessToken, right);
+    }
+
+    // expression op expression
+    peekToken(lexer);
+    opType = lexer->postToken->tokenType;
     int priority = getBinaryTokenPriority(opType);
     int association = getAssociation(opType);
     while ((priority != 0) && (association ? priority >= parentPriority : priority > parentPriority))
     {
         nextToken(lexer);
         opType = lexer->currToken->tokenType;
-        Node *right = parseExpression(parser, lexer, priority);
+        right = parseExpression(parser, lexer, priority);
         left = createBinaryOperatorExpressionNode(left, opType, right); // here use opType, so we store opType
         // peek next token
         peekToken(lexer);
@@ -134,10 +156,10 @@ Node *parseIfStatement(Parser *parser, Lexer *lexer)
 {
     Node *scopeNode = createScopeNode(1);
     matchToken(lexer, IfToken);
-    matchToken(lexer, LeftBracket);
+    matchToken(lexer, LeftParenthesis);
     int trueEndLabel = parser->label++;
     appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), trueEndLabel));
-    matchToken(lexer, RightBracket);
+    matchToken(lexer, RightParenthesis);
     appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
     peekToken(lexer);
     if (lexer->postToken->tokenType == ElseToken)
@@ -165,7 +187,7 @@ Node *parseForStatement(Parser *parser, Lexer *lexer)
 {
     Node *scopeNode = createScopeNode(0);
     matchToken(lexer, ForToken);
-    matchToken(lexer, LeftBracket);
+    matchToken(lexer, LeftParenthesis);
     appendNodeToScope(scopeNode, parseStatement(parser, lexer));
     int ForStartLabel = parser->label++;
     appendNodeToScope(scopeNode, createLabelStatementNode(ForStartLabel));
@@ -173,7 +195,7 @@ Node *parseForStatement(Parser *parser, Lexer *lexer)
     appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), ForEndLabel));
     matchToken(lexer, SemiColon);
     Node *expression = parseExpression(parser, lexer, 0);
-    matchToken(lexer, RightBracket);
+    matchToken(lexer, RightParenthesis);
     appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
     appendNodeToScope(scopeNode, expression);
     appendNodeToScope(scopeNode, createJumpStatementNode(ForStartLabel));
@@ -185,12 +207,12 @@ Node *parseWhileStatement(Parser *parser, Lexer *lexer)
 {
     Node *scopeNode = createScopeNode(0);
     matchToken(lexer, WhileToken);
-    matchToken(lexer, LeftBracket);
+    matchToken(lexer, LeftParenthesis);
     int whileStartLabel = parser->label++;
     appendNodeToScope(scopeNode, createLabelStatementNode(whileStartLabel));
     int whileEndLabel = parser->label++;
     appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), whileEndLabel));
-    matchToken(lexer, RightBracket);
+    matchToken(lexer, RightParenthesis);
     appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
     appendNodeToScope(scopeNode, createJumpStatementNode(whileStartLabel));
     appendNodeToScope(scopeNode, createLabelStatementNode(whileEndLabel));
