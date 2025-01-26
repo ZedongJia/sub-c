@@ -83,12 +83,14 @@ Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
     // expression[expression]
     peekToken(lexer);
     opType = lexer->postToken->tokenType;
-    if (opType == LeftBracket)
+    while (opType == LeftBracket)
     {
         nextToken(lexer);
         right = parseExpression(parser, lexer, 0);
         matchToken(lexer, RightBracket);
         left = createBinaryOperatorExpressionNode(left, AccessToken, right);
+        peekToken(lexer);
+        opType = lexer->postToken->tokenType;
     }
 
     // expression op expression
@@ -160,7 +162,11 @@ Node *parseIfStatement(Parser *parser, Lexer *lexer)
     int trueEndLabel = parser->label++;
     appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), trueEndLabel));
     matchToken(lexer, RightParenthesis);
-    appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == LeftBrace)
+        appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    else
+        appendNodeToScope(scopeNode, parseStatement(parser, lexer));
     peekToken(lexer);
     if (lexer->postToken->tokenType == ElseToken)
     {
@@ -180,7 +186,11 @@ Node *parseIfStatement(Parser *parser, Lexer *lexer)
 Node *parseElseStatement(Parser *parser, Lexer *lexer)
 {
     matchToken(lexer, ElseToken);
-    return parseStatements(parser, lexer, 0);
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == LeftBrace)
+        return parseStatements(parser, lexer, 0);
+    else
+        return parseStatement(parser, lexer);
 }
 
 Node *parseForStatement(Parser *parser, Lexer *lexer)
@@ -196,7 +206,11 @@ Node *parseForStatement(Parser *parser, Lexer *lexer)
     matchToken(lexer, SemiColon);
     Node *expression = parseExpression(parser, lexer, 0);
     matchToken(lexer, RightParenthesis);
-    appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == LeftBrace)
+        appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    else
+        appendNodeToScope(scopeNode, parseStatement(parser, lexer));
     appendNodeToScope(scopeNode, expression);
     appendNodeToScope(scopeNode, createJumpStatementNode(ForStartLabel));
     appendNodeToScope(scopeNode, createLabelStatementNode(ForEndLabel));
@@ -213,7 +227,11 @@ Node *parseWhileStatement(Parser *parser, Lexer *lexer)
     int whileEndLabel = parser->label++;
     appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), whileEndLabel));
     matchToken(lexer, RightParenthesis);
-    appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == LeftBrace)
+        appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    else
+        appendNodeToScope(scopeNode, parseStatement(parser, lexer));
     appendNodeToScope(scopeNode, createJumpStatementNode(whileStartLabel));
     appendNodeToScope(scopeNode, createLabelStatementNode(whileEndLabel));
     return scopeNode;
