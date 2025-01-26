@@ -9,14 +9,14 @@ char *getNodeTypeValue(NodeType nodeType)
     {
     case Err:
         return "Err";
-    case KeywordExpression:
-        return "KeywordExpression";
+    case TypeExpression:
+        return "Type";
     case LiteralExpression:
-        return "LiteralExpression";
+        return "Literal";
     case BinaryOperatorExpression:
-        return "BinaryOperatorExpression";
+        return "BinaryOperator";
     case UnaryOperatorExpression:
-        return "UnaryOperatorExpression";
+        return "UnaryOperator";
     case Statement:
         return "Statement";
     case Declaration:
@@ -49,8 +49,8 @@ void freeNode(Node *node)
     // free data
     switch (node->nodeType)
     {
-    case KeywordExpression:
-        freeKeywordExpressionNode((KeywordExpressionNode *)node->data);
+    case TypeExpression:
+        freeTypeExpressionNode((TypeExpressionNode *)node->data);
         break;
     case LiteralExpression:
         freeLiteralExpressionNode((LiteralExpressionNode *)node->data);
@@ -86,14 +86,14 @@ void freeNode(Node *node)
     free(node);
 }
 
-Node *createKeywordExpressionNode(TokenType keywordType)
+Node *createTypeExpressionNode(TokenType type)
 {
-    KeywordExpressionNode *keywordNode = (KeywordExpressionNode *)malloc(sizeof(KeywordExpressionNode));
-    keywordNode->keywordType = keywordType;
-    return createNode(KeywordExpression, (void *)keywordNode);
+    TypeExpressionNode *typeNode = (TypeExpressionNode *)malloc(sizeof(TypeExpressionNode));
+    typeNode->type = type;
+    return createNode(TypeExpression, (void *)typeNode);
 }
 
-void freeKeywordExpressionNode(KeywordExpressionNode *node)
+void freeTypeExpressionNode(TypeExpressionNode *node)
 {
     free(node);
 }
@@ -110,7 +110,8 @@ Node *createLiteralExpressionNode(TokenType literalType, char *value, int length
 
 void freeLiteralExpressionNode(LiteralExpressionNode *node)
 {
-    free(node->value);
+    if (node->value != NULL)
+        free(node->value);
     node->value = NULL;
     free(node);
 }

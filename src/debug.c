@@ -14,12 +14,12 @@ void prettyTree(Node *node)
 
 void __prettyNodeType(NodeType nodeType)
 {
-    printf("\033[35;1m%s\033[0m", getNodeTypeValue(nodeType));
+    printf("\033[32;1m%s\033[0m", getNodeTypeValue(nodeType));
 }
 
 void __prettyTokenType(TokenType tokenType)
 {
-    printf("\033[37;1m%s\033[0m", getTokenTypeValue(tokenType));
+    printf("\033[35;1m%s\033[0m", getTokenTypeValue(tokenType));
 }
 
 void __prettyTree(Node *node, int *parr, int indent, int isLast)
@@ -36,9 +36,9 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
         printf("\n");
         break;
     }
-    case KeywordExpression: {
-        KeywordExpressionNode *keywordNode = (KeywordExpressionNode *)node->data;
-        __prettyTokenType(keywordNode->keywordType);
+    case TypeExpression: {
+        TypeExpressionNode *keywordNode = (TypeExpressionNode *)node->data;
+        __prettyTokenType(keywordNode->type);
         printf("\n");
         break;
     }

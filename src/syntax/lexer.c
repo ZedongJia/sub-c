@@ -62,7 +62,7 @@ Token *__lexNumber(Lexer *lexer)
     return createToken(IntLiteralToken, lexer->__buffer, length);
 }
 
-Token *__lexLiteral(Lexer *lexer)
+Token *__lexKeywordOrIdentifier(Lexer *lexer)
 {
     int length = 0;
     lexer->__buffer[length] = lexer->__currChar;
@@ -77,12 +77,14 @@ Token *__lexLiteral(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    if (strcmp(lexer->__buffer, "true") == 0)
+    if (strcmp(lexer->__buffer, "int") == 0)
+        return createSymbolToken(IntToken);
+    if (strcmp(lexer->__buffer, "char") == 0)
+        return createSymbolToken(CharToken);
+    else if (strcmp(lexer->__buffer, "true") == 0)
         return createSymbolToken(TrueToken);
     else if (strcmp(lexer->__buffer, "false") == 0)
         return createSymbolToken(FalseToken);
-    else if (strcmp(lexer->__buffer, "int") == 0)
-        return createSymbolToken(IntToken);
     else if (strcmp(lexer->__buffer, "if") == 0)
         return createSymbolToken(IfToken);
     else if (strcmp(lexer->__buffer, "else") == 0)
@@ -95,15 +97,55 @@ Token *__lexLiteral(Lexer *lexer)
         return createToken(IdentifierToken, lexer->__buffer, length);
 }
 
+Token *__lexString(Lexer *lexer)
+{
+    int length = 0;
+    lexer->__buffer[length] = lexer->__currChar;
+    length++;
+    int isDone = 0;
+    while (!isDone)
+    {
+        __peekChar(lexer);
+        switch (lexer->__postChar)
+        {
+        case '\\': {
+            __nextChar(lexer);
+            lexer->__buffer[length] = lexer->__currChar;
+            length++;
+            break;
+        }
+        case '\"': {
+            isDone = 1;
+            break;
+        }
+        case '\n':
+        case -1: {
+            // err
+            printf("\033[35mError: unclosed string\033[0m\n");
+            isDone = 1;
+            break;
+        }
+        }
+        __nextChar(lexer);
+        lexer->__buffer[length] = lexer->__currChar;
+        length++;
+    }
+    lexer->__buffer[length] = '\0';
+    length++;
+    return createToken(StringLiteralToken, lexer->__buffer, length);
+}
+
 Token *__lex(Lexer *lexer)
 {
     __nextChar(lexer);
     if (isDigit(lexer->__currChar))
         return __lexNumber(lexer);
     if (isLetter(lexer->__currChar) || lexer->__currChar == '_')
-        return __lexLiteral(lexer);
+        return __lexKeywordOrIdentifier(lexer);
     switch (lexer->__currChar)
     {
+    case '\"':
+        return __lexString(lexer);
     case '+':
         return createSymbolToken(PlusToken);
     case '-':

@@ -26,12 +26,16 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
         matchToken(lexer, RightBracket);
         return expression;
     }
-    case TrueToken:
+    case TrueToken: {
+        nextToken(lexer);
+        return createLiteralExpressionNode(IntLiteralToken, "1", 2);
+    }
     case FalseToken: {
         nextToken(lexer);
-        return createKeywordExpressionNode(lexer->currToken->tokenType);
+        return createLiteralExpressionNode(IntLiteralToken, "0", 2);
     }
     case IntLiteralToken:
+    case StringLiteralToken:
     case IdentifierToken: {
         nextToken(lexer);
         return createLiteralExpressionNode(lexer->currToken->tokenType, lexer->currToken->value,
@@ -91,7 +95,8 @@ Node *parseStatement(Parser *parser, Lexer *lexer)
     peekToken(lexer);
     switch (lexer->postToken->tokenType)
     {
-    case IntToken: {
+    case IntToken:
+    case CharToken: {
         statement = parseDeclarationStatement(parser, lexer);
         break;
     }
@@ -119,7 +124,7 @@ Node *parseStatement(Parser *parser, Lexer *lexer)
 Node *parseDeclarationStatement(Parser *parser, Lexer *lexer)
 {
     nextToken(lexer);
-    Node *type = createKeywordExpressionNode(lexer->currToken->tokenType);
+    Node *type = createTypeExpressionNode(lexer->currToken->tokenType);
     Node *expression = parseExpression(parser, lexer, 0);
     matchToken(lexer, SemiColon);
     return createDeclarationNode(type, expression);

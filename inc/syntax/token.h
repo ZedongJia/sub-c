@@ -4,11 +4,14 @@ typedef enum TokenType
 {
     ErrToken,
     IntLiteralToken,
+    StringLiteralToken,
+    // type-keywords
+    IntToken,
+    CharToken,
     // keywords
     IdentifierToken,
     TrueToken,
     FalseToken,
-    IntToken,
     IfToken,
     ElseToken,
     ForToken,

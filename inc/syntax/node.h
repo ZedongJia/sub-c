@@ -6,7 +6,7 @@ typedef enum NodeType
     // expression
 
     Err,
-    KeywordExpression,
+    TypeExpression,
     LiteralExpression,
     BinaryOperatorExpression,
     UnaryOperatorExpression,
@@ -37,12 +37,12 @@ typedef struct Node
 Node *createNode(NodeType nodeType, void *data);
 void freeNode(Node *node);
 
-typedef struct KeywordExpressionNode
+typedef struct TypeExpressionNode
 {
-    TokenType keywordType;
-} KeywordExpressionNode;
-Node *createKeywordExpressionNode(TokenType keywordType);
-void freeKeywordExpressionNode(KeywordExpressionNode *node);
+    TokenType type;
+} TypeExpressionNode;
+Node *createTypeExpressionNode(TokenType type);
+void freeTypeExpressionNode(TypeExpressionNode *node);
 
 typedef struct LiteralExpressionNode
 {

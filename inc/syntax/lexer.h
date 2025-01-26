@@ -23,7 +23,8 @@ void freeLexer(Lexer *lexer);
 void __peekChar(Lexer *lexer);
 void __nextChar(Lexer *lexer);
 Token *__lexNumber(Lexer *lexer);
-Token *__lexLiteral(Lexer *lexer);
+Token *__lexKeywordOrIdentifier(Lexer *lexer);
+Token *__lexString(Lexer *lexer);
 Token *__lex(Lexer *lexer);
 
 void peekToken(Lexer *lexer);
