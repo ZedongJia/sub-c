@@ -9,6 +9,10 @@ typedef enum TokenType
     TrueToken,
     FalseToken,
     IntToken,
+    IfToken,
+    ElseToken,
+    ForToken,
+    WhileToken,
     // scope
     LeftBracket,
     RightBracket,
@@ -48,7 +52,6 @@ typedef struct Token
     char *value;
     int length;
 } Token;
-
 int isDigit(int ch);
 int isLetter(int ch);
 int getUnaryTokenPriority(TokenType tokenType);

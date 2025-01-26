@@ -19,6 +19,14 @@ char *getTokenTypeValue(TokenType tokenType)
         return "FalseToken";
     case IntToken:
         return "IntToken";
+    case IfToken:
+        return "IfToken";
+    case ElseToken:
+        return "ElseToken";
+    case ForToken:
+        return "ForToken";
+    case WhileToken:
+        return "WhileToken";
     // scope
     case LeftBracket:
         return "LeftBracket";
@@ -76,14 +84,17 @@ char *getTokenTypeValue(TokenType tokenType)
         return "UnexpectToken";
     }
 }
+
 int isDigit(int ch)
 {
     return ch >= '0' && ch <= '9';
 }
+
 int isLetter(int ch)
 {
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 }
+
 int getUnaryTokenPriority(TokenType tokenType)
 {
     switch (tokenType)
@@ -96,6 +107,7 @@ int getUnaryTokenPriority(TokenType tokenType)
         return 0;
     }
 }
+
 int getBinaryTokenPriority(TokenType tokenType)
 {
     switch (tokenType)
@@ -128,6 +140,7 @@ int getBinaryTokenPriority(TokenType tokenType)
         return 0;
     }
 }
+
 int getAssociation(TokenType tokenType)
 {
     // 0 means left, 1 means right
@@ -139,6 +152,7 @@ int getAssociation(TokenType tokenType)
         return 0;
     }
 }
+
 Token *createToken(TokenType tokenType, char *value, int length)
 {
     Token *token = (Token *)malloc(sizeof(Token));
@@ -148,6 +162,7 @@ Token *createToken(TokenType tokenType, char *value, int length)
     token->length = length;
     return token;
 }
+
 Token *createSymbolToken(TokenType tokenType)
 {
     Token *token = (Token *)malloc(sizeof(Token));
@@ -156,8 +171,11 @@ Token *createSymbolToken(TokenType tokenType)
     token->length = 0;
     return token;
 }
+
 void freeToken(Token *token)
 {
+    if (token == NULL)
+        return;
     if (token->value != NULL)
         free(token->value);
     token->value = NULL;

@@ -12,26 +12,25 @@ Lexer *createLexer(FILE *file)
     lexer->__file = file;
     return lexer;
 }
+
 void freeLexer(Lexer *lexer)
 {
-    if (lexer->currToken != NULL)
-    {
-        freeToken(lexer->currToken);
-        lexer->currToken = NULL;
-    }
-    if (lexer->postToken != NULL)
-    {
-        freeToken(lexer->postToken);
-        lexer->postToken = NULL;
-    }
+    if (lexer == NULL)
+        return;
+    freeToken(lexer->currToken);
+    lexer->currToken = NULL;
+    freeToken(lexer->postToken);
+    lexer->postToken = NULL;
     lexer->__file = NULL;
     free(lexer);
 }
+
 void __peekChar(Lexer *lexer)
 {
     if (lexer->__postChar == '\0')
         lexer->__postChar = getc(lexer->__file);
 }
+
 void __nextChar(Lexer *lexer)
 {
     if (lexer->__postChar != '\0')
@@ -44,6 +43,7 @@ void __nextChar(Lexer *lexer)
         lexer->__currChar = getc(lexer->__file);
     }
 }
+
 Token *__lexNumber(Lexer *lexer)
 {
     int length = 0;
@@ -61,6 +61,7 @@ Token *__lexNumber(Lexer *lexer)
     length++;
     return createToken(IntLiteralToken, lexer->__buffer, length);
 }
+
 Token *__lexLiteral(Lexer *lexer)
 {
     int length = 0;
@@ -82,9 +83,18 @@ Token *__lexLiteral(Lexer *lexer)
         return createSymbolToken(FalseToken);
     else if (strcmp(lexer->__buffer, "int") == 0)
         return createSymbolToken(IntToken);
+    else if (strcmp(lexer->__buffer, "if") == 0)
+        return createSymbolToken(IfToken);
+    else if (strcmp(lexer->__buffer, "else") == 0)
+        return createSymbolToken(ElseToken);
+    else if (strcmp(lexer->__buffer, "for") == 0)
+        return createSymbolToken(ForToken);
+    else if (strcmp(lexer->__buffer, "while") == 0)
+        return createSymbolToken(WhileToken);
     else
         return createToken(IdentifierToken, lexer->__buffer, length);
 }
+
 Token *__lex(Lexer *lexer)
 {
     __nextChar(lexer);
@@ -187,18 +197,17 @@ Token *__lex(Lexer *lexer)
         return createSymbolToken(ErrToken);
     }
 }
+
 void peekToken(Lexer *lexer)
 {
     if (lexer->postToken == NULL)
         lexer->postToken = __lex(lexer);
 }
+
 void nextToken(Lexer *lexer)
 {
-    if (lexer->currToken != NULL)
-    {
-        freeToken(lexer->currToken);
-        lexer->currToken = NULL;
-    }
+    freeToken(lexer->currToken);
+    lexer->currToken = NULL;
     if (lexer->postToken != NULL)
     {
         lexer->currToken = lexer->postToken;
@@ -209,6 +218,7 @@ void nextToken(Lexer *lexer)
         lexer->currToken = __lex(lexer);
     }
 }
+
 void matchToken(Lexer *lexer, TokenType expectedType)
 {
     peekToken(lexer);

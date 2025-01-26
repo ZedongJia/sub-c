@@ -1,15 +1,19 @@
 #include "syntax/parser.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 Parser *createParser()
 {
     Parser *parser = (Parser *)malloc(sizeof(Parser));
+    parser->label = 0;
     return parser;
 }
+
 void freeParser(Parser *parser)
 {
     free(parser);
 }
+
 Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
 {
     peekToken(lexer);
@@ -40,6 +44,7 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     }
     }
 }
+
 Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
 {
     Node *expression;
@@ -57,6 +62,7 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
         expression = parsePrimaryExpression(parser, lexer);
     return expression;
 }
+
 Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
 {
     Node *left = parseUnaryExpression(parser, lexer, parentPriority);
@@ -78,59 +84,134 @@ Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
     }
     return left;
 }
-Node *parseStatement(Parser *parser, Lexer *lexer, int parentPriority)
+
+Node *parseStatement(Parser *parser, Lexer *lexer)
 {
-    Node *expression = parseExpression(parser, lexer, parentPriority);
-    matchToken(lexer, SemiColon);
-    return createStatementNode(expression);
+    Node *statement;
+    peekToken(lexer);
+    switch (lexer->postToken->tokenType)
+    {
+    case IntToken: {
+        statement = parseDeclarationStatement(parser, lexer);
+        break;
+    }
+    case IfToken: {
+        statement = parseIfStatement(parser, lexer);
+        break;
+    }
+    case ForToken: {
+        statement = parseForStatement(parser, lexer);
+        break;
+    }
+    case WhileToken: {
+        statement = parseWhileStatement(parser, lexer);
+        break;
+    }
+    default: {
+        statement = createStatementNode(parseExpression(parser, lexer, 0));
+        matchToken(lexer, SemiColon);
+        break;
+    }
+    }
+    return statement;
 }
-Node *parseDeclarationStatement(Parser *parser, Lexer *lexer, int parentPriority)
+
+Node *parseDeclarationStatement(Parser *parser, Lexer *lexer)
 {
     nextToken(lexer);
     Node *type = createKeywordExpressionNode(lexer->currToken->tokenType);
-    Node *expression = parseExpression(parser, lexer, parentPriority);
+    Node *expression = parseExpression(parser, lexer, 0);
     matchToken(lexer, SemiColon);
     return createDeclarationNode(type, expression);
 }
-Node *parseStatements(Parser *parser, Lexer *lexer, int parentPriority, int isGlobal)
+
+Node *parseIfStatement(Parser *parser, Lexer *lexer)
 {
-    Node *head = NULL;
-    Node *tail = NULL;
-    Node *statement;
+    Node *scopeNode = createScopeNode(1);
+    matchToken(lexer, IfToken);
+    matchToken(lexer, LeftBracket);
+    int trueEndLabel = parser->label++;
+    appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), trueEndLabel));
+    matchToken(lexer, RightBracket);
+    appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == ElseToken)
+    {
+        int falseEndLabel = parser->label++;
+        appendNodeToScope(scopeNode, createJumpStatementNode(falseEndLabel));
+        appendNodeToScope(scopeNode, createLabelStatementNode(trueEndLabel));
+        appendNodeToScope(scopeNode, parseElseStatement(parser, lexer));
+        appendNodeToScope(scopeNode, createLabelStatementNode(falseEndLabel));
+    }
+    else
+    {
+        appendNodeToScope(scopeNode, createLabelStatementNode(trueEndLabel));
+    }
+    return scopeNode;
+}
+
+Node *parseElseStatement(Parser *parser, Lexer *lexer)
+{
+    matchToken(lexer, ElseToken);
+    return parseStatements(parser, lexer, 0);
+}
+
+Node *parseForStatement(Parser *parser, Lexer *lexer)
+{
+    Node *scopeNode = createScopeNode(0);
+    matchToken(lexer, ForToken);
+    matchToken(lexer, LeftBracket);
+    appendNodeToScope(scopeNode, parseStatement(parser, lexer));
+    int ForStartLabel = parser->label++;
+    appendNodeToScope(scopeNode, createLabelStatementNode(ForStartLabel));
+    int ForEndLabel = parser->label++;
+    appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), ForEndLabel));
+    matchToken(lexer, SemiColon);
+    Node *expression = parseExpression(parser, lexer, 0);
+    matchToken(lexer, RightBracket);
+    appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    appendNodeToScope(scopeNode, expression);
+    appendNodeToScope(scopeNode, createJumpStatementNode(ForStartLabel));
+    appendNodeToScope(scopeNode, createLabelStatementNode(ForEndLabel));
+    return scopeNode;
+}
+
+Node *parseWhileStatement(Parser *parser, Lexer *lexer)
+{
+    Node *scopeNode = createScopeNode(0);
+    matchToken(lexer, WhileToken);
+    matchToken(lexer, LeftBracket);
+    int whileStartLabel = parser->label++;
+    appendNodeToScope(scopeNode, createLabelStatementNode(whileStartLabel));
+    int whileEndLabel = parser->label++;
+    appendNodeToScope(scopeNode, createJumpIfFalseStatementNode(parseExpression(parser, lexer, 0), whileEndLabel));
+    matchToken(lexer, RightBracket);
+    appendNodeToScope(scopeNode, parseStatements(parser, lexer, 0));
+    appendNodeToScope(scopeNode, createJumpStatementNode(whileStartLabel));
+    appendNodeToScope(scopeNode, createLabelStatementNode(whileEndLabel));
+    return scopeNode;
+}
+
+Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal)
+{
+    Node *scopeNode = createScopeNode(0);
     if (!isGlobal)
         matchToken(lexer, LeftBrace);
     peekToken(lexer);
     while ((lexer->postToken->tokenType != EndOfFileToken) &&
-           ((isGlobal) || (!isGlobal && lexer->postToken->tokenType != LeftBrace)))
+           ((isGlobal) || (!isGlobal && lexer->postToken->tokenType != RightBrace)))
     {
-        peekToken(lexer);
-        switch (lexer->postToken->tokenType)
-        {
-        case IntToken:
-            statement = parseDeclarationStatement(parser, lexer, parentPriority);
-            break;
-        default:
-            statement = parseStatement(parser, lexer, parentPriority);
-            break;
-        }
-        if (head == NULL)
-        {
-            head = tail = statement;
-        }
-        else
-        {
-            tail->next = statement;
-            tail = tail->next;
-        }
+        appendNodeToScope(scopeNode, parseStatement(parser, lexer));
         peekToken(lexer);
     }
     isGlobal ? matchToken(lexer, EndOfFileToken) : matchToken(lexer, RightBrace);
-    return head;
+    return scopeNode;
 }
+
 Node *parse(Parser *parser, FILE *file)
 {
     Lexer *lexer = createLexer(file);
-    Node *root = parseStatements(parser, lexer, 0, 1);
+    Node *root = parseStatements(parser, lexer, 1);
     freeLexer(lexer);
     return root;
 }
