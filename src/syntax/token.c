@@ -11,7 +11,7 @@ char *getTokenTypeValue(TokenType tokenType)
     case IntLiteralToken:
         return "IntLiteral";
     case StringLiteralToken:
-        return "String";
+        return "StringLiteral";
     // type-keywords
     case IntToken:
         return "Int";
@@ -107,6 +107,8 @@ int getUnaryTokenPriority(TokenType tokenType)
     case PlusToken:
     case MinusToken:
     case LogicNotToken:
+    case StarToken:
+    case LogicAndToken:
         return 9;
     default:
         return 0;

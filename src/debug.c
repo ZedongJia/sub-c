@@ -19,7 +19,7 @@ void __prettyNodeType(NodeType nodeType)
 
 void __prettyTokenType(TokenType tokenType)
 {
-    printf("\033[35;1m%s\033[0m", getTokenTypeValue(tokenType));
+    printf("\033[34;1m%s\033[0m", getTokenTypeValue(tokenType));
 }
 
 void __prettyTree(Node *node, int *parr, int indent, int isLast)

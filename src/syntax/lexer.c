@@ -68,7 +68,7 @@ Token *__lexKeywordOrIdentifier(Lexer *lexer)
     lexer->__buffer[length] = lexer->__currChar;
     length++;
     __peekChar(lexer);
-    while (isLetter(lexer->__postChar) || lexer->__postChar == '_')
+    while (isLetter(lexer->__postChar) || lexer->__postChar == '_' || isDigit(lexer->__postChar))
     {
         __nextChar(lexer);
         lexer->__buffer[length] = lexer->__currChar;
