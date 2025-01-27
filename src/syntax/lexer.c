@@ -81,10 +81,6 @@ Token *__lexKeywordOrIdentifier(Lexer *lexer)
         return createSymbolToken(INT_TOKEN);
     if (strcmp(lexer->__buffer, "char") == 0)
         return createSymbolToken(CHAR_TOKEN);
-    else if (strcmp(lexer->__buffer, "true") == 0)
-        return createSymbolToken(TRUE_TOKEN);
-    else if (strcmp(lexer->__buffer, "false") == 0)
-        return createSymbolToken(FALSE_TOKEN);
     else if (strcmp(lexer->__buffer, "if") == 0)
         return createSymbolToken(IF_TOKEN);
     else if (strcmp(lexer->__buffer, "else") == 0)
@@ -93,6 +89,10 @@ Token *__lexKeywordOrIdentifier(Lexer *lexer)
         return createSymbolToken(FOR_TOKEN);
     else if (strcmp(lexer->__buffer, "while") == 0)
         return createSymbolToken(WHILE_TOKEN);
+    else if (strcmp(lexer->__buffer, "true") == 0)
+        return createToken(TRUE_TOKEN, lexer->__buffer, length);
+    else if (strcmp(lexer->__buffer, "false") == 0)
+        return createToken(FALSE_TOKEN, lexer->__buffer, length);
     else
         return createToken(IDENTIFIER_TOKEN, lexer->__buffer, length);
 }

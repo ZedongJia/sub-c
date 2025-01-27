@@ -87,7 +87,7 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     }
     case SCOPE: {
         Scope *scopeNode = (Scope *)node;
-        printf("%s\n", scopeNode->inhert ? "Inhert" : "New");
+        printf("\n");
         ListNode *p = scopeNode->list->head;
         while (p != NULL)
         {

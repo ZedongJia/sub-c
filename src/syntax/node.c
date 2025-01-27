@@ -204,11 +204,11 @@ void freeJump(Jump *node)
     free(node);
 }
 
-Node *createScope(int inhert)
+Node *createScope(Scope *parentScope)
 {
     Scope *scope = (Scope *)malloc(sizeof(Scope));
     scope->kind = SCOPE;
-    scope->inhert = inhert;
+    scope->parentScope = parentScope;
     scope->list = createList();
     return (Node *)scope;
 }
