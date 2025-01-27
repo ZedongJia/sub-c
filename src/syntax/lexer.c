@@ -270,8 +270,7 @@ Token *__lex(Lexer *lexer)
     default:
         // error skip
         reportUnexpectedChar(lexer->line, lexer->column, lexer->__currChar);
-        type = UNEXPECTED_TOKEN;
-        break;
+        return __lex(lexer);
     }
     return createSymbolToken(type, lexer->line, lexer->column);
 }
@@ -316,7 +315,6 @@ int matchToken(Lexer *lexer, TokenType expectedType)
         case RIGHT_BRACE:
         case RIGHT_BRACKET:
         case RIGHT_PARENTHESIS:
-        case UNEXPECTED_TOKEN:
         case ELSE_TOKEN:
             nextToken(lexer); // drop tokens which can't appear alone
             break;

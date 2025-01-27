@@ -6,8 +6,6 @@ const char *getTokenTypeValue(TokenType type)
 {
     switch (type)
     {
-    case UNEXPECTED_TOKEN:
-        return "?";
     case INT_LITERAL_TOKEN:
         return "Int Literal";
     case STRING_LITERAL_TOKEN:

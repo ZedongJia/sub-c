@@ -2,7 +2,6 @@
 #define TOKEN
 typedef enum TokenType
 {
-    UNEXPECTED_TOKEN,
     INT_LITERAL_TOKEN,
     STRING_LITERAL_TOKEN,
     // type-keywords
