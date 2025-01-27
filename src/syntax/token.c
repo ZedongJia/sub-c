@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *getTokenTypeValue(TokenType tokenType)
+const char *getTokenTypeValue(TokenType tokenType)
 {
     switch (tokenType)
     {

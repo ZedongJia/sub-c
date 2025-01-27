@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "output/tree.h"
 #include <stdio.h>
 #include <string.h>
 

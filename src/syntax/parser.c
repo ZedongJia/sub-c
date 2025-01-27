@@ -36,8 +36,7 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
         return createLiteral(lexer->currToken->tokenType, lexer->currToken->value, lexer->currToken->length);
     }
     default: {
-        printf("\033[35mError: unexpected %s, expect expression\033[0m\n",
-               getTokenTypeValue(lexer->postToken->tokenType));
+        reportUnexpectedToken(getTokenTypeValue(lexer->postToken->tokenType), "expression");
         return createNode(UNEXPECTED_KIND);
     }
     }

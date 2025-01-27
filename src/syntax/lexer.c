@@ -121,7 +121,7 @@ Token *__lexString(Lexer *lexer)
         case '\n':
         case -1: {
             // err
-            printf("\033[35mError: unclosed string\033[0m\n");
+            reportUnclosedString();
             isDone = 1;
             break;
         }
@@ -239,7 +239,7 @@ Token *__lex(Lexer *lexer)
         return createSymbolToken(END_OF_FILE_TOKEN);
     default:
         // error skip
-        printf("\033[35mError: unexpected token %c\033[0m\n", lexer->__currChar);
+        reportUnexpectedChar(lexer->__currChar);
         return createSymbolToken(UNEXPECTED_TOKEN);
     }
 }
@@ -274,7 +274,6 @@ void matchToken(Lexer *lexer, TokenType expectedType)
     }
     else
     {
-        printf("\033[35mError: unexpected %s, expect %s\033[0m\n", getTokenTypeValue(lexer->postToken->tokenType),
-               getTokenTypeValue(expectedType));
+        reportUnexpectedToken(getTokenTypeValue(lexer->postToken->tokenType), getTokenTypeValue(expectedType));
     }
 }

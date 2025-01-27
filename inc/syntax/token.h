@@ -49,7 +49,7 @@ typedef enum TokenType
     END_OF_FILE_TOKEN
 } TokenType;
 
-char *getTokenTypeValue(TokenType tokenType);
+const char *getTokenTypeValue(TokenType tokenType);
 
 typedef struct Token
 {

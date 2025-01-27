@@ -1,5 +1,6 @@
 #ifndef LEXER
 #define LEXER
+#include "output/report.h"
 #include "syntax/token.h"
 #include <stdio.h>
 typedef struct Lexer
