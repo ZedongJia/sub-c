@@ -56,6 +56,9 @@ const char *getTokenTypeValue(TokenType tokenType)
         return "/";
     case EQUAL_TOKEN:
         return "=";
+    // operate
+    case DIM_TOKEN:
+        return "dim";
     // logic
     case GREATER_TOKEN:
         return ">";

@@ -265,15 +265,29 @@ void nextToken(Lexer *lexer)
     }
 }
 
-void matchToken(Lexer *lexer, TokenType expectedType)
+int matchToken(Lexer *lexer, TokenType expectedType)
 {
     peekToken(lexer);
-    if (lexer->postToken->tokenType == expectedType)
+    TokenType type = lexer->postToken->tokenType;
+    if (type == expectedType)
     {
         nextToken(lexer);
+        return 1;
     }
     else
     {
-        reportUnexpectedToken(getTokenTypeValue(lexer->postToken->tokenType), getTokenTypeValue(expectedType));
+        reportUnexpectedToken(getTokenTypeValue(type), getTokenTypeValue(expectedType));
+        switch (type)
+        {
+        case RIGHT_BRACE:
+        case RIGHT_BRACKET:
+        case RIGHT_PARENTHESIS:
+        case UNEXPECTED_TOKEN:
+            nextToken(lexer); // drop token
+            break;
+        default:
+            break;
+        }
+        return 0;
     }
 }

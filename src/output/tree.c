@@ -1,4 +1,5 @@
 #include "output/tree.h"
+#include "output/color.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -14,17 +15,23 @@ void prettyTree(Node *node)
 
 void __prettyNodeType(NodeKind nodeType)
 {
-    printf("\033[32;1m%s\033[0m", getNodeKindValue(nodeType));
+    setColor(GREEN);
+    printf("%s", getNodeKindValue(nodeType));
+    clearColor();
 }
 
 void __prettyTokenType(TokenType tokenType)
 {
-    printf("\033[34;1m%s\033[0m", getTokenTypeValue(tokenType));
+    setColor(BLUE);
+    printf("%s", getTokenTypeValue(tokenType));
+    clearColor();
 }
 
 void __prettyType(BaseType baseType)
 {
-    printf("\033[37;1m%s\033[0m", getBaseTypeValue(baseType));
+    setColor(PURPLE);
+    printf("%s", getBaseTypeValue(baseType));
+    clearColor();
 }
 
 void __prettyTree(Node *node, int *parr, int indent, int isLast)
@@ -72,7 +79,9 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
         Declaration *declaration = (Declaration *)node;
         printf("\n");
         __prettyTree(declaration->type, parr, indent + 1, 0);
-        __prettyTree(declaration->expression, parr, indent + 1, 1);
+        __prettyTree(declaration->identifier, parr, indent + 1, declaration->initializer == NULL);
+        if (declaration->initializer != NULL)
+            __prettyTree(declaration->initializer, parr, indent + 1, 1);
         break;
     }
     case LABEL_KIND: {

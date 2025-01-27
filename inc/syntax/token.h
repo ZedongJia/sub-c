@@ -29,6 +29,8 @@ typedef enum TokenType
     STAR_TOKEN,
     SLASH_TOKEN,
     EQUAL_TOKEN,
+    // operate
+    DIM_TOKEN,
     // logic
     GREATER_TOKEN,
     GREATER_EQUAL_TOKEN,

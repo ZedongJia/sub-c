@@ -1,8 +1,8 @@
 #include "syntax/types.h"
 
-char *getBaseTypeValue(BaseType kind)
+char *getBaseTypeValue(BaseType type)
 {
-    switch (kind)
+    switch (type)
     {
     case UNEXPECTED_TYPE:
         return "?";
@@ -12,5 +12,18 @@ char *getBaseTypeValue(BaseType kind)
         return "char";
     default:
         return "?";
+    }
+}
+
+BaseType tokenTypeToBaseType(TokenType tokenType)
+{
+    switch (tokenType)
+    {
+    case INT_TOKEN:
+        return INT_TYPE;
+    case CHAR_TOKEN:
+        return CHAR_TYPE;
+    default:
+        return UNEXPECTED_TYPE;
     }
 }

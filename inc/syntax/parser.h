@@ -12,6 +12,7 @@ void freeParser(Parser *parser);
 Node *parsePrimaryExpression(Parser *parser, Lexer *lexer);
 Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority);
 Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer);
+Node *parseDimExpression(Node *base, Parser *parser, Lexer *lexer);
 Node *parseBinaryExpression(Node *base, Parser *parser, Lexer *lexer, int parentPriority);
 Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority);
 void parseStatement(Parser *parser, Lexer *lexer);

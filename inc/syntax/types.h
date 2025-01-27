@@ -1,3 +1,5 @@
+#include "token.h"
+
 typedef enum BaseType
 {
     UNEXPECTED_TYPE,
@@ -5,4 +7,5 @@ typedef enum BaseType
     CHAR_TYPE
 } BaseType;
 
-char *getBaseTypeValue(BaseType kind);
+char *getBaseTypeValue(BaseType type);
+BaseType tokenTypeToBaseType(TokenType tokenType);

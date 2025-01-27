@@ -80,9 +80,10 @@ typedef struct Declaration
     NodeKind kind;
     // extend
     Node *type;
-    Node *expression;
+    Node *identifier;
+    Node *initializer; // allow NULL
 } Declaration;
-Node *createDeclaration(Node *type, Node *expression);
+Node *createDeclaration(Node *type, Node *identifier, Node *initializer);
 void freeDeclaration(Declaration *node);
 
 typedef struct Label
