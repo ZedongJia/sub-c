@@ -6,12 +6,12 @@ char *getTokenTypeValue(TokenType tokenType)
 {
     switch (tokenType)
     {
-    case ErrToken:
-        return "Err";
+    case UnexpectedToken:
+        return "?";
     case IntLiteralToken:
-        return "IntLiteral";
+        return "Int Literal";
     case StringLiteralToken:
-        return "StringLiteral";
+        return "String Literal";
     // type-keywords
     case IntToken:
         return "Int";
@@ -34,68 +34,63 @@ char *getTokenTypeValue(TokenType tokenType)
         return "While";
     // scope
     case LeftParenthesis:
-        return "LeftParenthesis";
+        return "(";
     case RightParenthesis:
-        return "RightParenthesis";
+        return ")";
     case LeftBracket:
-        return "LeftBracket";
+        return "[";
     case RightBracket:
-        return "RightBracket";
+        return "]";
     case LeftBrace:
-        return "LeftBrace";
+        return "{";
     case RightBrace:
-        return "RightBrace";
+        return "}";
     // operator
     case PlusToken:
-        return "Plus";
+        return "+";
     case MinusToken:
-        return "Minus";
+        return "-";
     case StarToken:
-        return "Star";
+        return "*";
     case SlashToken:
-        return "Slash";
+        return "/";
     case EqualToken:
-        return "Equal";
-    // operate
-    case AccessToken:
-        return "Access";
-    case AddressOfToken:
-        return "AddressOf";
+        return "=";
     // logic
     case GreaterToken:
-        return "Greater";
+        return ">";
     case GreaterEqualToken:
-        return "GreaterEqual";
+        return ">=";
     case LessToken:
-        return "Less";
+        return "<";
     case LessEqualToken:
-        return "LessEqual";
+        return "<=";
     case DoubleEqualToken:
-        return "DoubleEqual";
+        return "==";
     case NotEqualToken:
-        return "NotEqual";
+        return "!=";
     case DoubleLogicAndToken:
-        return "DoubleLogicAnd";
+        return "&&";
     case DoubleLogicOrToken:
-        return "DoubleLogicOr";
+        return "||";
     case LogicAndToken:
-        return "LogicAnd";
+        return "&";
     case LogicOrToken:
-        return "LogicOr";
+        return "|";
     case LogicNotToken:
-        return "LogicNot";
+        return "!";
     // separator
     case CommaToken:
-        return "Comma";
+        return ",";
     case SemiColon:
-        return "SemiColon";
+        return ";";
     // other
     case WhiteSpaceToken:
-        return "WhiteSpace";
+        return " ";
     case EndOfFileToken:
-        return "EndOfFile";
+        return "EOF";
     default:
-        return "Unexpect";
+        return "?";
     }
 }
 

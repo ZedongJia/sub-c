@@ -4,12 +4,14 @@
 #include "syntax/node.h"
 typedef struct Parser
 {
-    int label;
+    int labelNumber;
 } Parser;
 Parser *createParser();
 void freeParser(Parser *parser);
 Node *parsePrimaryExpression(Parser *parser, Lexer *lexer);
 Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority);
+Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer);
+Node *parseBinaryExpression(Node *base, Parser *parser, Lexer *lexer, int parentPriority);
 Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority);
 Node *parseStatement(Parser *parser, Lexer *lexer);
 Node *parseDeclarationStatement(Parser *parser, Lexer *lexer);

@@ -2,7 +2,7 @@
 #define TOKEN
 typedef enum TokenType
 {
-    ErrToken,
+    UnexpectedToken,
     IntLiteralToken,
     StringLiteralToken,
     // type-keywords
@@ -29,9 +29,6 @@ typedef enum TokenType
     StarToken,
     SlashToken,
     EqualToken,
-    // operate
-    AccessToken,
-    AddressOfToken,
     // logic
     GreaterToken,
     GreaterEqualToken,

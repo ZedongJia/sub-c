@@ -6,6 +6,7 @@ BIN=bin
 
 # src files
 SRCS+=$(wildcard src/*.c)
+SRCS+=$(wildcard src/collection/*.c)
 SRCS+=$(wildcard src/syntax/*.c)
 # obj files
 OBJS=$(addprefix $(BUILD)/, $(SRCS:%.c=%.o))

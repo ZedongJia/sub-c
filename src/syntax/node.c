@@ -3,112 +3,105 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *getNodeTypeValue(NodeType nodeType)
+char *getNodeKindValue(NodeKind kind)
 {
-    switch (nodeType)
+    switch (kind)
     {
-    case Err:
-        return "Err";
-    case TypeExpression:
+    case UNEXPECTED:
+        return "?";
+    case TYPE:
         return "Type";
-    case LiteralExpression:
+    case LITERAL:
         return "Literal";
-    case BinaryOperatorExpression:
-        return "BinaryOperator";
-    case UnaryOperatorExpression:
-        return "UnaryOperator";
-    case Statement:
-        return "Statement";
-    case Declaration:
+    case BINARY_OPERATE:
+        return "Binary Operator";
+    case UNARY_OPERATE:
+        return "Unary Operator";
+    case DECLARATION:
         return "Declaration";
-    case Label:
+    case LABEL:
         return "Label";
-    case JumpIfFalse:
-        return "JumpIfFalse";
-    case Jump:
+    case JUMP_IF_FALSE:
+        return "Jump If False";
+    case JUMP:
         return "Jump";
-    case Scope:
+    case SCOPE:
         return "Scope";
     default:
-        return "UnexpectedNode";
+        return "?";
     }
 }
 
-Node *createNode(NodeType nodeType, void *data)
+Node *createNode(NodeKind kind)
 {
     Node *node = (Node *)malloc(sizeof(Node));
-    node->nodeType = nodeType;
-    node->data = data;
-    node->next = NULL;
-    node->prev = NULL;
+    node->kind = kind;
     return node;
 }
 
-void freeNode(Node *node)
+void freeNode(void *node)
 {
     // free data
-    switch (node->nodeType)
+    switch (((Node *)node)->kind)
     {
-    case TypeExpression:
-        freeTypeExpressionNode((TypeExpressionNode *)node->data);
+    case TYPE:
+        freeType((Type *)node);
         break;
-    case LiteralExpression:
-        freeLiteralExpressionNode((LiteralExpressionNode *)node->data);
+    case LITERAL:
+        freeLiteral((Literal *)node);
         break;
-    case BinaryOperatorExpression:
-        freeBinaryOperatorExpressionNode((BinaryOperatorExpressionNode *)node->data);
+    case BINARY_OPERATE:
+        freeBinaryOperator((BinaryOperator *)node);
         break;
-    case UnaryOperatorExpression:
-        freeUnaryOperatorExpressionNode((UnaryOperatorExpressionNode *)node->data);
+    case UNARY_OPERATE:
+        freeUnaryOperator((UnaryOperator *)node);
         break;
-    case Statement:
-        freeStatementNode((StatementNode *)node->data);
+    case DECLARATION:
+        freeDeclaration((Declaration *)node);
         break;
-    case Declaration:
-        freeDeclarationNode((DeclarationNode *)node->data);
+    case LABEL:
+        freeLabel((Label *)node);
         break;
-    case Label:
-        freeLabelStatementNode((LabelStatementNode *)node->data);
+    case JUMP_IF_FALSE:
+        freeJumpIfFalse((JumpIfFalse *)node);
         break;
-    case JumpIfFalse:
-        freeJumpIfFalseStatementNode((JumpIfFalseStatementNode *)node->data);
+    case JUMP:
+        freeJump((Jump *)node);
         break;
-    case Jump:
-        freeJumpStatementNode((JumpStatementNode *)node->data);
-        break;
-    case Scope:
-        freeScopeNode((ScopeNode *)node->data);
+    case SCOPE:
+        freeScope((Scope *)node);
         break;
     default:
+        free(node);
         break;
     }
-    node->data = NULL;
+}
+
+Node *createType(TokenType baseType)
+{
+    Type *type = (Type *)malloc(sizeof(Type));
+    type->kind = TYPE;
+    type->baseType = baseType;
+    return (Node *)type;
+}
+
+void freeType(Type *node)
+{
     free(node);
 }
 
-Node *createTypeExpressionNode(TokenType type)
+Node *createLiteral(TokenType type, char *value, int length)
 {
-    TypeExpressionNode *typeNode = (TypeExpressionNode *)malloc(sizeof(TypeExpressionNode));
-    typeNode->type = type;
-    return createNode(TypeExpression, (void *)typeNode);
+    Literal *literal = (Literal *)malloc(sizeof(Literal));
+    literal->kind = LITERAL;
+    literal->type = type;
+    literal->value = (char *)malloc(length * sizeof(char));
+    strcpy(literal->value, value);
+    literal->length = length;
+    return (Node *)literal;
 }
 
-void freeTypeExpressionNode(TypeExpressionNode *node)
-{
-    free(node);
-}
-
-Node *createLiteralExpressionNode(TokenType literalType, char *value, int length)
-{
-    LiteralExpressionNode *literalNode = (LiteralExpressionNode *)malloc(sizeof(LiteralExpressionNode));
-    literalNode->literalType = literalType;
-    literalNode->value = (char *)malloc(length * sizeof(char));
-    strcpy(literalNode->value, value);
-    literalNode->length = length;
-    return createNode(LiteralExpression, (void *)literalNode);
-}
-
-void freeLiteralExpressionNode(LiteralExpressionNode *node)
+void freeLiteral(Literal *node)
 {
     if (node->value != NULL)
         free(node->value);
@@ -116,33 +109,33 @@ void freeLiteralExpressionNode(LiteralExpressionNode *node)
     free(node);
 }
 
-Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand)
+Node *createUnaryOperator(TokenType type, Node *operand)
 {
-    UnaryOperatorExpressionNode *unaryOperatorNode =
-        (UnaryOperatorExpressionNode *)malloc(sizeof(UnaryOperatorExpressionNode));
-    unaryOperatorNode->op = op;
-    unaryOperatorNode->operand = operand;
-    return createNode(UnaryOperatorExpression, (void *)unaryOperatorNode);
+    UnaryOperator *unaryOperator = (UnaryOperator *)malloc(sizeof(UnaryOperator));
+    unaryOperator->kind = UNARY_OPERATE;
+    unaryOperator->type = type;
+    unaryOperator->operand = operand;
+    return (Node *)unaryOperator;
 }
 
-void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node)
+void freeUnaryOperator(UnaryOperator *node)
 {
     freeNode(node->operand);
     node->operand = NULL;
     free(node);
 }
 
-Node *createBinaryOperatorExpressionNode(Node *left, TokenType op, Node *right)
+Node *createBinaryOperator(Node *left, TokenType type, Node *right)
 {
-    BinaryOperatorExpressionNode *binaryOperatorNode =
-        (BinaryOperatorExpressionNode *)malloc(sizeof(BinaryOperatorExpressionNode));
-    binaryOperatorNode->left = left;
-    binaryOperatorNode->op = op;
-    binaryOperatorNode->right = right;
-    return createNode(BinaryOperatorExpression, (void *)binaryOperatorNode);
+    BinaryOperator *binaryOperator = (BinaryOperator *)malloc(sizeof(BinaryOperator));
+    binaryOperator->kind = BINARY_OPERATE;
+    binaryOperator->left = left;
+    binaryOperator->type = type;
+    binaryOperator->right = right;
+    return (Node *)binaryOperator;
 }
 
-void freeBinaryOperatorExpressionNode(BinaryOperatorExpressionNode *node)
+void freeBinaryOperator(BinaryOperator *node)
 {
     freeNode(node->left);
     node->left = NULL;
@@ -151,29 +144,16 @@ void freeBinaryOperatorExpressionNode(BinaryOperatorExpressionNode *node)
     free(node);
 }
 
-Node *createStatementNode(Node *expression)
+Node *createDeclaration(Node *type, Node *expression)
 {
-    StatementNode *statementNode = (StatementNode *)malloc(sizeof(StatementNode));
-    statementNode->expression = expression;
-    return createNode(Statement, (void *)statementNode);
+    Declaration *declaration = (Declaration *)malloc(sizeof(Declaration));
+    declaration->kind = DECLARATION;
+    declaration->type = type;
+    declaration->expression = expression;
+    return (Node *)declaration;
 }
 
-void freeStatementNode(StatementNode *node)
-{
-    freeNode(node->expression);
-    node->expression = NULL;
-    free(node);
-}
-
-Node *createDeclarationNode(Node *type, Node *expression)
-{
-    DeclarationNode *declarationNode = (DeclarationNode *)malloc(sizeof(DeclarationNode));
-    declarationNode->type = type;
-    declarationNode->expression = expression;
-    return createNode(Declaration, (void *)declarationNode);
-}
-
-void freeDeclarationNode(DeclarationNode *node)
+void freeDeclaration(Declaration *node)
 {
     freeNode(node->type);
     node->type = NULL;
@@ -182,79 +162,59 @@ void freeDeclarationNode(DeclarationNode *node)
     free(node);
 }
 
-Node *createLabelStatementNode(int label)
+Node *createLabel(int number)
 {
-    LabelStatementNode *labelStatementNode = (LabelStatementNode *)malloc(sizeof(LabelStatementNode));
-    labelStatementNode->label = label;
-    return createNode(Label, (void *)labelStatementNode);
+    Label *labelNumber = (Label *)malloc(sizeof(Label));
+    labelNumber->kind = LABEL;
+    labelNumber->number = number;
+    return (Node *)labelNumber;
 }
 
-void freeLabelStatementNode(LabelStatementNode *node)
+void freeLabel(Label *node)
 {
     free(node);
 }
 
-Node *createJumpIfFalseStatementNode(Node *condition, int label)
+Node *createJumpIfFalse(Node *condition, int number)
 {
-    JumpIfFalseStatementNode *jumpIfFalseStatementNode =
-        (JumpIfFalseStatementNode *)malloc(sizeof(JumpIfFalseStatementNode));
-    jumpIfFalseStatementNode->condition = condition;
-    jumpIfFalseStatementNode->label = label;
-    return createNode(JumpIfFalse, (void *)jumpIfFalseStatementNode);
+    JumpIfFalse *jumpIfFalse = (JumpIfFalse *)malloc(sizeof(JumpIfFalse));
+    jumpIfFalse->kind = JUMP_IF_FALSE;
+    jumpIfFalse->condition = condition;
+    jumpIfFalse->number = number;
+    return (Node *)jumpIfFalse;
 }
 
-void freeJumpIfFalseStatementNode(JumpIfFalseStatementNode *node)
+void freeJumpIfFalse(JumpIfFalse *node)
 {
     freeNode(node->condition);
     node->condition = NULL;
     free(node);
 }
 
-Node *createJumpStatementNode(int label)
+Node *createJump(int number)
 {
-    JumpStatementNode *jumpStatementNode = (JumpStatementNode *)malloc(sizeof(JumpStatementNode));
-    jumpStatementNode->label = label;
-    return createNode(Jump, (void *)jumpStatementNode);
+    Jump *jump = (Jump *)malloc(sizeof(Jump));
+    jump->kind = JUMP;
+    jump->number = number;
+    return (Node *)jump;
 }
 
-void freeJumpStatementNode(JumpStatementNode *node)
+void freeJump(Jump *node)
 {
     free(node);
 }
 
-Node *createScopeNode(int inhert)
+Node *createScope(int inhert)
 {
-    ScopeNode *scopeNode = (ScopeNode *)malloc(sizeof(ScopeNode));
-    scopeNode->inhert = inhert;
-    scopeNode->head = NULL;
-    scopeNode->tail = NULL;
-    return createNode(Scope, (void *)scopeNode);
+    Scope *scope = (Scope *)malloc(sizeof(Scope));
+    scope->kind = SCOPE;
+    scope->inhert = inhert;
+    scope->list = createList();
+    return (Node *)scope;
 }
 
-void appendNodeToScope(Node *scope, Node *node)
+void freeScope(Scope *node)
 {
-    ScopeNode *scopeNode = (ScopeNode *)scope->data;
-    if (scopeNode->head == NULL)
-    {
-        scopeNode->head = scopeNode->tail = node;
-    }
-    else
-    {
-        scopeNode->tail->next = node;
-        node->prev = scopeNode->tail;
-        scopeNode->tail = scopeNode->tail->next;
-    }
-}
-
-void freeScopeNode(ScopeNode *node)
-{
-    Node *p = node->tail;
-    Node *prev = NULL;
-    while (p != NULL)
-    {
-        prev = p->prev;
-        freeNode(p);
-        p = prev;
-    }
+    freeList(node->list, freeNode);
     free(node);
 }

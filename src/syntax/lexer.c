@@ -240,7 +240,7 @@ Token *__lex(Lexer *lexer)
     default:
         // error skip
         printf("\033[35mError: unexpected token %c\033[0m\n", lexer->__currChar);
-        return createSymbolToken(ErrToken);
+        return createSymbolToken(UnexpectedToken);
     }
 }
 

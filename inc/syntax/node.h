@@ -1,121 +1,109 @@
 #ifndef NODE
 #define NODE
+#include "collection/list.h"
 #include "syntax/token.h"
-typedef enum NodeType
+
+typedef enum NodeKind
 {
     // expression
-
-    Err,
-    TypeExpression,
-    LiteralExpression,
-    BinaryOperatorExpression,
-    UnaryOperatorExpression,
-
+    UNEXPECTED,
+    TYPE,
+    LITERAL,
+    BINARY_OPERATE,
+    UNARY_OPERATE,
     // statement
-
-    Statement,
-    Declaration,
-    Label,
-    JumpIfFalse,
-    Jump,
-    Scope
-} NodeType;
-char *getNodeTypeValue(NodeType nodeType);
-
-// expression
+    DECLARATION,
+    LABEL,
+    JUMP_IF_FALSE,
+    JUMP,
+    SCOPE
+} NodeKind;
+char *getNodeKindValue(NodeKind kind);
 
 typedef struct Node
 {
-    NodeType nodeType;
-    void *data; // allow NULL
-
-    // preserve for scope
-
-    struct Node *next;
-    struct Node *prev;
+    NodeKind kind;
 } Node;
-Node *createNode(NodeType nodeType, void *data);
-void freeNode(Node *node);
+Node *createNode(NodeKind kind);
+void freeNode(void *node);
 
-typedef struct TypeExpressionNode
+typedef struct Type
 {
+    NodeKind kind;
+    TokenType baseType;
+} Type;
+Node *createType(TokenType baseType);
+void freeType(Type *node);
+
+typedef struct Literal
+{
+    NodeKind kind;
     TokenType type;
-} TypeExpressionNode;
-Node *createTypeExpressionNode(TokenType type);
-void freeTypeExpressionNode(TypeExpressionNode *node);
-
-typedef struct LiteralExpressionNode
-{
-    TokenType literalType;
     char *value;
     int length;
-} LiteralExpressionNode;
-Node *createLiteralExpressionNode(TokenType literalType, char *value, int length);
-void freeLiteralExpressionNode(LiteralExpressionNode *node);
+} Literal;
+Node *createLiteral(TokenType type, char *value, int length);
+void freeLiteral(Literal *node);
 
-typedef struct UnaryOperatorExpressionNode
+typedef struct UnaryOperator
 {
-    TokenType op;
+    NodeKind kind;
+    TokenType type;
     Node *operand;
-} UnaryOperatorExpressionNode;
-Node *createUnaryOperatorExpressionNode(TokenType op, Node *operand);
-void freeUnaryOperatorExpressionNode(UnaryOperatorExpressionNode *node);
+} UnaryOperator;
+Node *createUnaryOperator(TokenType type, Node *operand);
+void freeUnaryOperator(UnaryOperator *node);
 
-typedef struct BinaryOperatorExpressionNode
+typedef struct BinaryOperator
 {
+    NodeKind kind;
     Node *left;
-    TokenType op;
+    TokenType type;
     Node *right;
-} BinaryOperatorExpressionNode;
-Node *createBinaryOperatorExpressionNode(Node *left, TokenType op, Node *right);
-void freeBinaryOperatorExpressionNode(BinaryOperatorExpressionNode *node);
+} BinaryOperator;
+Node *createBinaryOperator(Node *left, TokenType type, Node *right);
+void freeBinaryOperator(BinaryOperator *node);
 
-// statement
-
-typedef struct StatementNode
+typedef struct Declaration
 {
-    Node *expression;
-} StatementNode;
-Node *createStatementNode(Node *expression);
-void freeStatementNode(StatementNode *node);
-
-typedef struct DeclarationNode
-{
+    NodeKind kind;
     Node *type;
     Node *expression;
-} DeclarationNode;
-Node *createDeclarationNode(Node *type, Node *expression);
-void freeDeclarationNode(DeclarationNode *node);
+} Declaration;
+Node *createDeclaration(Node *type, Node *expression);
+void freeDeclaration(Declaration *node);
 
-typedef struct LabelStatementNode
+typedef struct Label
 {
-    int label;
-} LabelStatementNode;
-Node *createLabelStatementNode(int label);
-void freeLabelStatementNode(LabelStatementNode *node);
+    NodeKind kind;
+    int number;
+} Label;
+Node *createLabel(int number);
+void freeLabel(Label *node);
 
-typedef struct JumpIfFalseStatementNode
+typedef struct JumpIfFalse
 {
+    NodeKind kind;
     Node *condition;
-    int label;
-} JumpIfFalseStatementNode;
-Node *createJumpIfFalseStatementNode(Node *condition, int label);
-void freeJumpIfFalseStatementNode(JumpIfFalseStatementNode *node);
+    int number;
+} JumpIfFalse;
+Node *createJumpIfFalse(Node *condition, int number);
+void freeJumpIfFalse(JumpIfFalse *node);
 
-typedef struct JumpStatementNode
+typedef struct Jump
 {
-    int label;
-} JumpStatementNode;
-Node *createJumpStatementNode(int label);
-void freeJumpStatementNode(JumpStatementNode *node);
+    NodeKind kind;
+    int number;
+} Jump;
+Node *createJump(int number);
+void freeJump(Jump *node);
 
-typedef struct ScopeNode
+typedef struct Scope
 {
+    NodeKind kind;
     int inhert;
-    Node *head;
-    Node *tail;
-} ScopeNode;
-Node *createScopeNode(int inhert);
-void appendNodeToScope(Node *scope, Node *node);
-void freeScopeNode(ScopeNode *node);
+    List *list;
+} Scope;
+Node *createScope(int inhert);
+void freeScope(Scope *node);
 #endif
