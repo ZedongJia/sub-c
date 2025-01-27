@@ -1,3 +1,3 @@
-void reportUnclosedString();
-void reportUnexpectedChar(char ch);
-void reportUnexpectedToken(const char *unexpected, const char *expected);
+void reportUnclosedString(int line, int column);
+void reportUnexpectedChar(int line, int column, char ch);
+void reportUnexpectedToken(int line, int column, const char *unexpected, const char *expected);

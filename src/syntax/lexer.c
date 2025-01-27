@@ -5,11 +5,13 @@
 Lexer *createLexer(FILE *file)
 {
     Lexer *lexer = (Lexer *)malloc(sizeof(Lexer));
+    lexer->__file = file;
     lexer->__postChar = '\0';
     lexer->__currChar = '\0';
     lexer->postToken = NULL;
     lexer->currToken = NULL;
-    lexer->__file = file;
+    lexer->line = 1;
+    lexer->column = 0;
     return lexer;
 }
 
@@ -33,6 +35,7 @@ void __peekChar(Lexer *lexer)
 
 void __nextChar(Lexer *lexer)
 {
+    lexer->column++;
     if (lexer->__postChar != '\0')
     {
         lexer->__currChar = lexer->__postChar;
@@ -59,7 +62,7 @@ Token *__lexNumber(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    return createToken(INT_LITERAL_TOKEN, lexer->__buffer, length);
+    return createToken(INT_LITERAL_TOKEN, lexer->__buffer, length, lexer->line, lexer->column - length + 1);
 }
 
 Token *__lexKeywordOrIdentifier(Lexer *lexer)
@@ -77,24 +80,26 @@ Token *__lexKeywordOrIdentifier(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
+    TokenType type;
     if (strcmp(lexer->__buffer, "int") == 0)
-        return createSymbolToken(INT_TOKEN);
-    if (strcmp(lexer->__buffer, "char") == 0)
-        return createSymbolToken(CHAR_TOKEN);
+        type = INT_TOKEN;
+    else if (strcmp(lexer->__buffer, "char") == 0)
+        type = CHAR_TOKEN;
     else if (strcmp(lexer->__buffer, "if") == 0)
-        return createSymbolToken(IF_TOKEN);
+        type = IF_TOKEN;
     else if (strcmp(lexer->__buffer, "else") == 0)
-        return createSymbolToken(ELSE_TOKEN);
+        type = ELSE_TOKEN;
     else if (strcmp(lexer->__buffer, "for") == 0)
-        return createSymbolToken(FOR_TOKEN);
+        type = FOR_TOKEN;
     else if (strcmp(lexer->__buffer, "while") == 0)
-        return createSymbolToken(WHILE_TOKEN);
+        type = WHILE_TOKEN;
     else if (strcmp(lexer->__buffer, "true") == 0)
-        return createToken(TRUE_TOKEN, lexer->__buffer, length);
+        type = TRUE_TOKEN;
     else if (strcmp(lexer->__buffer, "false") == 0)
-        return createToken(FALSE_TOKEN, lexer->__buffer, length);
+        type = FALSE_TOKEN;
     else
-        return createToken(IDENTIFIER_TOKEN, lexer->__buffer, length);
+        type = IDENTIFIER_TOKEN;
+    return createToken(type, lexer->__buffer, length, lexer->line, lexer->column - length + 1);
 }
 
 Token *__lexString(Lexer *lexer)
@@ -103,7 +108,7 @@ Token *__lexString(Lexer *lexer)
     lexer->__buffer[length] = lexer->__currChar;
     length++;
     int isDone = 0;
-    while (!isDone)
+    while (1)
     {
         __peekChar(lexer);
         switch (lexer->__postChar)
@@ -121,18 +126,20 @@ Token *__lexString(Lexer *lexer)
         case '\n':
         case -1: {
             // err
-            reportUnclosedString();
+            reportUnclosedString(lexer->line, lexer->column - length + 1);
             isDone = 1;
             break;
         }
         }
+        if (isDone)
+            break;
         __nextChar(lexer);
         lexer->__buffer[length] = lexer->__currChar;
         length++;
     }
     lexer->__buffer[length] = '\0';
     length++;
-    return createToken(STRING_LITERAL_TOKEN, lexer->__buffer, length);
+    return createToken(STRING_LITERAL_TOKEN, lexer->__buffer, length, lexer->line, lexer->column - length + 1);
 }
 
 Token *__lex(Lexer *lexer)
@@ -142,106 +149,131 @@ Token *__lex(Lexer *lexer)
         return __lexNumber(lexer);
     if (isLetter(lexer->__currChar) || lexer->__currChar == '_')
         return __lexKeywordOrIdentifier(lexer);
+    TokenType type;
     switch (lexer->__currChar)
     {
     case '\"':
         return __lexString(lexer);
     case '+':
-        return createSymbolToken(PLUS_TOKEN);
+        type = PLUS_TOKEN;
+        break;
     case '-':
-        return createSymbolToken(MINUS_TOKEN);
+        type = MINUS_TOKEN;
+        break;
     case '*':
-        return createSymbolToken(STAR_TOKEN);
+        type = STAR_TOKEN;
+        break;
     case '/':
-        return createSymbolToken(SLASH_TOKEN);
+        type = SLASH_TOKEN;
+        break;
     case '>': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(GREATER_EQUAL_TOKEN);
+            type = GREATER_EQUAL_TOKEN;
         }
         else
-            return createSymbolToken(GREATER_TOKEN);
+            type = GREATER_TOKEN;
+        break;
     }
     case '<': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(LESS_EQUAL_TOKEN);
+            type = LESS_EQUAL_TOKEN;
         }
         else
-            return createSymbolToken(LESS_TOKEN);
+            type = LESS_TOKEN;
+        break;
     }
     case '=': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(DOUBLE_EQUAL_TOKEN);
+            type = DOUBLE_EQUAL_TOKEN;
         }
         else
-            return createSymbolToken(EQUAL_TOKEN);
+            type = EQUAL_TOKEN;
+        break;
     }
     case '&': {
         __peekChar(lexer);
         if (lexer->__postChar == '&')
         {
             __nextChar(lexer);
-            return createSymbolToken(DOUBLE_LOGIC_AND_TOKEN);
+            type = DOUBLE_LOGIC_AND_TOKEN;
         }
         else
-            return createSymbolToken(LOGIC_AND_TOKEN);
+            type = LOGIC_AND_TOKEN;
+        break;
     }
     case '|': {
         __peekChar(lexer);
         if (lexer->__postChar == '|')
         {
             __nextChar(lexer);
-            return createSymbolToken(DOUBLE_LOGIC_OR_TOKEN);
+            type = DOUBLE_LOGIC_OR_TOKEN;
         }
         else
-            return createSymbolToken(LOGIC_OR_TOKEN);
+            type = LOGIC_OR_TOKEN;
+        break;
     }
     case '!': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(NOT_EQUAL_TOKEN);
+            type = NOT_EQUAL_TOKEN;
         }
         else
-            return createSymbolToken(LOGIC_NOT_TOKEN);
+            type = LOGIC_NOT_TOKEN;
+        break;
     }
     case '(':
-        return createSymbolToken(LEFT_PARENTHESIS);
+        type = LEFT_PARENTHESIS;
+        break;
     case ')':
-        return createSymbolToken(RIGHT_PARENTHESIS);
+        type = RIGHT_PARENTHESIS;
+        break;
     case '[':
-        return createSymbolToken(LEFT_BRACKET);
+        type = LEFT_BRACKET;
+        break;
     case ']':
-        return createSymbolToken(RIGHT_BRACKET);
+        type = RIGHT_BRACKET;
+        break;
     case '{':
-        return createSymbolToken(LEFT_BRACE);
+        type = LEFT_BRACE;
+        break;
     case '}':
-        return createSymbolToken(RIGHT_BRACE);
+        type = RIGHT_BRACE;
+        break;
     case ',':
-        return createSymbolToken(COMMA_TOKEN);
+        type = COMMA_TOKEN;
+        break;
     case ';':
-        return createSymbolToken(SEMI_COLON_TOKEN);
-    case ' ':
+        type = SEMI_COLON_TOKEN;
+        break;
     case '\n':
+        lexer->line++;
+        lexer->column = 0;
+        return __lex(lexer);
+    case ' ':
     case '\r':
     case '\t':
         return __lex(lexer);
     case -1:
-        return createSymbolToken(END_OF_FILE_TOKEN);
+        type = END_OF_FILE_TOKEN;
+        break;
     default:
         // error skip
-        reportUnexpectedChar(lexer->__currChar);
-        return createSymbolToken(UNEXPECTED_TOKEN);
+        reportUnexpectedChar(lexer->line, lexer->column, lexer->__currChar);
+        type = UNEXPECTED_TOKEN;
+        break;
     }
+    return createSymbolToken(type, lexer->line, lexer->column);
 }
 
 void peekToken(Lexer *lexer)
@@ -268,7 +300,9 @@ void nextToken(Lexer *lexer)
 int matchToken(Lexer *lexer, TokenType expectedType)
 {
     peekToken(lexer);
-    TokenType type = lexer->postToken->tokenType;
+    TokenType type = lexer->postToken->type;
+    int line = lexer->postToken->line;
+    int column = lexer->postToken->column;
     if (type == expectedType)
     {
         nextToken(lexer);
@@ -276,14 +310,15 @@ int matchToken(Lexer *lexer, TokenType expectedType)
     }
     else
     {
-        reportUnexpectedToken(getTokenTypeValue(type), getTokenTypeValue(expectedType));
+        reportUnexpectedToken(line, column, getTokenTypeValue(type), getTokenTypeValue(expectedType));
         switch (type)
         {
         case RIGHT_BRACE:
         case RIGHT_BRACKET:
         case RIGHT_PARENTHESIS:
         case UNEXPECTED_TOKEN:
-            nextToken(lexer); // drop token
+        case ELSE_TOKEN:
+            nextToken(lexer); // drop tokens which can't appear alone
             break;
         default:
             break;

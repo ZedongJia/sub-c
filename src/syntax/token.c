@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *getTokenTypeValue(TokenType tokenType)
+const char *getTokenTypeValue(TokenType type)
 {
-    switch (tokenType)
+    switch (type)
     {
     case UNEXPECTED_TOKEN:
         return "?";
@@ -107,9 +107,9 @@ int isLetter(int ch)
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 }
 
-int getUnaryTokenPriority(TokenType tokenType)
+int getUnaryTokenPriority(TokenType type)
 {
-    switch (tokenType)
+    switch (type)
     {
     case PLUS_TOKEN:
     case MINUS_TOKEN:
@@ -122,9 +122,9 @@ int getUnaryTokenPriority(TokenType tokenType)
     }
 }
 
-int getBinaryTokenPriority(TokenType tokenType)
+int getBinaryTokenPriority(TokenType type)
 {
-    switch (tokenType)
+    switch (type)
     {
     case STAR_TOKEN:
     case SLASH_TOKEN:
@@ -155,10 +155,10 @@ int getBinaryTokenPriority(TokenType tokenType)
     }
 }
 
-int getAssociation(TokenType tokenType)
+int getAssociation(TokenType type)
 {
     // 0 means left, 1 means right
-    switch (tokenType)
+    switch (type)
     {
     case EQUAL_TOKEN:
         return 1;
@@ -167,22 +167,26 @@ int getAssociation(TokenType tokenType)
     }
 }
 
-Token *createToken(TokenType tokenType, char *value, int length)
+Token *createToken(TokenType type, char *value, int length, int line, int column)
 {
     Token *token = (Token *)malloc(sizeof(Token));
-    token->tokenType = tokenType;
+    token->type = type;
     token->value = (char *)malloc(length * sizeof(char));
     strcpy(token->value, value);
     token->length = length;
+    token->line = line;
+    token->column = column;
     return token;
 }
 
-Token *createSymbolToken(TokenType tokenType)
+Token *createSymbolToken(TokenType type, int line, int column)
 {
     Token *token = (Token *)malloc(sizeof(Token));
-    token->tokenType = tokenType;
+    token->type = type;
     token->value = NULL;
     token->length = 0;
+    token->line = line;
+    token->column = column;
     return token;
 }
 

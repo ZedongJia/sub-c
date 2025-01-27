@@ -20,10 +20,10 @@ void __prettyNodeType(NodeKind nodeType)
     clearColor();
 }
 
-void __prettyTokenType(TokenType tokenType)
+void __prettyTokenType(TokenType type)
 {
     setColor(BLUE);
-    printf("%s", getTokenTypeValue(tokenType));
+    printf("%s", getTokenTypeValue(type));
     clearColor();
 }
 

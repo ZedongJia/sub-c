@@ -16,6 +16,10 @@ typedef struct Lexer
 
     Token *postToken;
     Token *currToken;
+
+    // position
+    int line;
+    int column;
 } Lexer;
 
 Lexer *createLexer(FILE *file);

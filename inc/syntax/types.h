@@ -8,4 +8,4 @@ typedef enum BaseType
 } BaseType;
 
 char *getBaseTypeValue(BaseType type);
-BaseType tokenTypeToBaseType(TokenType tokenType);
+BaseType tokenTypeToBaseType(TokenType type);

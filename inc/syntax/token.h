@@ -51,20 +51,24 @@ typedef enum TokenType
     END_OF_FILE_TOKEN
 } TokenType;
 
-const char *getTokenTypeValue(TokenType tokenType);
+const char *getTokenTypeValue(TokenType type);
 
 typedef struct Token
 {
-    TokenType tokenType;
+    TokenType type;
     char *value;
     int length;
+
+    // position
+    int line;
+    int column;
 } Token;
 int isDigit(int ch);
 int isLetter(int ch);
-int getUnaryTokenPriority(TokenType tokenType);
-int getBinaryTokenPriority(TokenType tokenType);
-int getAssociation(TokenType tokenType);
-Token *createToken(TokenType tokenType, char *value, int length);
-Token *createSymbolToken(TokenType tokenType);
+int getUnaryTokenPriority(TokenType type);
+int getBinaryTokenPriority(TokenType type);
+int getAssociation(TokenType type);
+Token *createToken(TokenType type, char *value, int length, int line, int column);
+Token *createSymbolToken(TokenType type, int line, int column);
 void freeToken(Token *token);
 #endif

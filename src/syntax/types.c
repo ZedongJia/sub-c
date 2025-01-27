@@ -15,9 +15,9 @@ char *getBaseTypeValue(BaseType type)
     }
 }
 
-BaseType tokenTypeToBaseType(TokenType tokenType)
+BaseType tokenTypeToBaseType(TokenType type)
 {
-    switch (tokenType)
+    switch (type)
     {
     case INT_TOKEN:
         return INT_TYPE;
