@@ -6,88 +6,88 @@ char *getTokenTypeValue(TokenType tokenType)
 {
     switch (tokenType)
     {
-    case UnexpectedToken:
+    case UNEXPECTED_TOKEN:
         return "?";
-    case IntLiteralToken:
+    case INT_LITERAL_TOKEN:
         return "Int Literal";
-    case StringLiteralToken:
+    case STRING_LITERAL_TOKEN:
         return "String Literal";
     // type-keywords
-    case IntToken:
+    case INT_TOKEN:
         return "Int";
-    case CharToken:
+    case CHAR_TOKEN:
         return "Char";
     // keywords
-    case IdentifierToken:
+    case IDENTIFIER_TOKEN:
         return "Identifier";
-    case TrueToken:
+    case TRUE_TOKEN:
         return "True";
-    case FalseToken:
+    case FALSE_TOKEN:
         return "False";
-    case IfToken:
+    case IF_TOKEN:
         return "If";
-    case ElseToken:
+    case ELSE_TOKEN:
         return "Else";
-    case ForToken:
+    case FOR_TOKEN:
         return "For";
-    case WhileToken:
+    case WHILE_TOKEN:
         return "While";
     // scope
-    case LeftParenthesis:
+    case LEFT_PARENTHESIS:
         return "(";
-    case RightParenthesis:
+    case RIGHT_PARENTHESIS:
         return ")";
-    case LeftBracket:
+    case LEFT_BRACKET:
         return "[";
-    case RightBracket:
+    case RIGHT_BRACKET:
         return "]";
-    case LeftBrace:
+    case LEFT_BRACE:
         return "{";
-    case RightBrace:
+    case RIGHT_BRACE:
         return "}";
     // operator
-    case PlusToken:
+    case PLUS_TOKEN:
         return "+";
-    case MinusToken:
+    case MINUS_TOKEN:
         return "-";
-    case StarToken:
+    case STAR_TOKEN:
         return "*";
-    case SlashToken:
+    case SLASH_TOKEN:
         return "/";
-    case EqualToken:
+    case EQUAL_TOKEN:
         return "=";
     // logic
-    case GreaterToken:
+    case GREATER_TOKEN:
         return ">";
-    case GreaterEqualToken:
+    case GREATER_EQUAL_TOKEN:
         return ">=";
-    case LessToken:
+    case LESS_TOKEN:
         return "<";
-    case LessEqualToken:
+    case LESS_EQUAL_TOKEN:
         return "<=";
-    case DoubleEqualToken:
+    case DOUBLE_EQUAL_TOKEN:
         return "==";
-    case NotEqualToken:
+    case NOT_EQUAL_TOKEN:
         return "!=";
-    case DoubleLogicAndToken:
+    case DOUBLE_LOGIC_AND_TOKEN:
         return "&&";
-    case DoubleLogicOrToken:
+    case DOUBLE_LOGIC_OR_TOKEN:
         return "||";
-    case LogicAndToken:
+    case LOGIC_AND_TOKEN:
         return "&";
-    case LogicOrToken:
+    case LOGIC_OR_TOKEN:
         return "|";
-    case LogicNotToken:
+    case LOGIC_NOT_TOKEN:
         return "!";
     // separator
-    case CommaToken:
+    case COMMA_TOKEN:
         return ",";
-    case SemiColon:
+    case SEMI_COLON_TOKEN:
         return ";";
     // other
-    case WhiteSpaceToken:
+    case WHITE_SPACE_TOKEN:
         return " ";
-    case EndOfFileToken:
+    case END_OF_FILE_TOKEN:
         return "EOF";
     default:
         return "?";
@@ -108,11 +108,11 @@ int getUnaryTokenPriority(TokenType tokenType)
 {
     switch (tokenType)
     {
-    case PlusToken:
-    case MinusToken:
-    case LogicNotToken:
-    case StarToken:
-    case LogicAndToken:
+    case PLUS_TOKEN:
+    case MINUS_TOKEN:
+    case LOGIC_NOT_TOKEN:
+    case STAR_TOKEN:
+    case LOGIC_AND_TOKEN:
         return 9;
     default:
         return 0;
@@ -123,29 +123,29 @@ int getBinaryTokenPriority(TokenType tokenType)
 {
     switch (tokenType)
     {
-    case StarToken:
-    case SlashToken:
+    case STAR_TOKEN:
+    case SLASH_TOKEN:
         return 8;
-    case PlusToken:
-    case MinusToken:
+    case PLUS_TOKEN:
+    case MINUS_TOKEN:
         return 7;
-    case GreaterToken:
-    case GreaterEqualToken:
-    case LessToken:
-    case LessEqualToken:
+    case GREATER_TOKEN:
+    case GREATER_EQUAL_TOKEN:
+    case LESS_TOKEN:
+    case LESS_EQUAL_TOKEN:
         return 6;
-    case DoubleEqualToken:
-    case NotEqualToken:
+    case DOUBLE_EQUAL_TOKEN:
+    case NOT_EQUAL_TOKEN:
         return 5;
-    case LogicAndToken:
-    case LogicOrToken:
+    case LOGIC_AND_TOKEN:
+    case LOGIC_OR_TOKEN:
         return 4;
-    case DoubleLogicAndToken:
-    case DoubleLogicOrToken:
+    case DOUBLE_LOGIC_AND_TOKEN:
+    case DOUBLE_LOGIC_OR_TOKEN:
         return 3;
-    case EqualToken:
+    case EQUAL_TOKEN:
         return 2;
-    case CommaToken:
+    case COMMA_TOKEN:
         return 1;
     default:
         return 0;
@@ -157,7 +157,7 @@ int getAssociation(TokenType tokenType)
     // 0 means left, 1 means right
     switch (tokenType)
     {
-    case EqualToken:
+    case EQUAL_TOKEN:
         return 1;
     default:
         return 0;

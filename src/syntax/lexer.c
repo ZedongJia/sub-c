@@ -59,7 +59,7 @@ Token *__lexNumber(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    return createToken(IntLiteralToken, lexer->__buffer, length);
+    return createToken(INT_LITERAL_TOKEN, lexer->__buffer, length);
 }
 
 Token *__lexKeywordOrIdentifier(Lexer *lexer)
@@ -78,23 +78,23 @@ Token *__lexKeywordOrIdentifier(Lexer *lexer)
     lexer->__buffer[length] = '\0';
     length++;
     if (strcmp(lexer->__buffer, "int") == 0)
-        return createSymbolToken(IntToken);
+        return createSymbolToken(INT_TOKEN);
     if (strcmp(lexer->__buffer, "char") == 0)
-        return createSymbolToken(CharToken);
+        return createSymbolToken(CHAR_TOKEN);
     else if (strcmp(lexer->__buffer, "true") == 0)
-        return createSymbolToken(TrueToken);
+        return createSymbolToken(TRUE_TOKEN);
     else if (strcmp(lexer->__buffer, "false") == 0)
-        return createSymbolToken(FalseToken);
+        return createSymbolToken(FALSE_TOKEN);
     else if (strcmp(lexer->__buffer, "if") == 0)
-        return createSymbolToken(IfToken);
+        return createSymbolToken(IF_TOKEN);
     else if (strcmp(lexer->__buffer, "else") == 0)
-        return createSymbolToken(ElseToken);
+        return createSymbolToken(ELSE_TOKEN);
     else if (strcmp(lexer->__buffer, "for") == 0)
-        return createSymbolToken(ForToken);
+        return createSymbolToken(FOR_TOKEN);
     else if (strcmp(lexer->__buffer, "while") == 0)
-        return createSymbolToken(WhileToken);
+        return createSymbolToken(WHILE_TOKEN);
     else
-        return createToken(IdentifierToken, lexer->__buffer, length);
+        return createToken(IDENTIFIER_TOKEN, lexer->__buffer, length);
 }
 
 Token *__lexString(Lexer *lexer)
@@ -132,7 +132,7 @@ Token *__lexString(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    return createToken(StringLiteralToken, lexer->__buffer, length);
+    return createToken(STRING_LITERAL_TOKEN, lexer->__buffer, length);
 }
 
 Token *__lex(Lexer *lexer)
@@ -147,100 +147,100 @@ Token *__lex(Lexer *lexer)
     case '\"':
         return __lexString(lexer);
     case '+':
-        return createSymbolToken(PlusToken);
+        return createSymbolToken(PLUS_TOKEN);
     case '-':
-        return createSymbolToken(MinusToken);
+        return createSymbolToken(MINUS_TOKEN);
     case '*':
-        return createSymbolToken(StarToken);
+        return createSymbolToken(STAR_TOKEN);
     case '/':
-        return createSymbolToken(SlashToken);
+        return createSymbolToken(SLASH_TOKEN);
     case '>': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(GreaterEqualToken);
+            return createSymbolToken(GREATER_EQUAL_TOKEN);
         }
         else
-            return createSymbolToken(GreaterToken);
+            return createSymbolToken(GREATER_TOKEN);
     }
     case '<': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(LessEqualToken);
+            return createSymbolToken(LESS_EQUAL_TOKEN);
         }
         else
-            return createSymbolToken(LessToken);
+            return createSymbolToken(LESS_TOKEN);
     }
     case '=': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(DoubleEqualToken);
+            return createSymbolToken(DOUBLE_EQUAL_TOKEN);
         }
         else
-            return createSymbolToken(EqualToken);
+            return createSymbolToken(EQUAL_TOKEN);
     }
     case '&': {
         __peekChar(lexer);
         if (lexer->__postChar == '&')
         {
             __nextChar(lexer);
-            return createSymbolToken(DoubleLogicAndToken);
+            return createSymbolToken(DOUBLE_LOGIC_AND_TOKEN);
         }
         else
-            return createSymbolToken(LogicAndToken);
+            return createSymbolToken(LOGIC_AND_TOKEN);
     }
     case '|': {
         __peekChar(lexer);
         if (lexer->__postChar == '|')
         {
             __nextChar(lexer);
-            return createSymbolToken(DoubleLogicOrToken);
+            return createSymbolToken(DOUBLE_LOGIC_OR_TOKEN);
         }
         else
-            return createSymbolToken(LogicOrToken);
+            return createSymbolToken(LOGIC_OR_TOKEN);
     }
     case '!': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            return createSymbolToken(NotEqualToken);
+            return createSymbolToken(NOT_EQUAL_TOKEN);
         }
         else
-            return createSymbolToken(LogicNotToken);
+            return createSymbolToken(LOGIC_NOT_TOKEN);
     }
     case '(':
-        return createSymbolToken(LeftParenthesis);
+        return createSymbolToken(LEFT_PARENTHESIS);
     case ')':
-        return createSymbolToken(RightParenthesis);
+        return createSymbolToken(RIGHT_PARENTHESIS);
     case '[':
-        return createSymbolToken(LeftBracket);
+        return createSymbolToken(LEFT_BRACKET);
     case ']':
-        return createSymbolToken(RightBracket);
+        return createSymbolToken(RIGHT_BRACKET);
     case '{':
-        return createSymbolToken(LeftBrace);
+        return createSymbolToken(LEFT_BRACE);
     case '}':
-        return createSymbolToken(RightBrace);
+        return createSymbolToken(RIGHT_BRACE);
     case ',':
-        return createSymbolToken(CommaToken);
+        return createSymbolToken(COMMA_TOKEN);
     case ';':
-        return createSymbolToken(SemiColon);
+        return createSymbolToken(SEMI_COLON_TOKEN);
     case ' ':
     case '\n':
     case '\r':
     case '\t':
         return __lex(lexer);
     case -1:
-        return createSymbolToken(EndOfFileToken);
+        return createSymbolToken(END_OF_FILE_TOKEN);
     default:
         // error skip
         printf("\033[35mError: unexpected token %c\033[0m\n", lexer->__currChar);
-        return createSymbolToken(UnexpectedToken);
+        return createSymbolToken(UNEXPECTED_TOKEN);
     }
 }
 

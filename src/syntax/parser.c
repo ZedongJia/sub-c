@@ -19,24 +19,24 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     peekToken(lexer);
     switch (lexer->postToken->tokenType)
     {
-    case LeftParenthesis: {
+    case LEFT_PARENTHESIS: {
         // ( expression )
-        matchToken(lexer, LeftParenthesis);
+        matchToken(lexer, LEFT_PARENTHESIS);
         Node *expression = parseExpression(parser, lexer, 0);
-        matchToken(lexer, RightParenthesis);
+        matchToken(lexer, RIGHT_PARENTHESIS);
         return expression;
     }
-    case TrueToken: {
+    case TRUE_TOKEN: {
         nextToken(lexer);
-        return createLiteral(IntLiteralToken, "1", 2);
+        return createLiteral(INT_LITERAL_TOKEN, "1", 2);
     }
-    case FalseToken: {
+    case FALSE_TOKEN: {
         nextToken(lexer);
-        return createLiteral(IntLiteralToken, "0", 2);
+        return createLiteral(INT_LITERAL_TOKEN, "0", 2);
     }
-    case IntLiteralToken:
-    case StringLiteralToken:
-    case IdentifierToken: {
+    case INT_LITERAL_TOKEN:
+    case STRING_LITERAL_TOKEN:
+    case IDENTIFIER_TOKEN: {
         nextToken(lexer);
         return createLiteral(lexer->currToken->tokenType, lexer->currToken->value, lexer->currToken->length);
     }
@@ -72,13 +72,13 @@ Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer)
     TokenType type;
     peekToken(lexer);
     type = lexer->postToken->tokenType;
-    while (type == LeftBracket)
+    while (type == LEFT_BRACKET)
     {
         nextToken(lexer);
         right = parseExpression(parser, lexer, 0);
-        matchToken(lexer, RightBracket);
-        base = createBinaryOperator(base, PlusToken, right);
-        base = createUnaryOperator(StarToken, base);
+        matchToken(lexer, RIGHT_BRACKET);
+        base = createBinaryOperator(base, PLUS_TOKEN, right);
+        base = createUnaryOperator(STAR_TOKEN, base);
         peekToken(lexer);
         type = lexer->postToken->tokenType;
     }
@@ -123,26 +123,26 @@ Node *parseStatement(Parser *parser, Lexer *lexer)
     peekToken(lexer);
     switch (lexer->postToken->tokenType)
     {
-    case IntToken:
-    case CharToken: {
+    case INT_TOKEN:
+    case CHAR_TOKEN: {
         statement = parseDeclarationStatement(parser, lexer);
         break;
     }
-    case IfToken: {
+    case IF_TOKEN: {
         statement = parseIfStatement(parser, lexer);
         break;
     }
-    case ForToken: {
+    case FOR_TOKEN: {
         statement = parseForStatement(parser, lexer);
         break;
     }
-    case WhileToken: {
+    case WHILE_TOKEN: {
         statement = parseWhileStatement(parser, lexer);
         break;
     }
     default: {
         statement = parseExpression(parser, lexer, 0);
-        matchToken(lexer, SemiColon);
+        matchToken(lexer, SEMI_COLON_TOKEN);
         break;
     }
     }
@@ -154,7 +154,7 @@ Node *parseDeclarationStatement(Parser *parser, Lexer *lexer)
     nextToken(lexer);
     Node *type = createType(lexer->currToken->tokenType);
     Node *expression = parseExpression(parser, lexer, 0);
-    matchToken(lexer, SemiColon);
+    matchToken(lexer, SEMI_COLON_TOKEN);
     return createDeclaration(type, expression);
 }
 
@@ -162,18 +162,18 @@ Node *parseIfStatement(Parser *parser, Lexer *lexer)
 {
     Node *scope = createScope(1);
     List *list = ((Scope *)scope)->list;
-    matchToken(lexer, IfToken);
-    matchToken(lexer, LeftParenthesis);
+    matchToken(lexer, IF_TOKEN);
+    matchToken(lexer, LEFT_PARENTHESIS);
     int trueEndLabelNumber = parser->labelNumber++;
     appendToList(list, createJumpIfFalse(parseExpression(parser, lexer, 0), trueEndLabelNumber));
-    matchToken(lexer, RightParenthesis);
+    matchToken(lexer, RIGHT_PARENTHESIS);
     peekToken(lexer);
-    if (lexer->postToken->tokenType == LeftBrace)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         appendToList(list, parseStatements(parser, lexer, 0));
     else
         appendToList(list, parseStatement(parser, lexer));
     peekToken(lexer);
-    if (lexer->postToken->tokenType == ElseToken)
+    if (lexer->postToken->tokenType == ELSE_TOKEN)
     {
         int falseEndLabelNumber = parser->labelNumber++;
         appendToList(list, createJump(falseEndLabelNumber));
@@ -190,9 +190,9 @@ Node *parseIfStatement(Parser *parser, Lexer *lexer)
 
 Node *parseElseStatement(Parser *parser, Lexer *lexer)
 {
-    matchToken(lexer, ElseToken);
+    matchToken(lexer, ELSE_TOKEN);
     peekToken(lexer);
-    if (lexer->postToken->tokenType == LeftBrace)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         return parseStatements(parser, lexer, 0);
     else
         return parseStatement(parser, lexer);
@@ -202,18 +202,18 @@ Node *parseForStatement(Parser *parser, Lexer *lexer)
 {
     Node *scope = createScope(0);
     List *list = ((Scope *)scope)->list;
-    matchToken(lexer, ForToken);
-    matchToken(lexer, LeftParenthesis);
+    matchToken(lexer, FOR_TOKEN);
+    matchToken(lexer, LEFT_PARENTHESIS);
     appendToList(list, parseStatement(parser, lexer));
     int ForStartLabelNumber = parser->labelNumber++;
     appendToList(list, createLabel(ForStartLabelNumber));
     int ForEndLabelNumber = parser->labelNumber++;
     appendToList(list, createJumpIfFalse(parseExpression(parser, lexer, 0), ForEndLabelNumber));
-    matchToken(lexer, SemiColon);
+    matchToken(lexer, SEMI_COLON_TOKEN);
     Node *expression = parseExpression(parser, lexer, 0);
-    matchToken(lexer, RightParenthesis);
+    matchToken(lexer, RIGHT_PARENTHESIS);
     peekToken(lexer);
-    if (lexer->postToken->tokenType == LeftBrace)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         appendToList(list, parseStatements(parser, lexer, 0));
     else
         appendToList(list, parseStatement(parser, lexer));
@@ -227,15 +227,15 @@ Node *parseWhileStatement(Parser *parser, Lexer *lexer)
 {
     Node *scope = createScope(0);
     List *list = ((Scope *)scope)->list;
-    matchToken(lexer, WhileToken);
-    matchToken(lexer, LeftParenthesis);
+    matchToken(lexer, WHILE_TOKEN);
+    matchToken(lexer, LEFT_PARENTHESIS);
     int whileStartLabelNumber = parser->labelNumber++;
     appendToList(list, createLabel(whileStartLabelNumber));
     int whileEndLabelNumber = parser->labelNumber++;
     appendToList(list, createJumpIfFalse(parseExpression(parser, lexer, 0), whileEndLabelNumber));
-    matchToken(lexer, RightParenthesis);
+    matchToken(lexer, RIGHT_PARENTHESIS);
     peekToken(lexer);
-    if (lexer->postToken->tokenType == LeftBrace)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         appendToList(list, parseStatements(parser, lexer, 0));
     else
         appendToList(list, parseStatement(parser, lexer));
@@ -249,15 +249,15 @@ Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal)
     Node *scope = createScope(0);
     List *list = ((Scope *)scope)->list;
     if (!isGlobal)
-        matchToken(lexer, LeftBrace);
+        matchToken(lexer, LEFT_BRACE);
     peekToken(lexer);
-    while ((lexer->postToken->tokenType != EndOfFileToken) &&
-           ((isGlobal) || (!isGlobal && lexer->postToken->tokenType != RightBrace)))
+    while ((lexer->postToken->tokenType != END_OF_FILE_TOKEN) &&
+           ((isGlobal) || (!isGlobal && lexer->postToken->tokenType != RIGHT_BRACE)))
     {
         appendToList(list, parseStatement(parser, lexer));
         peekToken(lexer);
     }
-    isGlobal ? matchToken(lexer, EndOfFileToken) : matchToken(lexer, RightBrace);
+    isGlobal ? matchToken(lexer, END_OF_FILE_TOKEN) : matchToken(lexer, RIGHT_BRACE);
     return scope;
 }
 
