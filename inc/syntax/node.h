@@ -2,21 +2,22 @@
 #define NODE
 #include "collection/list.h"
 #include "syntax/token.h"
+#include "syntax/types.h"
 
 typedef enum NodeKind
 {
     // expression
-    UNEXPECTED,
-    TYPE,
-    LITERAL,
-    BINARY_OPERATE,
-    UNARY_OPERATE,
+    UNEXPECTED_KIND,
+    TYPE_KIND,
+    LITERAL_KIND,
+    BINARY_OPERATE_KIND,
+    UNARY_OPERATE_KIND,
     // statement
-    DECLARATION,
-    LABEL,
-    JUMP_IF_FALSE,
-    JUMP,
-    SCOPE
+    DECLARATION_KIND,
+    LABEL_KIND,
+    JUMP_IF_FALSE_KIND,
+    JUMP_KIND,
+    SCOPE_KIND
 } NodeKind;
 char *getNodeKindValue(NodeKind kind);
 
@@ -33,9 +34,9 @@ typedef struct Type
     // inhert
     NodeKind kind;
     // extend
-    TokenType baseType;
+    BaseType baseType;
 } Type;
-Node *createType(TokenType baseType);
+Node *createType(BaseType baseType);
 void freeType(Type *node);
 
 typedef struct Literal

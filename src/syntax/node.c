@@ -7,25 +7,25 @@ char *getNodeKindValue(NodeKind kind)
 {
     switch (kind)
     {
-    case UNEXPECTED:
+    case UNEXPECTED_KIND:
         return "?";
-    case TYPE:
+    case TYPE_KIND:
         return "Type";
-    case LITERAL:
+    case LITERAL_KIND:
         return "Literal";
-    case BINARY_OPERATE:
+    case BINARY_OPERATE_KIND:
         return "Binary Operator";
-    case UNARY_OPERATE:
+    case UNARY_OPERATE_KIND:
         return "Unary Operator";
-    case DECLARATION:
+    case DECLARATION_KIND:
         return "Declaration";
-    case LABEL:
+    case LABEL_KIND:
         return "Label";
-    case JUMP_IF_FALSE:
+    case JUMP_IF_FALSE_KIND:
         return "Jump If False";
-    case JUMP:
+    case JUMP_KIND:
         return "Jump";
-    case SCOPE:
+    case SCOPE_KIND:
         return "Scope";
     default:
         return "?";
@@ -44,31 +44,31 @@ void freeNode(void *node)
     // free data
     switch (((Node *)node)->kind)
     {
-    case TYPE:
+    case TYPE_KIND:
         freeType((Type *)node);
         break;
-    case LITERAL:
+    case LITERAL_KIND:
         freeLiteral((Literal *)node);
         break;
-    case BINARY_OPERATE:
+    case BINARY_OPERATE_KIND:
         freeBinaryOperator((BinaryOperator *)node);
         break;
-    case UNARY_OPERATE:
+    case UNARY_OPERATE_KIND:
         freeUnaryOperator((UnaryOperator *)node);
         break;
-    case DECLARATION:
+    case DECLARATION_KIND:
         freeDeclaration((Declaration *)node);
         break;
-    case LABEL:
+    case LABEL_KIND:
         freeLabel((Label *)node);
         break;
-    case JUMP_IF_FALSE:
+    case JUMP_IF_FALSE_KIND:
         freeJumpIfFalse((JumpIfFalse *)node);
         break;
-    case JUMP:
+    case JUMP_KIND:
         freeJump((Jump *)node);
         break;
-    case SCOPE:
+    case SCOPE_KIND:
         freeScope((Scope *)node);
         break;
     default:
@@ -77,10 +77,10 @@ void freeNode(void *node)
     }
 }
 
-Node *createType(TokenType baseType)
+Node *createType(BaseType baseType)
 {
     Type *type = (Type *)malloc(sizeof(Type));
-    type->kind = TYPE;
+    type->kind = TYPE_KIND;
     type->baseType = baseType;
     return (Node *)type;
 }
@@ -93,7 +93,7 @@ void freeType(Type *node)
 Node *createLiteral(TokenType type, char *value, int length)
 {
     Literal *literal = (Literal *)malloc(sizeof(Literal));
-    literal->kind = LITERAL;
+    literal->kind = LITERAL_KIND;
     literal->type = type;
     literal->value = (char *)malloc(length * sizeof(char));
     strcpy(literal->value, value);
@@ -112,7 +112,7 @@ void freeLiteral(Literal *node)
 Node *createUnaryOperator(TokenType type, Node *operand)
 {
     UnaryOperator *unaryOperator = (UnaryOperator *)malloc(sizeof(UnaryOperator));
-    unaryOperator->kind = UNARY_OPERATE;
+    unaryOperator->kind = UNARY_OPERATE_KIND;
     unaryOperator->type = type;
     unaryOperator->operand = operand;
     return (Node *)unaryOperator;
@@ -128,7 +128,7 @@ void freeUnaryOperator(UnaryOperator *node)
 Node *createBinaryOperator(Node *left, TokenType type, Node *right)
 {
     BinaryOperator *binaryOperator = (BinaryOperator *)malloc(sizeof(BinaryOperator));
-    binaryOperator->kind = BINARY_OPERATE;
+    binaryOperator->kind = BINARY_OPERATE_KIND;
     binaryOperator->left = left;
     binaryOperator->type = type;
     binaryOperator->right = right;
@@ -147,7 +147,7 @@ void freeBinaryOperator(BinaryOperator *node)
 Node *createDeclaration(Node *type, Node *expression)
 {
     Declaration *declaration = (Declaration *)malloc(sizeof(Declaration));
-    declaration->kind = DECLARATION;
+    declaration->kind = DECLARATION_KIND;
     declaration->type = type;
     declaration->expression = expression;
     return (Node *)declaration;
@@ -165,7 +165,7 @@ void freeDeclaration(Declaration *node)
 Node *createLabel(int number)
 {
     Label *labelNumber = (Label *)malloc(sizeof(Label));
-    labelNumber->kind = LABEL;
+    labelNumber->kind = LABEL_KIND;
     labelNumber->number = number;
     return (Node *)labelNumber;
 }
@@ -178,7 +178,7 @@ void freeLabel(Label *node)
 Node *createJumpIfFalse(Node *condition, int number)
 {
     JumpIfFalse *jumpIfFalse = (JumpIfFalse *)malloc(sizeof(JumpIfFalse));
-    jumpIfFalse->kind = JUMP_IF_FALSE;
+    jumpIfFalse->kind = JUMP_IF_FALSE_KIND;
     jumpIfFalse->condition = condition;
     jumpIfFalse->number = number;
     return (Node *)jumpIfFalse;
@@ -194,7 +194,7 @@ void freeJumpIfFalse(JumpIfFalse *node)
 Node *createJump(int number)
 {
     Jump *jump = (Jump *)malloc(sizeof(Jump));
-    jump->kind = JUMP;
+    jump->kind = JUMP_KIND;
     jump->number = number;
     return (Node *)jump;
 }
@@ -207,7 +207,7 @@ void freeJump(Jump *node)
 Node *createScope(Scope *parentScope)
 {
     Scope *scope = (Scope *)malloc(sizeof(Scope));
-    scope->kind = SCOPE;
+    scope->kind = SCOPE_KIND;
     scope->parentScope = parentScope;
     scope->list = createList();
     return (Node *)scope;

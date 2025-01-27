@@ -38,7 +38,7 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     default: {
         printf("\033[35mError: unexpected %s, expect expression\033[0m\n",
                getTokenTypeValue(lexer->postToken->tokenType));
-        return createNode(UNEXPECTED);
+        return createNode(UNEXPECTED_KIND);
     }
     }
 }
@@ -146,7 +146,20 @@ void parseStatement(Parser *parser, Lexer *lexer)
 void parseDeclarationStatement(Parser *parser, Lexer *lexer)
 {
     nextToken(lexer);
-    Node *type = createType(lexer->currToken->tokenType);
+    BaseType baseType;
+    switch (lexer->currToken->tokenType)
+    {
+    case INT_TOKEN:
+        baseType = INT_TYPE;
+        break;
+    case CHAR_TOKEN:
+        baseType = CHAR_TYPE;
+        break;
+    default:
+        baseType = UNEXPECTED_TYPE;
+        break;
+    }
+    Node *type = createType(baseType);
     Node *expression = parseExpression(parser, lexer, 0);
     matchToken(lexer, SEMI_COLON_TOKEN);
     appendToList(parser->currScope->list, createDeclaration(type, expression));
