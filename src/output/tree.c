@@ -1,5 +1,4 @@
 #include "output/tree.h"
-#include "output/color.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -15,23 +14,17 @@ void prettyTree(Node *node)
 
 void __prettyNodeType(NodeKind nodeType)
 {
-    setColor(GREEN);
-    printf("%s", getNodeKindValue(nodeType));
-    clearColor();
+    printf("\033[33;1m%s\033[0m", getNodeKindValue(nodeType));
 }
 
 void __prettyTokenType(TokenType type)
 {
-    setColor(BLUE);
-    printf("%s", getTokenTypeValue(type));
-    clearColor();
+    printf("\033[35;1m%s\033[0m", getTokenTypeValue(type));
 }
 
 void __prettyType(BaseType baseType)
 {
-    setColor(PURPLE);
-    printf("%s", getBaseTypeValue(baseType));
-    clearColor();
+    printf("\033[36;1m%s\033[0m", getBaseTypeValue(baseType));
 }
 
 void __prettyTree(Node *node, int *parr, int indent, int isLast)

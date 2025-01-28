@@ -254,9 +254,7 @@ void parseElseStatement(Parser *parser, Lexer *lexer)
 
 void parseForStatement(Parser *parser, Lexer *lexer)
 {
-    // enter new scope
-    Node *scope = createScope(parser->currScope);
-    parser->currScope = (Scope *)scope;
+    enterScope(parser);
 
     // parse
     List *list = parser->currScope->list;
@@ -279,17 +277,12 @@ void parseForStatement(Parser *parser, Lexer *lexer)
     appendToList(list, createJump(ForStartLabelNumber));
     appendToList(list, createLabel(ForEndLabelNumber));
 
-    // back to old scope
-    parser->currScope = parser->currScope->parentScope;
-    if (parser->currScope != NULL)
-        appendToList(parser->currScope->list, scope);
+    leaveScope(parser);
 }
 
 void parseWhileStatement(Parser *parser, Lexer *lexer)
 {
-    // enter new scope
-    Node *scope = createScope(parser->currScope);
-    parser->currScope = (Scope *)scope;
+    enterScope(parser);
 
     List *list = parser->currScope->list;
     matchToken(lexer, WHILE_TOKEN);
@@ -307,10 +300,7 @@ void parseWhileStatement(Parser *parser, Lexer *lexer)
     appendToList(list, createJump(whileStartLabelNumber));
     appendToList(list, createLabel(whileEndLabelNumber));
 
-    // back to old scope
-    parser->currScope = parser->currScope->parentScope;
-    if (parser->currScope != NULL)
-        appendToList(parser->currScope->list, scope);
+    leaveScope(parser);
 }
 
 /**
@@ -318,9 +308,7 @@ void parseWhileStatement(Parser *parser, Lexer *lexer)
  */
 Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal)
 {
-    // enter new scope
-    Node *scope = createScope(parser->currScope);
-    parser->currScope = (Scope *)scope;
+    Node *scope = enterScope(parser);
 
     if (!isGlobal)
         matchToken(lexer, LEFT_BRACE);
@@ -333,10 +321,7 @@ Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal)
     }
     isGlobal ? matchToken(lexer, END_OF_FILE_TOKEN) : matchToken(lexer, RIGHT_BRACE);
 
-    // back to old scope
-    parser->currScope = parser->currScope->parentScope;
-    if (parser->currScope != NULL)
-        appendToList(parser->currScope->list, scope);
+    leaveScope(parser);
     return scope;
 }
 
@@ -345,5 +330,23 @@ Node *parse(Parser *parser, FILE *file)
     Lexer *lexer = createLexer(file);
     Node *root = parseStatements(parser, lexer, 1);
     freeLexer(lexer);
+
     return root;
+}
+
+Node *enterScope(Parser *parser)
+{
+    // enter new scope
+    Node *scope = createScope(parser->currScope);
+    parser->currScope = (Scope *)scope;
+    return scope;
+}
+
+void leaveScope(Parser *parser)
+{
+    // back to parent scope
+    Scope *scope = parser->currScope;
+    parser->currScope = scope->parentScope;
+    if (parser->currScope != NULL)
+        appendToList(parser->currScope->list, scope);
 }

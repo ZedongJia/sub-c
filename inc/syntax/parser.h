@@ -23,4 +23,6 @@ void parseForStatement(Parser *parser, Lexer *lexer);
 void parseWhileStatement(Parser *parser, Lexer *lexer);
 Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal);
 Node *parse(Parser *parser, FILE *file);
+Node *enterScope(Parser *parser);
+void leaveScope(Parser *parser);
 #endif

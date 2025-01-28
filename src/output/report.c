@@ -1,31 +1,17 @@
-#include "output/color.h"
 #include "stdio.h"
-
-void __reportLineAndColumn(int line, int column)
-{
-    printf("Error at line:%d column:%d: ", line, column);
-}
 
 void reportUnclosedString(int line, int column)
 {
-    setColor(RED);
-    __reportLineAndColumn(line, column);
-    printf("unclosed string\n");
-    clearColor();
+    printf("\033[31;1mError at line:%d column:%d: unclosed string\033[0m\n", line, column);
 }
 
 void reportUnexpectedChar(int line, int column, char ch)
 {
-    setColor(RED);
-    __reportLineAndColumn(line, column);
-    printf("unexpected char %c\n", ch);
-    clearColor();
+    printf("\033[31;1mError at line:%d column:%d: unexpected char %c\033[0m\n", line, column, ch);
 }
 
 void reportUnexpectedToken(int line, int column, const char *unexpected, const char *expected)
 {
-    setColor(RED);
-    __reportLineAndColumn(line, column);
-    printf("unexpected %s, expect %s\n", unexpected, expected);
-    clearColor();
+    printf("\033[31;1mError at line:%d column:%d: unexpected %s, expect %s\033[0m\n", line, column, unexpected,
+           expected);
 }
