@@ -70,18 +70,37 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
 
 Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer)
 {
-    peekToken(lexer);
     Node *right = NULL;
-    TokenType type = lexer->postToken->type;
-    while (type == LEFT_BRACKET)
+    TokenType type;
+    int isDone = 0;
+    while (!isDone)
     {
-        nextToken(lexer);
-        right = parseExpression(parser, lexer, 0);
-        matchToken(lexer, RIGHT_BRACKET);
-        base = createBinaryOperator(base, PLUS_TOKEN, right);
-        base = createUnaryOperator(STAR_TOKEN, base);
         peekToken(lexer);
         type = lexer->postToken->type;
+        switch (type)
+        {
+        case LEFT_BRACKET: {
+            // []
+            nextToken(lexer);
+            right = parseExpression(parser, lexer, 0);
+            matchToken(lexer, RIGHT_BRACKET);
+            base = createBinaryOperator(base, PLUS_TOKEN, right);
+            base = createUnaryOperator(STAR_TOKEN, base);
+            break;
+        }
+        case LEFT_PARENTHESIS: {
+            // call()
+            nextToken(lexer);
+            right = parseExpression(parser, lexer, 0);
+            matchToken(lexer, RIGHT_PARENTHESIS);
+            base = createBinaryOperator(base, CALL_TOKEN, right);
+            break;
+        }
+        default: {
+            isDone = 1;
+            break;
+        }
+        }
     }
     return base;
 }

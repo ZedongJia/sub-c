@@ -30,6 +30,7 @@ typedef enum TokenType
     EQUAL_TOKEN,
     // operate
     DIM_TOKEN,
+    CALL_TOKEN,
     // logic
     GREATER_TOKEN,
     GREATER_EQUAL_TOKEN,

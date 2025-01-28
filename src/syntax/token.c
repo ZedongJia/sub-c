@@ -57,6 +57,8 @@ const char *getTokenTypeValue(TokenType type)
     // operate
     case DIM_TOKEN:
         return "dim";
+    case CALL_TOKEN:
+        return "call";
     // logic
     case GREATER_TOKEN:
         return ">";
