@@ -37,10 +37,21 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     case TRUE_TOKEN:
     case FALSE_TOKEN:
     case INT_LITERAL_TOKEN:
-    case STRING_LITERAL_TOKEN:
-    case IDENTIFIER_TOKEN: {
+    case STRING_LITERAL_TOKEN: {
         nextToken(lexer);
         return createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+    }
+    case IDENTIFIER_TOKEN: {
+        nextToken(lexer);
+        Scope *p = parser->currScope;
+        while (p != NULL)
+        {
+            if (tryLookUp(&p->table, lexer->currToken->value))
+                return createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+            p = p->parentScope;
+        }
+        reportVariableUndefined(lexer->currToken->line, lexer->currToken->column, lexer->currToken->value);
+        return createNode(UNEXPECTED_NODE);
     }
     default: {
         reportUnexpectedToken(lexer->postToken->line, lexer->postToken->column,
@@ -212,6 +223,8 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
             break;
         }
         identifier = createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+        int line = lexer->currToken->line;
+        int column = lexer->currToken->column;
         baseType = parseArrayType(baseType, parser, lexer);
         peekToken(lexer);
         if (lexer->postToken->tokenType == EQUAL_TOKEN)
@@ -223,7 +236,19 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
         {
             initializer = NULL;
         }
-        appendToList(parser->currScope->list, createDeclaration(baseType, identifier, initializer));
+        const char *name = ((Literal *)identifier)->value;
+        if (!tryDeclare(&parser->currScope->table, baseType, name))
+        {
+            reportVariabledefined(line, column, name);
+            freeBaseType(baseType);
+            freeNode(identifier);
+            if (initializer != NULL)
+                freeNode(initializer);
+        }
+        else
+        {
+            appendToList(parser->currScope->list, createDeclaration(baseType, identifier, initializer));
+        }
         peekToken(lexer);
         if (lexer->postToken->tokenType != COMMA_TOKEN)
             break;

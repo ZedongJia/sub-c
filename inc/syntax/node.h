@@ -1,8 +1,8 @@
 #ifndef NODE
 #define NODE
 #include "collection/list.h"
+#include "syntax/symbol.h"
 #include "syntax/token.h"
-#include "syntax/types.h"
 #include "syntax/types.h"
 
 typedef enum NodeType
@@ -111,6 +111,7 @@ typedef struct Scope
     // inhert
     NodeType nodeType;
     // extend
+    SymbolTable table;
     List *list;
     struct Scope *parentScope; // parent reference
 } Scope;

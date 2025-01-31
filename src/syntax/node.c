@@ -193,6 +193,7 @@ Node *createScope(Scope *parentScope)
 {
     Scope *scope = (Scope *)malloc(sizeof(Scope));
     scope->nodeType = SCOPE_NODE;
+    scope->table.num_var = 0;
     scope->parentScope = parentScope;
     scope->list = createList();
     return (Node *)scope;

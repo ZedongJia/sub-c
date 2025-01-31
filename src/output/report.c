@@ -15,3 +15,12 @@ void reportUnexpectedToken(int line, int column, const char *unexpected, const c
     printf("\033[31;1mError at line:%d column:%d: unexpected %s, expect %s\033[0m\n", line, column, unexpected,
            expected);
 }
+
+void reportVariableUndefined(int line, int column, const char *name)
+{
+    printf("\033[31;1mError at line:%d column:%d: variable %s has't been defined\033[0m\n", line, column, name);
+}
+void reportVariabledefined(int line, int column, const char *name)
+{
+    printf("\033[31;1mError at line:%d column:%d: variable %s has been defined\033[0m\n", line, column, name);
+}
