@@ -9,8 +9,6 @@ char *getNodeTypeValue(NodeType nodeType)
     {
     case UNEXPECTED_NODE:
         return "?";
-    case TYPE_NODE:
-        return "Type";
     case LITERAL_NODE:
         return "Literal";
     case BINARY_OPERATE_NODE:
@@ -44,9 +42,6 @@ void freeNode(void *node)
     // free data
     switch (((Node *)node)->nodeType)
     {
-    case TYPE_NODE:
-        freeType((Type *)node);
-        break;
     case LITERAL_NODE:
         freeLiteral((Literal *)node);
         break;
@@ -75,19 +70,6 @@ void freeNode(void *node)
         free(node);
         break;
     }
-}
-
-Node *createType(BaseType baseType)
-{
-    Type *type = (Type *)malloc(sizeof(Type));
-    type->nodeType = TYPE_NODE;
-    type->baseType = baseType;
-    return (Node *)type;
-}
-
-void freeType(Type *node)
-{
-    free(node);
 }
 
 Node *createLiteral(TokenType tokenType, char *value)
@@ -143,11 +125,11 @@ void freeBinaryOperator(BinaryOperator *node)
     free(node);
 }
 
-Node *createDeclaration(Node *type, Node *identifier, Node *initializer)
+Node *createDeclaration(BaseType *baseType, Node *identifier, Node *initializer)
 {
     Declaration *declaration = (Declaration *)malloc(sizeof(Declaration));
     declaration->nodeType = DECLARATION_NODE;
-    declaration->type = type;
+    declaration->baseType = baseType;
     declaration->identifier = identifier;
     declaration->initializer = initializer;
     return (Node *)declaration;
@@ -155,8 +137,8 @@ Node *createDeclaration(Node *type, Node *identifier, Node *initializer)
 
 void freeDeclaration(Declaration *node)
 {
-    freeNode(node->type);
-    node->type = NULL;
+    freeBaseType(node->baseType);
+    node->baseType = NULL;
     freeNode(node->identifier);
     node->identifier = NULL;
     if (node->initializer != NULL)

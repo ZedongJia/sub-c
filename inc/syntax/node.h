@@ -3,12 +3,12 @@
 #include "collection/list.h"
 #include "syntax/token.h"
 #include "syntax/types.h"
+#include "syntax/types.h"
 
 typedef enum NodeType
 {
     // expression
     UNEXPECTED_NODE,
-    TYPE_NODE,
     LITERAL_NODE,
     BINARY_OPERATE_NODE,
     UNARY_OPERATE_NODE,
@@ -28,16 +28,6 @@ typedef struct Node
 } Node;
 Node *createNode(NodeType nodeType);
 void freeNode(void *node);
-
-typedef struct Type
-{
-    // inhert
-    NodeType nodeType;
-    // extend
-    BaseType baseType;
-} Type;
-Node *createType(BaseType baseType);
-void freeType(Type *node);
 
 typedef struct Literal
 {
@@ -78,11 +68,11 @@ typedef struct Declaration
     // inhert
     NodeType nodeType;
     // extend
-    Node *type;
+    BaseType *baseType;
     Node *identifier;
     Node *initializer; // allow NULL
 } Declaration;
-Node *createDeclaration(Node *type, Node *identifier, Node *initializer);
+Node *createDeclaration(BaseType *baseType, Node *identifier, Node *initializer);
 void freeDeclaration(Declaration *node);
 
 typedef struct Label

@@ -105,23 +105,6 @@ Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer)
     return base;
 }
 
-Node *parseDimExpression(Node *base, Parser *parser, Lexer *lexer)
-{
-    peekToken(lexer);
-    Node *right = NULL;
-    TokenType tokenType = lexer->postToken->tokenType;
-    while (tokenType == LEFT_BRACKET)
-    {
-        nextToken(lexer);
-        right = parseExpression(parser, lexer, 0);
-        matchToken(lexer, RIGHT_BRACKET);
-        base = createBinaryOperator(base, DIM_TOKEN, right);
-        peekToken(lexer);
-        tokenType = lexer->postToken->tokenType;
-    }
-    return base;
-}
-
 Node *parseBinaryExpression(Node *base, Parser *parser, Lexer *lexer, int parentPriority)
 {
     peekToken(lexer);
@@ -184,17 +167,53 @@ void parseStatement(Parser *parser, Lexer *lexer)
     }
 }
 
+BaseType *parsePointerType(BaseType *baseType, Parser *parser, Lexer *lexer)
+{
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == STAR_TOKEN)
+    {
+        nextToken(lexer);
+        baseType = createPointerType(parsePointerType(baseType, parser, lexer));
+    }
+    return baseType;
+}
+
+BaseType *parseArrayType(BaseType *baseType, Parser *parser, Lexer *lexer)
+{
+    peekToken(lexer);
+    if (lexer->postToken->tokenType == LEFT_BRACKET)
+    {
+        nextToken(lexer);
+        int size = 0;
+        if (!matchToken(lexer, INT_LITERAL_TOKEN))
+        {
+            matchToken(lexer, RIGHT_BRACKET);
+            return createArrayType(baseType, size);
+        }
+        size = atoi(lexer->currToken->value);
+        matchToken(lexer, RIGHT_BRACKET);
+        baseType = createArrayType(parseArrayType(baseType, parser, lexer), size);
+    }
+    return baseType;
+}
+
 void parseDeclarationStatement(Parser *parser, Lexer *lexer)
 {
     nextToken(lexer);
-    BaseType baseType = tokenTypeToBaseType(lexer->currToken->tokenType);
+    ValueType valueType = tokenTypeToValueType(lexer->currToken->tokenType);
     peekToken(lexer);
-    Node *type, *identifier, *initializer;
+    Node *identifier, *initializer;
     while (1)
     {
-        type = createType(baseType);
-        identifier = parseUnaryExpression(parser, lexer, 0);
-        identifier = parseDimExpression(identifier, parser, lexer);
+        BaseType *baseType = createBaseType(valueType);
+        baseType = parsePointerType(baseType, parser, lexer);
+        if (!matchToken(lexer, IDENTIFIER_TOKEN))
+        {
+            freeBaseType(baseType);
+            break;
+        }
+        identifier = createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+        baseType = parseArrayType(baseType, parser, lexer);
         peekToken(lexer);
         if (lexer->postToken->tokenType == EQUAL_TOKEN)
         {
@@ -205,7 +224,7 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
         {
             initializer = NULL;
         }
-        appendToList(parser->currScope->list, createDeclaration(type, identifier, initializer));
+        appendToList(parser->currScope->list, createDeclaration(baseType, identifier, initializer));
         peekToken(lexer);
         if (lexer->postToken->tokenType != COMMA_TOKEN)
             break;

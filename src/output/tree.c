@@ -22,9 +22,28 @@ void __prettyTokenType(TokenType type)
     printf("\033[35;1m%s\033[0m", getTokenTypeValue(type));
 }
 
-void __prettyType(BaseType baseType)
+void __prettyBaseType(BaseType *baseType)
 {
-    printf("\033[36;1m%s\033[0m", getBaseTypeValue(baseType));
+    printf("\033[36;1m%s\033[0m", getValueTypeValue(baseType->valueType));
+    switch (baseType->valueType)
+    {
+    case POINTER_VALUE: {
+        PointerType *pointerType = (PointerType *)baseType;
+        printf("_%d(", pointerType->dim);
+        __prettyBaseType(pointerType->baseType);
+        printf(")");
+        break;
+    }
+    case ARRAY_VALUE: {
+        ArrayType *arrayType = (ArrayType *)baseType;
+        printf("(%d*", arrayType->size);
+        __prettyBaseType(arrayType->baseType);
+        printf(")");
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void __prettyTree(Node *node, int *parr, int indent, int isLast)
@@ -38,12 +57,6 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     switch (node->nodeType)
     {
     case UNEXPECTED_NODE: {
-        printf("\n");
-        break;
-    }
-    case TYPE_NODE: {
-        Type *type = (Type *)node;
-        __prettyType(type->baseType);
         printf("\n");
         break;
     }
@@ -70,8 +83,9 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     }
     case DECLARATION_NODE: {
         Declaration *declaration = (Declaration *)node;
+        printf("Type: ");
+        __prettyBaseType(declaration->baseType);
         printf("\n");
-        __prettyTree(declaration->type, parr, indent + 1, 0);
         __prettyTree(declaration->identifier, parr, indent + 1, declaration->initializer == NULL);
         if (declaration->initializer != NULL)
             __prettyTree(declaration->initializer, parr, indent + 1, 1);
