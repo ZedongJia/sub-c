@@ -85,6 +85,7 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
         Declaration *declaration = (Declaration *)node;
         printf("Type: ");
         __prettyBaseType(declaration->baseType);
+        printf(" %dbytes", declaration->baseType->offset);
         printf("\n");
         __prettyTree(declaration->identifier, parr, indent + 1, declaration->initializer == NULL);
         if (declaration->initializer != NULL)

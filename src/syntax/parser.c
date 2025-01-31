@@ -187,7 +187,6 @@ BaseType *parseArrayType(BaseType *baseType, Parser *parser, Lexer *lexer)
         int size = 0;
         if (!matchToken(lexer, INT_LITERAL_TOKEN))
         {
-            matchToken(lexer, RIGHT_BRACKET);
             return createArrayType(baseType, size);
         }
         size = atoi(lexer->currToken->value);

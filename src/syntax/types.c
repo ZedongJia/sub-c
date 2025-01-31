@@ -40,10 +40,10 @@ BaseType *createBaseType(ValueType valueType)
     int offset = 0;
     switch (valueType)
     {
-    case INT_TOKEN:
+    case INT_VALUE:
         offset = 4;
         break;
-    case CHAR_TOKEN:
+    case CHAR_VALUE:
         offset = 1;
         break;
     default:
