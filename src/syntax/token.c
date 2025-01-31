@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *getTokenTypeValue(TokenType type)
+const char *getTokenTypeValue(TokenType tokenType)
 {
-    switch (type)
+    switch (tokenType)
     {
     case INT_LITERAL_TOKEN:
         return "Int Literal";
     case STRING_LITERAL_TOKEN:
         return "String Literal";
-    // type-keywords
+    // tokenType-keywords
     case INT_TOKEN:
         return "Int";
     case CHAR_TOKEN:
@@ -107,9 +107,9 @@ int isLetter(int ch)
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
 }
 
-int getUnaryTokenPriority(TokenType type)
+int getUnaryTokenPriority(TokenType tokenType)
 {
-    switch (type)
+    switch (tokenType)
     {
     case PLUS_TOKEN:
     case MINUS_TOKEN:
@@ -122,9 +122,9 @@ int getUnaryTokenPriority(TokenType type)
     }
 }
 
-int getBinaryTokenPriority(TokenType type)
+int getBinaryTokenPriority(TokenType tokenType)
 {
-    switch (type)
+    switch (tokenType)
     {
     case STAR_TOKEN:
     case SLASH_TOKEN:
@@ -155,10 +155,10 @@ int getBinaryTokenPriority(TokenType type)
     }
 }
 
-int getAssociation(TokenType type)
+int getAssociation(TokenType tokenType)
 {
     // 0 means left, 1 means right
-    switch (type)
+    switch (tokenType)
     {
     case EQUAL_TOKEN:
         return 1;
@@ -167,24 +167,22 @@ int getAssociation(TokenType type)
     }
 }
 
-Token *createToken(TokenType type, char *value, int length, int line, int column)
+Token *createToken(TokenType tokenType, char *value, int line, int column)
 {
     Token *token = (Token *)malloc(sizeof(Token));
-    token->type = type;
-    token->value = (char *)malloc(length * sizeof(char));
+    token->tokenType = tokenType;
+    token->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
     strcpy(token->value, value);
-    token->length = length;
     token->line = line;
     token->column = column;
     return token;
 }
 
-Token *createSymbolToken(TokenType type, int line, int column)
+Token *createSymbolToken(TokenType tokenType, int line, int column)
 {
     Token *token = (Token *)malloc(sizeof(Token));
-    token->type = type;
+    token->tokenType = tokenType;
     token->value = NULL;
-    token->length = 0;
     token->line = line;
     token->column = column;
     return token;

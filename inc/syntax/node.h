@@ -44,11 +44,10 @@ typedef struct Literal
     // inhert
     NodeKind kind;
     // extend
-    TokenType type;
+    TokenType tokenType;
     char *value;
-    int length;
 } Literal;
-Node *createLiteral(TokenType type, char *value, int length);
+Node *createLiteral(TokenType tokenType, char *value);
 void freeLiteral(Literal *node);
 
 typedef struct UnaryOperator
@@ -56,10 +55,10 @@ typedef struct UnaryOperator
     // inhert
     NodeKind kind;
     // extend
-    TokenType type;
+    TokenType tokenType;
     Node *operand;
 } UnaryOperator;
-Node *createUnaryOperator(TokenType type, Node *operand);
+Node *createUnaryOperator(TokenType tokenType, Node *operand);
 void freeUnaryOperator(UnaryOperator *node);
 
 typedef struct BinaryOperator
@@ -68,10 +67,10 @@ typedef struct BinaryOperator
     NodeKind kind;
     // extend
     Node *left;
-    TokenType type;
+    TokenType tokenType;
     Node *right;
 } BinaryOperator;
-Node *createBinaryOperator(Node *left, TokenType type, Node *right);
+Node *createBinaryOperator(Node *left, TokenType tokenType, Node *right);
 void freeBinaryOperator(BinaryOperator *node);
 
 typedef struct Declaration

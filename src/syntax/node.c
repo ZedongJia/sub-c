@@ -90,14 +90,13 @@ void freeType(Type *node)
     free(node);
 }
 
-Node *createLiteral(TokenType type, char *value, int length)
+Node *createLiteral(TokenType tokenType, char *value)
 {
     Literal *literal = (Literal *)malloc(sizeof(Literal));
     literal->kind = LITERAL_KIND;
-    literal->type = type;
-    literal->value = (char *)malloc(length * sizeof(char));
+    literal->tokenType = tokenType;
+    literal->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
     strcpy(literal->value, value);
-    literal->length = length;
     return (Node *)literal;
 }
 
@@ -109,11 +108,11 @@ void freeLiteral(Literal *node)
     free(node);
 }
 
-Node *createUnaryOperator(TokenType type, Node *operand)
+Node *createUnaryOperator(TokenType tokenType, Node *operand)
 {
     UnaryOperator *unaryOperator = (UnaryOperator *)malloc(sizeof(UnaryOperator));
     unaryOperator->kind = UNARY_OPERATE_KIND;
-    unaryOperator->type = type;
+    unaryOperator->tokenType = tokenType;
     unaryOperator->operand = operand;
     return (Node *)unaryOperator;
 }
@@ -125,12 +124,12 @@ void freeUnaryOperator(UnaryOperator *node)
     free(node);
 }
 
-Node *createBinaryOperator(Node *left, TokenType type, Node *right)
+Node *createBinaryOperator(Node *left, TokenType tokenType, Node *right)
 {
     BinaryOperator *binaryOperator = (BinaryOperator *)malloc(sizeof(BinaryOperator));
     binaryOperator->kind = BINARY_OPERATE_KIND;
     binaryOperator->left = left;
-    binaryOperator->type = type;
+    binaryOperator->tokenType = tokenType;
     binaryOperator->right = right;
     return (Node *)binaryOperator;
 }

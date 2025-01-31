@@ -18,7 +18,7 @@ void freeParser(Parser *parser)
 Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
 {
     peekToken(lexer);
-    switch (lexer->postToken->type)
+    switch (lexer->postToken->tokenType)
     {
     case LEFT_PARENTHESIS: {
         // ( expression )
@@ -40,11 +40,11 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     case STRING_LITERAL_TOKEN:
     case IDENTIFIER_TOKEN: {
         nextToken(lexer);
-        return createLiteral(lexer->currToken->type, lexer->currToken->value, lexer->currToken->length);
+        return createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
     }
     default: {
         reportUnexpectedToken(lexer->postToken->line, lexer->postToken->column,
-                              getTokenTypeValue(lexer->postToken->type), "expression");
+                              getTokenTypeValue(lexer->postToken->tokenType), "expression");
         return createNode(UNEXPECTED_KIND);
     }
     }
@@ -54,14 +54,14 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
 {
     peekToken(lexer);
     Node *expression;
-    int priority = getUnaryTokenPriority(lexer->postToken->type);
+    int priority = getUnaryTokenPriority(lexer->postToken->tokenType);
     if (priority != 0 && priority >= parentPriority)
     {
         // right association
         nextToken(lexer);
-        TokenType type = lexer->currToken->type;
+        TokenType tokenType = lexer->currToken->tokenType;
         Node *operand = parseExpression(parser, lexer, priority);
-        expression = createUnaryOperator(type, operand);
+        expression = createUnaryOperator(tokenType, operand);
     }
     else
         expression = parsePrimaryExpression(parser, lexer);
@@ -71,13 +71,13 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
 Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer)
 {
     Node *right = NULL;
-    TokenType type;
+    TokenType tokenType;
     int isDone = 0;
     while (!isDone)
     {
         peekToken(lexer);
-        type = lexer->postToken->type;
-        switch (type)
+        tokenType = lexer->postToken->tokenType;
+        switch (tokenType)
         {
         case LEFT_BRACKET: {
             // []
@@ -109,15 +109,15 @@ Node *parseDimExpression(Node *base, Parser *parser, Lexer *lexer)
 {
     peekToken(lexer);
     Node *right = NULL;
-    TokenType type = lexer->postToken->type;
-    while (type == LEFT_BRACKET)
+    TokenType tokenType = lexer->postToken->tokenType;
+    while (tokenType == LEFT_BRACKET)
     {
         nextToken(lexer);
         right = parseExpression(parser, lexer, 0);
         matchToken(lexer, RIGHT_BRACKET);
         base = createBinaryOperator(base, DIM_TOKEN, right);
         peekToken(lexer);
-        type = lexer->postToken->type;
+        tokenType = lexer->postToken->tokenType;
     }
     return base;
 }
@@ -126,20 +126,20 @@ Node *parseBinaryExpression(Node *base, Parser *parser, Lexer *lexer, int parent
 {
     peekToken(lexer);
     Node *right = NULL;
-    TokenType type = lexer->postToken->type;
-    int priority = getBinaryTokenPriority(type);
-    int association = getAssociation(type);
+    TokenType tokenType = lexer->postToken->tokenType;
+    int priority = getBinaryTokenPriority(tokenType);
+    int association = getAssociation(tokenType);
     while ((priority != 0) && (association ? priority >= parentPriority : priority > parentPriority))
     {
         nextToken(lexer);
-        type = lexer->currToken->type;
+        tokenType = lexer->currToken->tokenType;
         right = parseExpression(parser, lexer, priority);
-        base = createBinaryOperator(base, type, right); // here use type, so we store type
+        base = createBinaryOperator(base, tokenType, right); // here use tokenType, so we store tokenType
         // peek next token
         peekToken(lexer);
-        type = lexer->postToken->type;
-        priority = getBinaryTokenPriority(type);
-        association = getAssociation(type);
+        tokenType = lexer->postToken->tokenType;
+        priority = getBinaryTokenPriority(tokenType);
+        association = getAssociation(tokenType);
     }
     return base;
 }
@@ -156,7 +156,7 @@ Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
 void parseStatement(Parser *parser, Lexer *lexer)
 {
     peekToken(lexer);
-    switch (lexer->postToken->type)
+    switch (lexer->postToken->tokenType)
     {
     case INT_TOKEN:
     case CHAR_TOKEN: {
@@ -187,7 +187,7 @@ void parseStatement(Parser *parser, Lexer *lexer)
 void parseDeclarationStatement(Parser *parser, Lexer *lexer)
 {
     nextToken(lexer);
-    BaseType baseType = tokenTypeToBaseType(lexer->currToken->type);
+    BaseType baseType = tokenTypeToBaseType(lexer->currToken->tokenType);
     peekToken(lexer);
     Node *type, *identifier, *initializer;
     while (1)
@@ -196,7 +196,7 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
         identifier = parseUnaryExpression(parser, lexer, 0);
         identifier = parseDimExpression(identifier, parser, lexer);
         peekToken(lexer);
-        if (lexer->postToken->type == EQUAL_TOKEN)
+        if (lexer->postToken->tokenType == EQUAL_TOKEN)
         {
             nextToken(lexer);
             initializer = parseExpression(parser, lexer, 0);
@@ -207,7 +207,7 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
         }
         appendToList(parser->currScope->list, createDeclaration(type, identifier, initializer));
         peekToken(lexer);
-        if (lexer->postToken->type != COMMA_TOKEN)
+        if (lexer->postToken->tokenType != COMMA_TOKEN)
             break;
         nextToken(lexer);
     }
@@ -223,12 +223,12 @@ void parseIfStatement(Parser *parser, Lexer *lexer)
     appendToList(list, createJumpIfFalse(parseExpression(parser, lexer, 0), trueEndLabelNumber));
     matchToken(lexer, RIGHT_PARENTHESIS);
     peekToken(lexer);
-    if (lexer->postToken->type == LEFT_BRACE)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         parseStatements(parser, lexer, 0);
     else
         parseStatement(parser, lexer);
     peekToken(lexer);
-    if (lexer->postToken->type == ELSE_TOKEN)
+    if (lexer->postToken->tokenType == ELSE_TOKEN)
     {
         int falseEndLabelNumber = parser->labelNumber++;
         appendToList(list, createJump(falseEndLabelNumber));
@@ -246,7 +246,7 @@ void parseElseStatement(Parser *parser, Lexer *lexer)
 {
     matchToken(lexer, ELSE_TOKEN);
     peekToken(lexer);
-    if (lexer->postToken->type == LEFT_BRACE)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         parseStatements(parser, lexer, 0);
     else
         parseStatement(parser, lexer);
@@ -269,7 +269,7 @@ void parseForStatement(Parser *parser, Lexer *lexer)
     Node *expression = parseExpression(parser, lexer, 0);
     matchToken(lexer, RIGHT_PARENTHESIS);
     peekToken(lexer);
-    if (lexer->postToken->type == LEFT_BRACE)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         parseStatements(parser, lexer, 0);
     else
         parseStatement(parser, lexer);
@@ -293,7 +293,7 @@ void parseWhileStatement(Parser *parser, Lexer *lexer)
     appendToList(list, createJumpIfFalse(parseExpression(parser, lexer, 0), whileEndLabelNumber));
     matchToken(lexer, RIGHT_PARENTHESIS);
     peekToken(lexer);
-    if (lexer->postToken->type == LEFT_BRACE)
+    if (lexer->postToken->tokenType == LEFT_BRACE)
         parseStatements(parser, lexer, 0);
     else
         parseStatement(parser, lexer);
@@ -313,8 +313,8 @@ Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal)
     if (!isGlobal)
         matchToken(lexer, LEFT_BRACE);
     peekToken(lexer);
-    while ((lexer->postToken->type != END_OF_FILE_TOKEN) &&
-           ((isGlobal) || (!isGlobal && lexer->postToken->type != RIGHT_BRACE)))
+    while ((lexer->postToken->tokenType != END_OF_FILE_TOKEN) &&
+           ((isGlobal) || (!isGlobal && lexer->postToken->tokenType != RIGHT_BRACE)))
     {
         parseStatement(parser, lexer);
         peekToken(lexer);

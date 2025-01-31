@@ -49,13 +49,13 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     }
     case LITERAL_KIND: {
         Literal *literal = (Literal *)node;
-        __prettyTokenType(literal->type);
+        __prettyTokenType(literal->tokenType);
         printf("(%s)\n", literal->value);
         break;
     }
     case BINARY_OPERATE_KIND: {
         BinaryOperator *binaryOperator = (BinaryOperator *)node;
-        __prettyTokenType(binaryOperator->type);
+        __prettyTokenType(binaryOperator->tokenType);
         printf("\n");
         __prettyTree(binaryOperator->left, parr, indent + 1, 0);
         __prettyTree(binaryOperator->right, parr, indent + 1, 1);
@@ -63,7 +63,7 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     }
     case UNARY_OPERATE_KIND: {
         UnaryOperator *unaryOperator = (UnaryOperator *)node;
-        __prettyTokenType(unaryOperator->type);
+        __prettyTokenType(unaryOperator->tokenType);
         printf("\n");
         __prettyTree(unaryOperator->operand, parr, indent + 1, 1);
         break;

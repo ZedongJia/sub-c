@@ -62,7 +62,7 @@ Token *__lexNumber(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    return createToken(INT_LITERAL_TOKEN, lexer->__buffer, length, lexer->line, lexer->column - length + 1);
+    return createToken(INT_LITERAL_TOKEN, lexer->__buffer, lexer->line, lexer->column - length + 1);
 }
 
 Token *__lexKeywordOrIdentifier(Lexer *lexer)
@@ -80,26 +80,26 @@ Token *__lexKeywordOrIdentifier(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    TokenType type;
+    TokenType tokenType;
     if (strcmp(lexer->__buffer, "int") == 0)
-        type = INT_TOKEN;
+        tokenType = INT_TOKEN;
     else if (strcmp(lexer->__buffer, "char") == 0)
-        type = CHAR_TOKEN;
+        tokenType = CHAR_TOKEN;
     else if (strcmp(lexer->__buffer, "if") == 0)
-        type = IF_TOKEN;
+        tokenType = IF_TOKEN;
     else if (strcmp(lexer->__buffer, "else") == 0)
-        type = ELSE_TOKEN;
+        tokenType = ELSE_TOKEN;
     else if (strcmp(lexer->__buffer, "for") == 0)
-        type = FOR_TOKEN;
+        tokenType = FOR_TOKEN;
     else if (strcmp(lexer->__buffer, "while") == 0)
-        type = WHILE_TOKEN;
+        tokenType = WHILE_TOKEN;
     else if (strcmp(lexer->__buffer, "true") == 0)
-        type = TRUE_TOKEN;
+        tokenType = TRUE_TOKEN;
     else if (strcmp(lexer->__buffer, "false") == 0)
-        type = FALSE_TOKEN;
+        tokenType = FALSE_TOKEN;
     else
-        type = IDENTIFIER_TOKEN;
-    return createToken(type, lexer->__buffer, length, lexer->line, lexer->column - length + 1);
+        tokenType = IDENTIFIER_TOKEN;
+    return createToken(tokenType, lexer->__buffer, lexer->line, lexer->column - length + 1);
 }
 
 Token *__lexString(Lexer *lexer)
@@ -139,7 +139,7 @@ Token *__lexString(Lexer *lexer)
     }
     lexer->__buffer[length] = '\0';
     length++;
-    return createToken(STRING_LITERAL_TOKEN, lexer->__buffer, length, lexer->line, lexer->column - length + 1);
+    return createToken(STRING_LITERAL_TOKEN, lexer->__buffer, lexer->line, lexer->column - length + 1);
 }
 
 Token *__lex(Lexer *lexer)
@@ -149,32 +149,32 @@ Token *__lex(Lexer *lexer)
         return __lexNumber(lexer);
     if (isLetter(lexer->__currChar) || lexer->__currChar == '_')
         return __lexKeywordOrIdentifier(lexer);
-    TokenType type;
+    TokenType tokenType;
     switch (lexer->__currChar)
     {
     case '\"':
         return __lexString(lexer);
     case '+':
-        type = PLUS_TOKEN;
+        tokenType = PLUS_TOKEN;
         break;
     case '-':
-        type = MINUS_TOKEN;
+        tokenType = MINUS_TOKEN;
         break;
     case '*':
-        type = STAR_TOKEN;
+        tokenType = STAR_TOKEN;
         break;
     case '/':
-        type = SLASH_TOKEN;
+        tokenType = SLASH_TOKEN;
         break;
     case '>': {
         __peekChar(lexer);
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            type = GREATER_EQUAL_TOKEN;
+            tokenType = GREATER_EQUAL_TOKEN;
         }
         else
-            type = GREATER_TOKEN;
+            tokenType = GREATER_TOKEN;
         break;
     }
     case '<': {
@@ -182,10 +182,10 @@ Token *__lex(Lexer *lexer)
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            type = LESS_EQUAL_TOKEN;
+            tokenType = LESS_EQUAL_TOKEN;
         }
         else
-            type = LESS_TOKEN;
+            tokenType = LESS_TOKEN;
         break;
     }
     case '=': {
@@ -193,10 +193,10 @@ Token *__lex(Lexer *lexer)
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            type = DOUBLE_EQUAL_TOKEN;
+            tokenType = DOUBLE_EQUAL_TOKEN;
         }
         else
-            type = EQUAL_TOKEN;
+            tokenType = EQUAL_TOKEN;
         break;
     }
     case '&': {
@@ -204,10 +204,10 @@ Token *__lex(Lexer *lexer)
         if (lexer->__postChar == '&')
         {
             __nextChar(lexer);
-            type = DOUBLE_LOGIC_AND_TOKEN;
+            tokenType = DOUBLE_LOGIC_AND_TOKEN;
         }
         else
-            type = LOGIC_AND_TOKEN;
+            tokenType = LOGIC_AND_TOKEN;
         break;
     }
     case '|': {
@@ -215,10 +215,10 @@ Token *__lex(Lexer *lexer)
         if (lexer->__postChar == '|')
         {
             __nextChar(lexer);
-            type = DOUBLE_LOGIC_OR_TOKEN;
+            tokenType = DOUBLE_LOGIC_OR_TOKEN;
         }
         else
-            type = LOGIC_OR_TOKEN;
+            tokenType = LOGIC_OR_TOKEN;
         break;
     }
     case '!': {
@@ -226,35 +226,35 @@ Token *__lex(Lexer *lexer)
         if (lexer->__postChar == '=')
         {
             __nextChar(lexer);
-            type = NOT_EQUAL_TOKEN;
+            tokenType = NOT_EQUAL_TOKEN;
         }
         else
-            type = LOGIC_NOT_TOKEN;
+            tokenType = LOGIC_NOT_TOKEN;
         break;
     }
     case '(':
-        type = LEFT_PARENTHESIS;
+        tokenType = LEFT_PARENTHESIS;
         break;
     case ')':
-        type = RIGHT_PARENTHESIS;
+        tokenType = RIGHT_PARENTHESIS;
         break;
     case '[':
-        type = LEFT_BRACKET;
+        tokenType = LEFT_BRACKET;
         break;
     case ']':
-        type = RIGHT_BRACKET;
+        tokenType = RIGHT_BRACKET;
         break;
     case '{':
-        type = LEFT_BRACE;
+        tokenType = LEFT_BRACE;
         break;
     case '}':
-        type = RIGHT_BRACE;
+        tokenType = RIGHT_BRACE;
         break;
     case ',':
-        type = COMMA_TOKEN;
+        tokenType = COMMA_TOKEN;
         break;
     case ';':
-        type = SEMI_COLON_TOKEN;
+        tokenType = SEMI_COLON_TOKEN;
         break;
     case '\n':
         lexer->line++;
@@ -265,14 +265,14 @@ Token *__lex(Lexer *lexer)
     case '\t':
         return __lex(lexer);
     case -1:
-        type = END_OF_FILE_TOKEN;
+        tokenType = END_OF_FILE_TOKEN;
         break;
     default:
         // error skip
         reportUnexpectedChar(lexer->line, lexer->column, lexer->__currChar);
         return __lex(lexer);
     }
-    return createSymbolToken(type, lexer->line, lexer->column);
+    return createSymbolToken(tokenType, lexer->line, lexer->column);
 }
 
 void peekToken(Lexer *lexer)
@@ -296,21 +296,21 @@ void nextToken(Lexer *lexer)
     }
 }
 
-int matchToken(Lexer *lexer, TokenType expectedType)
+int matchToken(Lexer *lexer, TokenType expectedTokenType)
 {
     peekToken(lexer);
-    TokenType type = lexer->postToken->type;
+    TokenType tokenType = lexer->postToken->tokenType;
     int line = lexer->postToken->line;
     int column = lexer->postToken->column;
-    if (type == expectedType)
+    if (tokenType == expectedTokenType)
     {
         nextToken(lexer);
         return 1;
     }
     else
     {
-        reportUnexpectedToken(line, column, getTokenTypeValue(type), getTokenTypeValue(expectedType));
-        switch (type)
+        reportUnexpectedToken(line, column, getTokenTypeValue(tokenType), getTokenTypeValue(expectedTokenType));
+        switch (tokenType)
         {
         case RIGHT_BRACE:
         case RIGHT_BRACKET:

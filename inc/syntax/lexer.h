@@ -34,5 +34,5 @@ Token *__lex(Lexer *lexer);
 
 void peekToken(Lexer *lexer);
 void nextToken(Lexer *lexer);
-int matchToken(Lexer *lexer, TokenType expectedType);
+int matchToken(Lexer *lexer, TokenType expectedTokenType);
 #endif
