@@ -107,8 +107,8 @@ Token *__lexString(Lexer *lexer)
     int length = 0;
     lexer->__buffer[length] = lexer->__currChar;
     length++;
-    int isDone = 0;
-    while (1)
+    int isDone = 0, isError = 0;
+    while (!isDone)
     {
         __peekChar(lexer);
         switch (lexer->__postChar)
@@ -127,11 +127,11 @@ Token *__lexString(Lexer *lexer)
         case -1: {
             // err
             reportUnclosedString(lexer->line, lexer->column - length + 1);
-            isDone = 1;
+            isError = 1;
             break;
         }
         }
-        if (isDone)
+        if (isError)
             break;
         __nextChar(lexer);
         lexer->__buffer[length] = lexer->__currChar;
