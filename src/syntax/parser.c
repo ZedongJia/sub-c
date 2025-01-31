@@ -45,7 +45,7 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
     default: {
         reportUnexpectedToken(lexer->postToken->line, lexer->postToken->column,
                               getTokenTypeValue(lexer->postToken->tokenType), "expression");
-        return createNode(UNEXPECTED_KIND);
+        return createNode(UNEXPECTED_NODE);
     }
     }
 }

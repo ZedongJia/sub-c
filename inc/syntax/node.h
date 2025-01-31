@@ -4,35 +4,35 @@
 #include "syntax/token.h"
 #include "syntax/types.h"
 
-typedef enum NodeKind
+typedef enum NodeType
 {
     // expression
-    UNEXPECTED_KIND,
-    TYPE_KIND,
-    LITERAL_KIND,
-    BINARY_OPERATE_KIND,
-    UNARY_OPERATE_KIND,
+    UNEXPECTED_NODE,
+    TYPE_NODE,
+    LITERAL_NODE,
+    BINARY_OPERATE_NODE,
+    UNARY_OPERATE_NODE,
     // statement
-    DECLARATION_KIND,
-    LABEL_KIND,
-    JUMP_IF_FALSE_KIND,
-    JUMP_KIND,
-    SCOPE_KIND
-} NodeKind;
-char *getNodeKindValue(NodeKind kind);
+    DECLARATION_NODE,
+    LABEL_NODE,
+    JUMP_IF_FALSE_NODE,
+    JUMP_NODE,
+    SCOPE_NODE
+} NodeType;
+char *getNodeTypeValue(NodeType nodeType);
 
 typedef struct Node
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
 } Node;
-Node *createNode(NodeKind kind);
+Node *createNode(NodeType nodeType);
 void freeNode(void *node);
 
 typedef struct Type
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     BaseType baseType;
 } Type;
@@ -42,7 +42,7 @@ void freeType(Type *node);
 typedef struct Literal
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     TokenType tokenType;
     char *value;
@@ -53,7 +53,7 @@ void freeLiteral(Literal *node);
 typedef struct UnaryOperator
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     TokenType tokenType;
     Node *operand;
@@ -64,7 +64,7 @@ void freeUnaryOperator(UnaryOperator *node);
 typedef struct BinaryOperator
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     Node *left;
     TokenType tokenType;
@@ -76,7 +76,7 @@ void freeBinaryOperator(BinaryOperator *node);
 typedef struct Declaration
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     Node *type;
     Node *identifier;
@@ -88,7 +88,7 @@ void freeDeclaration(Declaration *node);
 typedef struct Label
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     int number;
 } Label;
@@ -98,7 +98,7 @@ void freeLabel(Label *node);
 typedef struct JumpIfFalse
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     Node *condition;
     int number;
@@ -109,7 +109,7 @@ void freeJumpIfFalse(JumpIfFalse *node);
 typedef struct Jump
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     int number;
 } Jump;
@@ -119,7 +119,7 @@ void freeJump(Jump *node);
 typedef struct Scope
 {
     // inhert
-    NodeKind kind;
+    NodeType nodeType;
     // extend
     List *list;
     struct Scope *parentScope; // parent reference
