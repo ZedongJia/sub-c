@@ -69,10 +69,9 @@ typedef struct Declaration
     NodeType nodeType;
     // extend
     BaseType *baseType;
-    Node *identifier;
-    Node *initializer; // allow NULL
+    char *name;
 } Declaration;
-Node *createDeclaration(BaseType *baseType, Node *identifier, Node *initializer);
+Node *createDeclaration(BaseType *baseType, const char *name);
 void freeDeclaration(Declaration *node);
 
 typedef struct Label

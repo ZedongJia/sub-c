@@ -10,7 +10,6 @@ int main()
     {
         printf("[IN]\n");
         Node *root = parse(parser, stdin);
-        printf("[OUT]\n");
         prettyTree(root);
         freeNode(root);
     }

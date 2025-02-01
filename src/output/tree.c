@@ -9,7 +9,18 @@ void prettyTree(Node *node)
     int parr[256];
     for (int i = 0; i < 256; i++)
         parr[i] = 0;
+    
+    printf("[Tree]");
     __prettyTree(node, parr, 0, 1);
+    printf("\n");
+}
+
+void __prettyPrefix(int *parr, int indent, int isLast, const char *end)
+{
+    printf("\n");
+    for (int i = 0; i < indent; i++)
+        printf(parr[i] ? "    " : "│   ");
+    printf(isLast ? "└─%s " : "├─%s ", end);
 }
 
 void __prettyNodeType(NodeType nodeType)
@@ -22,9 +33,14 @@ void __prettyTokenType(TokenType type)
     printf("\033[35;1m%s\033[0m", getTokenTypeValue(type));
 }
 
+void __prettyPropertyName(const char *name)
+{
+    printf("\033[36;1m%s\033[0m", name);
+}
+
 void __prettyBaseType(BaseType *baseType)
 {
-    printf("\033[36;1m%s\033[0m", getValueTypeValue(baseType->valueType));
+    printf("%s", getValueTypeValue(baseType->valueType));
     switch (baseType->valueType)
     {
     case POINTER_VALUE: {
@@ -48,28 +64,21 @@ void __prettyBaseType(BaseType *baseType)
 
 void __prettyTree(Node *node, int *parr, int indent, int isLast)
 {
-    for (int i = 0; i < indent; i++)
-        printf(parr[i] ? "    " : "│   ");
+    __prettyPrefix(parr, indent, isLast, "─");
     parr[indent] = isLast ? 1 : 0;
-    printf(isLast ? "└── " : "├── ");
     __prettyNodeType(node->nodeType);
     printf(" ");
     switch (node->nodeType)
     {
-    case UNEXPECTED_NODE: {
-        printf("\n");
-        break;
-    }
     case LITERAL_NODE: {
         Literal *literal = (Literal *)node;
         __prettyTokenType(literal->tokenType);
-        printf("(%s)\n", literal->value);
+        printf("(%s)", literal->value);
         break;
     }
     case BINARY_OPERATE_NODE: {
         BinaryOperator *binaryOperator = (BinaryOperator *)node;
         __prettyTokenType(binaryOperator->tokenType);
-        printf("\n");
         __prettyTree(binaryOperator->left, parr, indent + 1, 0);
         __prettyTree(binaryOperator->right, parr, indent + 1, 1);
         break;
@@ -77,39 +86,39 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     case UNARY_OPERATE_NODE: {
         UnaryOperator *unaryOperator = (UnaryOperator *)node;
         __prettyTokenType(unaryOperator->tokenType);
-        printf("\n");
         __prettyTree(unaryOperator->operand, parr, indent + 1, 1);
         break;
     }
     case DECLARATION_NODE: {
         Declaration *declaration = (Declaration *)node;
-        printf("Type: ");
+        // type
+        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPropertyName("Type: ");
         __prettyBaseType(declaration->baseType);
-        printf(" %dbytes", declaration->baseType->offset);
-        printf("\n");
-        __prettyTree(declaration->identifier, parr, indent + 1, declaration->initializer == NULL);
-        if (declaration->initializer != NULL)
-            __prettyTree(declaration->initializer, parr, indent + 1, 1);
+        printf(" %dbytes ", declaration->baseType->offset);
+        // identifier
+        __prettyPrefix(parr, indent + 1, 1, "*");
+        __prettyPropertyName("Identifier: ");
+        printf("%s", declaration->name);
         break;
     }
     case LABEL_NODE: {
         Label *label = (Label *)node;
-        printf("%d\n", label->number);
+        printf("%d", label->number);
         break;
     }
     case JUMP_IF_FALSE_NODE: {
         JumpIfFalse *jumpIfFalse = (JumpIfFalse *)node;
-        printf("%d\n", jumpIfFalse->number);
+        printf("%d", jumpIfFalse->number);
         __prettyTree(jumpIfFalse->condition, parr, indent + 1, 1);
         break;
     case JUMP_NODE: {
         Jump *jump = (Jump *)node;
-        printf("%d\n", jump->number);
+        printf("%d", jump->number);
         break;
     }
     case SCOPE_NODE: {
         Scope *scope = (Scope *)node;
-        printf("\n");
         ListNode *p = scope->list->head;
         while (p != NULL)
         {

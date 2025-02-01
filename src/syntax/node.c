@@ -125,13 +125,13 @@ void freeBinaryOperator(BinaryOperator *node)
     free(node);
 }
 
-Node *createDeclaration(BaseType *baseType, Node *identifier, Node *initializer)
+Node *createDeclaration(BaseType *baseType, const char *name)
 {
     Declaration *declaration = (Declaration *)malloc(sizeof(Declaration));
     declaration->nodeType = DECLARATION_NODE;
     declaration->baseType = baseType;
-    declaration->identifier = identifier;
-    declaration->initializer = initializer;
+    declaration->name = (char *)malloc((strlen(name) + 1) * sizeof(char));
+    strcpy(declaration->name, name);
     return (Node *)declaration;
 }
 
@@ -139,11 +139,8 @@ void freeDeclaration(Declaration *node)
 {
     freeBaseType(node->baseType);
     node->baseType = NULL;
-    freeNode(node->identifier);
-    node->identifier = NULL;
-    if (node->initializer != NULL)
-        freeNode(node->initializer);
-    node->initializer = NULL;
+    freeNode(node->name);
+    node->name = NULL;
     free(node);
 }
 

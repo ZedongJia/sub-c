@@ -216,7 +216,9 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
     while (1)
     {
         BaseType *baseType = createBaseType(valueType);
+        // parse pointer
         baseType = parsePointerType(baseType, parser, lexer);
+        // parse identifier
         if (!matchToken(lexer, IDENTIFIER_TOKEN))
         {
             freeBaseType(baseType);
@@ -225,7 +227,9 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
         identifier = createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
         int line = lexer->currToken->line;
         int column = lexer->currToken->column;
+        // parse array type
         baseType = parseArrayType(baseType, parser, lexer);
+        // parse initializer
         peekToken(lexer);
         if (lexer->postToken->tokenType == EQUAL_TOKEN)
         {
@@ -237,17 +241,19 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
             initializer = NULL;
         }
         const char *name = ((Literal *)identifier)->value;
-        if (!tryDeclare(&parser->currScope->table, baseType, name))
+        if (tryDeclare(&parser->currScope->table, baseType, name))
+        {
+            appendToList(parser->currScope->list, createDeclaration(baseType, name));
+            if (initializer != NULL)
+                appendToList(parser->currScope->list, createBinaryOperator(identifier, EQUAL_TOKEN, initializer));
+        }
+        else
         {
             reportVariabledefined(line, column, name);
             freeBaseType(baseType);
             freeNode(identifier);
             if (initializer != NULL)
                 freeNode(initializer);
-        }
-        else
-        {
-            appendToList(parser->currScope->list, createDeclaration(baseType, identifier, initializer));
         }
         peekToken(lexer);
         if (lexer->postToken->tokenType != COMMA_TOKEN)
