@@ -1,6 +1,6 @@
+#include "syntax/node.h"
 #ifndef TREE
 #define TREE
-#include "syntax/node.h"
 void prettyTree(Node *node);
 void __prettyPrefix(int *parr, int indent, int isLast, const char *end);
 void __prettyNodeType(NodeType nodeType);

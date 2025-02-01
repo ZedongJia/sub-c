@@ -1,7 +1,7 @@
-#ifndef PARSER
-#define PARSER
 #include "syntax/lexer.h"
 #include "syntax/node.h"
+#ifndef PARSER
+#define PARSER
 typedef struct Parser
 {
     int labelNumber;

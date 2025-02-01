@@ -20,7 +20,28 @@ void reportVariableUndefined(int line, int column, const char *name)
 {
     printf("\033[31;1mError at line:%d column:%d: variable %s has't been defined\033[0m\n", line, column, name);
 }
+
 void reportVariabledefined(int line, int column, const char *name)
 {
     printf("\033[31;1mError at line:%d column:%d: variable %s has been defined\033[0m\n", line, column, name);
+}
+
+void reportBinaryOperatorError(int line, int column, const char *left, const char *op, const char *right)
+{
+    printf("\033[31;1mError at line:%d column:%d: Not support %s %s %s\033[0m\n", line, column, left, op, right);
+}
+
+void reportUnaryOperatorError(int line, int column, const char *op, char *operand)
+{
+    printf("\033[31;1mError at line:%d column:%d: Not support %s %s\033[0m\n", line, column, op, operand);
+}
+
+void reportAccessError(int line, int column, const char *name)
+{
+    printf("\033[31;1mError at line:%d column:%d: Can't access %s\033[0m\n", line, column, name);
+}
+
+void reportCallError(int line, int column, const char *name)
+{
+    printf("\033[31;1mError at line:%d column:%d: Can't cal %s\033[0m\n", line, column, name);
 }

@@ -35,19 +35,28 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
         return expression;
     }
     case TRUE_TOKEN:
-    case FALSE_TOKEN:
-    case INT_LITERAL_TOKEN:
+    case FALSE_TOKEN: {
+        nextToken(lexer);
+        return createLiteral(createBaseType(BOOL_VALUE), lexer->currToken->tokenType, lexer->currToken->value);
+    }
+    case INT_LITERAL_TOKEN: {
+        nextToken(lexer);
+        return createLiteral(createBaseType(INT_VALUE), lexer->currToken->tokenType, lexer->currToken->value);
+    }
     case STRING_LITERAL_TOKEN: {
         nextToken(lexer);
-        return createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+        return createLiteral(createPointerType(createBaseType(CHAR_VALUE)), lexer->currToken->tokenType,
+                             lexer->currToken->value);
     }
     case IDENTIFIER_TOKEN: {
         nextToken(lexer);
         Scope *p = parser->currScope;
         while (p != NULL)
         {
-            if (tryLookUp(&p->table, lexer->currToken->value))
-                return createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+            int index = tryLookUp(&p->table, lexer->currToken->value);
+            if (index != -1)
+                return createLiteral(p->table.variables[index].baseType, lexer->currToken->tokenType,
+                                     lexer->currToken->value);
             p = p->parentScope;
         }
         reportVariableUndefined(lexer->currToken->line, lexer->currToken->column, lexer->currToken->value);
@@ -70,9 +79,18 @@ Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority)
     {
         // right association
         nextToken(lexer);
+        int line = lexer->currToken->line;
+        int column = lexer->currToken->column;
         TokenType tokenType = lexer->currToken->tokenType;
         Node *operand = parseExpression(parser, lexer, priority);
-        expression = createUnaryOperator(tokenType, operand);
+        BaseType *baseType = computeUnaryOperator(STAR_TOKEN, ((ExpressionView *)operand)->baseType);
+        if (baseType == NULL)
+        {
+            reportUnaryOperatorError(line, column, getTokenTypeValue(tokenType),
+                                     getValueTypeValue(((ExpressionView *)operand)->baseType->valueType));
+            baseType = ((ExpressionView *)operand)->baseType;
+        }
+        expression = createUnaryOperator(baseType, tokenType, operand);
     }
     else
         expression = parsePrimaryExpression(parser, lexer);
@@ -93,10 +111,28 @@ Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer)
         case LEFT_BRACKET: {
             // []
             nextToken(lexer);
+            int line = lexer->currToken->line;
+            int column = lexer->currToken->column;
             right = parseExpression(parser, lexer, 0);
             matchToken(lexer, RIGHT_BRACKET);
-            base = createBinaryOperator(base, PLUS_TOKEN, right);
-            base = createUnaryOperator(STAR_TOKEN, base);
+            BaseType *baseType = computeBinaryOperator(((ExpressionView *)base)->baseType, PLUS_TOKEN,
+                                                       ((ExpressionView *)right)->baseType);
+            if (baseType == NULL)
+            {
+                reportBinaryOperatorError(
+                    line, column, getValueTypeValue(((ExpressionView *)base)->baseType->valueType),
+                    getTokenTypeValue(PLUS_TOKEN), getValueTypeValue(((ExpressionView *)right)->baseType->valueType));
+                baseType = ((ExpressionView *)base)->baseType;
+            }
+            base = createBinaryOperator(baseType, base, PLUS_TOKEN, right);
+            baseType = computeUnaryOperator(STAR_TOKEN, ((ExpressionView *)base)->baseType);
+            if (baseType == NULL)
+            {
+                reportUnaryOperatorError(line, column, getTokenTypeValue(STAR_TOKEN),
+                                         getValueTypeValue(((ExpressionView *)base)->baseType->valueType));
+                baseType = ((ExpressionView *)base)->baseType;
+            }
+            base = createUnaryOperator(baseType, STAR_TOKEN, base);
             break;
         }
         case LEFT_PARENTHESIS: {
@@ -104,7 +140,8 @@ Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer)
             nextToken(lexer);
             right = parseExpression(parser, lexer, 0);
             matchToken(lexer, RIGHT_PARENTHESIS);
-            base = createBinaryOperator(base, CALL_TOKEN, right);
+            // TODO: there should be callable check
+            base = createBinaryOperator(((ExpressionView *)base)->baseType, base, CALL_TOKEN, right);
             break;
         }
         default: {
@@ -127,8 +164,19 @@ Node *parseBinaryExpression(Node *base, Parser *parser, Lexer *lexer, int parent
     {
         nextToken(lexer);
         tokenType = lexer->currToken->tokenType;
+        int line = lexer->currToken->line;
+        int column = lexer->currToken->column;
         right = parseExpression(parser, lexer, priority);
-        base = createBinaryOperator(base, tokenType, right); // here use tokenType, so we store tokenType
+        BaseType *baseType =
+            computeBinaryOperator(((ExpressionView *)base)->baseType, tokenType, ((ExpressionView *)right)->baseType);
+        if (baseType == NULL)
+        {
+            reportBinaryOperatorError(line, column, getValueTypeValue(((ExpressionView *)base)->baseType->valueType),
+                                      getTokenTypeValue(tokenType),
+                                      getValueTypeValue(((ExpressionView *)right)->baseType->valueType));
+            baseType = ((ExpressionView *)base)->baseType;
+        }
+        base = createBinaryOperator(baseType, base, tokenType, right);
         // peek next token
         peekToken(lexer);
         tokenType = lexer->postToken->tokenType;
@@ -224,36 +272,31 @@ void parseDeclarationStatement(Parser *parser, Lexer *lexer)
             freeBaseType(baseType);
             break;
         }
-        identifier = createLiteral(lexer->currToken->tokenType, lexer->currToken->value);
+        identifier = createLiteral(baseType, lexer->currToken->tokenType, lexer->currToken->value);
         int line = lexer->currToken->line;
         int column = lexer->currToken->column;
         // parse array type
         baseType = parseArrayType(baseType, parser, lexer);
-        // parse initializer
-        peekToken(lexer);
-        if (lexer->postToken->tokenType == EQUAL_TOKEN)
-        {
-            nextToken(lexer);
-            initializer = parseExpression(parser, lexer, 0);
-        }
-        else
-        {
-            initializer = NULL;
-        }
         const char *name = ((Literal *)identifier)->value;
         if (tryDeclare(&parser->currScope->table, baseType, name))
         {
             appendToList(parser->currScope->list, createDeclaration(baseType, name));
-            if (initializer != NULL)
-                appendToList(parser->currScope->list, createBinaryOperator(identifier, EQUAL_TOKEN, initializer));
+            initializer = parseBinaryExpression(identifier, parser, lexer, 0);
+            if (initializer->nodeType == BINARY_OPERATE_NODE)
+                appendToList(parser->currScope->list, initializer);
         }
         else
         {
             reportVariabledefined(line, column, name);
             freeBaseType(baseType);
             freeNode(identifier);
-            if (initializer != NULL)
-                freeNode(initializer);
+            peekToken(lexer);
+            while (lexer->postToken->tokenType != COMMA_TOKEN || lexer->postToken->tokenType != SEMI_COLON_TOKEN)
+            {
+                // drop initializer part
+                nextToken(lexer);
+                peekToken(lexer);
+            }
         }
         peekToken(lexer);
         if (lexer->postToken->tokenType != COMMA_TOKEN)
@@ -379,7 +422,6 @@ Node *parse(Parser *parser, FILE *file)
     Lexer *lexer = createLexer(file);
     Node *root = parseStatements(parser, lexer, 1);
     freeLexer(lexer);
-
     return root;
 }
 

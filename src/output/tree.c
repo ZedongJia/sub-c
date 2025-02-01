@@ -9,7 +9,7 @@ void prettyTree(Node *node)
     int parr[256];
     for (int i = 0; i < 256; i++)
         parr[i] = 0;
-    
+
     printf("[Tree]");
     __prettyTree(node, parr, 0, 1);
     printf("\n");
@@ -72,20 +72,45 @@ void __prettyTree(Node *node, int *parr, int indent, int isLast)
     {
     case LITERAL_NODE: {
         Literal *literal = (Literal *)node;
-        __prettyTokenType(literal->tokenType);
-        printf("(%s)", literal->value);
+        // type
+        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPropertyName("Type: ");
+        __prettyBaseType(literal->baseType);
+        printf(" %dbytes ", literal->baseType->offset);
+        // name
+        __prettyPrefix(parr, indent + 1, 1, "*");
+        __prettyPropertyName("Value: ");
+        printf("%s", literal->value);
         break;
     }
     case BINARY_OPERATE_NODE: {
         BinaryOperator *binaryOperator = (BinaryOperator *)node;
+        // type
+        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPropertyName("Type: ");
+        __prettyBaseType(binaryOperator->baseType);
+        printf(" %dbytes ", binaryOperator->baseType->offset);
+        // operator
+        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPropertyName("Operator: ");
         __prettyTokenType(binaryOperator->tokenType);
+        // left right
         __prettyTree(binaryOperator->left, parr, indent + 1, 0);
         __prettyTree(binaryOperator->right, parr, indent + 1, 1);
         break;
     }
     case UNARY_OPERATE_NODE: {
         UnaryOperator *unaryOperator = (UnaryOperator *)node;
+        // type
+        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPropertyName("Type: ");
+        __prettyBaseType(unaryOperator->baseType);
+        printf(" %dbytes ", unaryOperator->baseType->offset);
+        // operator
+        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPropertyName("Operator: ");
         __prettyTokenType(unaryOperator->tokenType);
+        // operand
         __prettyTree(unaryOperator->operand, parr, indent + 1, 1);
         break;
     }

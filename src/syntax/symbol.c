@@ -6,14 +6,14 @@ int tryLookUp(SymbolTable *table, const char *name)
     for (int i = 0; i < table->num_var; i++)
     {
         if (strcmp(name, table->variables[i].name) == 0)
-            return 1;
+            return i;
     }
-    return 0;
+    return -1;
 }
 
 int tryDeclare(SymbolTable *table, BaseType *baseType, const char *name)
 {
-    if (tryLookUp(table, name))
+    if (tryLookUp(table, name) != -1)
     {
         return 0;
     }

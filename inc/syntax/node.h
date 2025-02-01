@@ -1,9 +1,9 @@
-#ifndef NODE
-#define NODE
 #include "collection/list.h"
 #include "syntax/symbol.h"
 #include "syntax/token.h"
 #include "syntax/types.h"
+#ifndef NODE
+#define NODE
 
 typedef enum NodeType
 {
@@ -29,38 +29,51 @@ typedef struct Node
 Node *createNode(NodeType nodeType);
 void freeNode(void *node);
 
+typedef struct ExpressionView
+{
+    // inhert
+    NodeType nodeType;
+    BaseType *baseType; // ref
+} ExpressionView;
+
 typedef struct Literal
 {
     // inhert
     NodeType nodeType;
+    // inhert from expression
+    BaseType *baseType; // ref
     // extend
     TokenType tokenType;
     char *value;
 } Literal;
-Node *createLiteral(TokenType tokenType, char *value);
+Node *createLiteral(BaseType *baseType, TokenType tokenType, char *value);
 void freeLiteral(Literal *node);
 
 typedef struct UnaryOperator
 {
     // inhert
     NodeType nodeType;
+    // inhert from expression
+    BaseType *baseType; // ref
     // extend
     TokenType tokenType;
     Node *operand;
 } UnaryOperator;
-Node *createUnaryOperator(TokenType tokenType, Node *operand);
+Node *createUnaryOperator(BaseType *baseType, TokenType tokenType, Node *operand);
 void freeUnaryOperator(UnaryOperator *node);
 
 typedef struct BinaryOperator
 {
     // inhert
     NodeType nodeType;
+    // inhert from expression
+    BaseType *baseType; // ref
     // extend
     Node *left;
     TokenType tokenType;
     Node *right;
 } BinaryOperator;
-Node *createBinaryOperator(Node *left, TokenType tokenType, Node *right);
+Node *createBinaryOperator(BaseType *baseType, Node *left, TokenType tokenType, Node *right);
 void freeBinaryOperator(BinaryOperator *node);
 
 typedef struct Declaration

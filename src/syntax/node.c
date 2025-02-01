@@ -72,10 +72,11 @@ void freeNode(void *node)
     }
 }
 
-Node *createLiteral(TokenType tokenType, char *value)
+Node *createLiteral(BaseType *baseType, TokenType tokenType, char *value)
 {
     Literal *literal = (Literal *)malloc(sizeof(Literal));
     literal->nodeType = LITERAL_NODE;
+    literal->baseType = baseType;
     literal->tokenType = tokenType;
     literal->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
     strcpy(literal->value, value);
@@ -84,16 +85,18 @@ Node *createLiteral(TokenType tokenType, char *value)
 
 void freeLiteral(Literal *node)
 {
-    if (node->value != NULL)
-        free(node->value);
+    free(node->value);
     node->value = NULL;
+    freeBaseType(node->baseType);
+    node->baseType = NULL;
     free(node);
 }
 
-Node *createUnaryOperator(TokenType tokenType, Node *operand)
+Node *createUnaryOperator(BaseType *baseType, TokenType tokenType, Node *operand)
 {
     UnaryOperator *unaryOperator = (UnaryOperator *)malloc(sizeof(UnaryOperator));
     unaryOperator->nodeType = UNARY_OPERATE_NODE;
+    unaryOperator->baseType = baseType;
     unaryOperator->tokenType = tokenType;
     unaryOperator->operand = operand;
     return (Node *)unaryOperator;
@@ -101,15 +104,18 @@ Node *createUnaryOperator(TokenType tokenType, Node *operand)
 
 void freeUnaryOperator(UnaryOperator *node)
 {
+    freeBaseType(node->baseType);
+    node->baseType = NULL;
     freeNode(node->operand);
     node->operand = NULL;
     free(node);
 }
 
-Node *createBinaryOperator(Node *left, TokenType tokenType, Node *right)
+Node *createBinaryOperator(BaseType *baseType, Node *left, TokenType tokenType, Node *right)
 {
     BinaryOperator *binaryOperator = (BinaryOperator *)malloc(sizeof(BinaryOperator));
     binaryOperator->nodeType = BINARY_OPERATE_NODE;
+    binaryOperator->baseType = baseType;
     binaryOperator->left = left;
     binaryOperator->tokenType = tokenType;
     binaryOperator->right = right;
@@ -122,6 +128,8 @@ void freeBinaryOperator(BinaryOperator *node)
     node->left = NULL;
     freeNode(node->right);
     node->right = NULL;
+    freeBaseType(node->baseType);
+    node->baseType = NULL;
     free(node);
 }
 

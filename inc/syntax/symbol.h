@@ -1,6 +1,6 @@
+#include "syntax/types.h"
 #ifndef SYMBOL
 #define SYMBOL
-#include "syntax/types.h"
 
 typedef struct VariableSymbol
 {
