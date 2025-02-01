@@ -60,7 +60,7 @@ Node *parsePrimaryExpression(Parser *parser, Lexer *lexer)
             p = p->parentScope;
         }
         reportVariableUndefined(lexer->currToken->line, lexer->currToken->column, lexer->currToken->value);
-        return createNode(UNEXPECTED_NODE);
+        return createLiteral(createBaseType(UNEXPECTED_VALUE), lexer->currToken->tokenType, lexer->currToken->value);
     }
     default: {
         reportUnexpectedToken(lexer->postToken->line, lexer->postToken->column,
