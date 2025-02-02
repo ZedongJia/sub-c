@@ -35,7 +35,7 @@ void __lexNumber(Lexer *lexer)
     __putback(lexer);
     lexer->buf[lexer->len] = '\0';
     lexer->len++;
-    lexer->token = INT_LITERAL_TOKEN;
+    lexer->token = INT_LIT_T;
 }
 
 void __lexKeywordOrIdentifier(Lexer *lexer)
@@ -53,23 +53,23 @@ void __lexKeywordOrIdentifier(Lexer *lexer)
     lexer->buf[lexer->len] = '\0';
     lexer->len++;
     if (strcmp(lexer->buf, "int") == 0)
-        lexer->token = INT_TOKEN;
+        lexer->token = INT_T;
     else if (strcmp(lexer->buf, "char") == 0)
-        lexer->token = CHAR_TOKEN;
+        lexer->token = CHAR_T;
     else if (strcmp(lexer->buf, "if") == 0)
-        lexer->token = IF_TOKEN;
+        lexer->token = IF_T;
     else if (strcmp(lexer->buf, "else") == 0)
-        lexer->token = ELSE_TOKEN;
+        lexer->token = ELSE_T;
     else if (strcmp(lexer->buf, "for") == 0)
-        lexer->token = FOR_TOKEN;
+        lexer->token = FOR_T;
     else if (strcmp(lexer->buf, "while") == 0)
-        lexer->token = WHILE_TOKEN;
+        lexer->token = WHILE_T;
     else if (strcmp(lexer->buf, "true") == 0)
-        lexer->token = TRUE_TOKEN;
+        lexer->token = TRUE_T;
     else if (strcmp(lexer->buf, "false") == 0)
-        lexer->token = FALSE_TOKEN;
+        lexer->token = FALSE_T;
     else
-        lexer->token = IDENTIFIER_TOKEN;
+        lexer->token = ID_T;
 }
 
 void __lexString(Lexer *lexer)
@@ -109,60 +109,60 @@ void __lexString(Lexer *lexer)
     __putback(lexer);
     lexer->buf[lexer->len] = lexer->__cc;
     lexer->len++;
-    lexer->token = STRING_LITERAL_TOKEN;
+    lexer->token = STR_LIT_T;
 }
 
-const int tab[][4] = {
-    {'+', 0, PLUS_TOKEN, 0},
-    {'-', 0, MINUS_TOKEN, 0},
-    {'*', 0, STAR_TOKEN, 0},
-    {'/', 0, SLASH_TOKEN, 0},
-    {'>', '=', GREATER_TOKEN, GREATER_EQUAL_TOKEN},
-    {'<', '=', LESS_TOKEN, LESS_EQUAL_TOKEN},
-    {'=', '=', EQUAL_TOKEN, DOUBLE_EQUAL_TOKEN},
-    {'&', '&', LOGIC_AND_TOKEN, DOUBLE_LOGIC_AND_TOKEN},
-    {'|', '|', LOGIC_OR_TOKEN, DOUBLE_LOGIC_OR_TOKEN},
-    {'!', '=', LOGIC_NOT_TOKEN, NOT_EQUAL_TOKEN},
-    {'(', 0, LEFT_PARENTHESIS, 0},
-    {')', 0, RIGHT_PARENTHESIS, 0},
-    {'[', 0, LEFT_BRACKET, 0},
-    {']', 0, RIGHT_BRACKET, 0},
-    {'{', 0, LEFT_BRACE, 0},
-    {'}', 0, RIGHT_BRACE, 0},
-    {',', 0, COMMA_TOKEN, 0},
-    {';', 0, SEMI_COLON_TOKEN, 0},
-    {-1, 0, END_OF_FILE_TOKEN, 0},
+const int table[][4] = {
+    {'+', 0, PLUS_T, 0},
+    {'-', 0, MIN_T, 0},
+    {'*', 0, STAR_T, 0},
+    {'/', 0, SLASH_T, 0},
+    {'>', '=', GT_T, GE_T},
+    {'<', '=', LT_T, LE_T},
+    {'=', '=', EQ_T, D_EQ_T},
+    {'&', '&', AND_T, D_AND_T},
+    {'|', '|', OR_T, D_OR_T},
+    {'!', '=', NOT_T, NE_T},
+    {'(', 0, L_PAREN_T, 0},
+    {')', 0, R_PAREN_T, 0},
+    {'[', 0, L_BRK_T, 0},
+    {']', 0, R_BRK_T, 0},
+    {'{', 0, L_BRC_T, 0},
+    {'}', 0, R_BRC_T, 0},
+    {',', 0, COMMA_T, 0},
+    {';', 0, SEMI_COLON_T, 0},
+    {-1, 0, EOF_T, 0},
 };
 
-TokenType __matchTab(Lexer *lexer)
+Token __matchTable(Lexer *lexer)
 {
     int isDone = 0;
     int index = 0;
     while (!isDone)
     {
-        if (tab[index][0] == -1)
+        if (table[index][0] == -1)
             isDone = 1;
-        if (tab[index][0] == lexer->__cc)
+        if (table[index][0] == lexer->__cc)
         {
             // match first
-            if (tab[index][1])
+            if (table[index][1])
             {
                 __next(lexer);
-                if (tab[index][1] == lexer->__cc)
+                if (table[index][1] == lexer->__cc)
                 {
                     lexer->buf[lexer->len] = lexer->__cc;
                     lexer->len++;
                     lexer->buf[lexer->len] = '\0';
                     lexer->len++;
                     // match second
-                    return tab[index][3];
+                    return table[index][3];
                 }
                 // match fail, put back
                 __putback(lexer);
             }
             lexer->buf[lexer->len] = '\0';
             lexer->len++;
-            return tab[index][2];
+            return table[index][2];
         }
         index++;
     }
@@ -206,7 +206,7 @@ void __lex(Lexer *lexer)
         }
         else
         {
-            lexer->token = __matchTab(lexer);
+            lexer->token = __matchTable(lexer);
             if (!lexer->token)
             {
                 reportUnexpectedChar(lexer->line, lexer->start, lexer->__cc);
@@ -230,11 +230,11 @@ void initLexer(Lexer *lexer, FILE *in)
 
 void next(Lexer *lexer)
 {
-    if (lexer->token != END_OF_FILE_TOKEN)
+    if (lexer->token != EOF_T)
         __lex(lexer);
 }
 
-int match(Lexer *lexer, TokenType what)
+int match(Lexer *lexer, Token what)
 {
     if (lexer->token == what)
     {
@@ -243,13 +243,13 @@ int match(Lexer *lexer, TokenType what)
     }
     else
     {
-        reportUnexpectedToken(lexer->line, lexer->start, getTokenTypeValue(lexer->token), getTokenTypeValue(what));
+        reportUnexpectedToken(lexer->line, lexer->start, tokenName(lexer->token), tokenName(what));
         switch (lexer->token)
         {
-        case RIGHT_BRACE:
-        case RIGHT_BRACKET:
-        case RIGHT_PARENTHESIS:
-        case ELSE_TOKEN:
+        case R_BRC_T:
+        case R_BRK_T:
+        case R_PAREN_T:
+        case ELSE_T:
             next(lexer); // drop tokens which can't appear alone
             break;
         default:;

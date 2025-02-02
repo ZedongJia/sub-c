@@ -2,93 +2,87 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *getTokenTypeValue(TokenType tokenType)
+const char *tokenName(Token token)
 {
-    switch (tokenType)
+    switch (token)
     {
-    case INT_LITERAL_TOKEN:
+    case INT_LIT_T:
         return "Int Literal";
-    case STRING_LITERAL_TOKEN:
+    case STR_LIT_T:
         return "String Literal";
-    // tokenType-keywords
-    case INT_TOKEN:
+    // token-keywords
+    case INT_T:
         return "Int";
-    case CHAR_TOKEN:
+    case CHAR_T:
         return "Char";
     // keywords
-    case IDENTIFIER_TOKEN:
+    case ID_T:
         return "Identifier";
-    case TRUE_TOKEN:
+    case TRUE_T:
         return "True";
-    case FALSE_TOKEN:
+    case FALSE_T:
         return "False";
-    case IF_TOKEN:
+    case IF_T:
         return "If";
-    case ELSE_TOKEN:
+    case ELSE_T:
         return "Else";
-    case FOR_TOKEN:
+    case FOR_T:
         return "For";
-    case WHILE_TOKEN:
+    case WHILE_T:
         return "While";
     // scope
-    case LEFT_PARENTHESIS:
+    case L_PAREN_T:
         return "(";
-    case RIGHT_PARENTHESIS:
+    case R_PAREN_T:
         return ")";
-    case LEFT_BRACKET:
+    case L_BRK_T:
         return "[";
-    case RIGHT_BRACKET:
+    case R_BRK_T:
         return "]";
-    case LEFT_BRACE:
+    case L_BRC_T:
         return "{";
-    case RIGHT_BRACE:
+    case R_BRC_T:
         return "}";
     // operator
-    case PLUS_TOKEN:
+    case PLUS_T:
         return "+";
-    case MINUS_TOKEN:
+    case MIN_T:
         return "-";
-    case STAR_TOKEN:
+    case STAR_T:
         return "*";
-    case SLASH_TOKEN:
+    case SLASH_T:
         return "/";
-    case EQUAL_TOKEN:
+    case EQ_T:
         return "=";
-    // operate
-    case DIM_TOKEN:
-        return "dim";
-    case CALL_TOKEN:
-        return "call";
-    // logic
-    case GREATER_TOKEN:
+    case GT_T:
         return ">";
-    case GREATER_EQUAL_TOKEN:
+    case GE_T:
         return ">=";
-    case LESS_TOKEN:
+    case LT_T:
         return "<";
-    case LESS_EQUAL_TOKEN:
+    case LE_T:
         return "<=";
-    case DOUBLE_EQUAL_TOKEN:
+    case D_EQ_T:
         return "==";
-    case NOT_EQUAL_TOKEN:
+    case NE_T:
         return "!=";
-    case DOUBLE_LOGIC_AND_TOKEN:
+    case D_AND_T:
         return "&&";
-    case DOUBLE_LOGIC_OR_TOKEN:
+    case D_OR_T:
         return "||";
-    case LOGIC_AND_TOKEN:
+    case AND_T:
         return "&";
-    case LOGIC_OR_TOKEN:
+    case OR_T:
         return "|";
-    case LOGIC_NOT_TOKEN:
+    case NOT_T:
         return "!";
     // separator
-    case COMMA_TOKEN:
+    case COMMA_T:
         return ",";
-    case SEMI_COLON_TOKEN:
+    case SEMI_COLON_T:
         return ";";
     // other
-    case END_OF_FILE_TOKEN:
+    case EOF_T:
         return "EOF";
     default:
         return "?";
@@ -108,64 +102,4 @@ int isLetter(int ch)
 int canSkip(int ch)
 {
     return ch == ' ' || ch == '\r' || ch == '\t';
-}
-
-int getUnaryTokenPriority(TokenType tokenType)
-{
-    switch (tokenType)
-    {
-    case PLUS_TOKEN:
-    case MINUS_TOKEN:
-    case LOGIC_NOT_TOKEN:
-    case STAR_TOKEN:
-    case LOGIC_AND_TOKEN:
-        return 9;
-    default:
-        return 0;
-    }
-}
-
-int getBinaryTokenPriority(TokenType tokenType)
-{
-    switch (tokenType)
-    {
-    case STAR_TOKEN:
-    case SLASH_TOKEN:
-        return 8;
-    case PLUS_TOKEN:
-    case MINUS_TOKEN:
-        return 7;
-    case GREATER_TOKEN:
-    case GREATER_EQUAL_TOKEN:
-    case LESS_TOKEN:
-    case LESS_EQUAL_TOKEN:
-        return 6;
-    case DOUBLE_EQUAL_TOKEN:
-    case NOT_EQUAL_TOKEN:
-        return 5;
-    case LOGIC_AND_TOKEN:
-    case LOGIC_OR_TOKEN:
-        return 4;
-    case DOUBLE_LOGIC_AND_TOKEN:
-    case DOUBLE_LOGIC_OR_TOKEN:
-        return 3;
-    case EQUAL_TOKEN:
-        return 2;
-    case COMMA_TOKEN:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-int getAssociation(TokenType tokenType)
-{
-    // 0 means left, 1 means right
-    switch (tokenType)
-    {
-    case EQUAL_TOKEN:
-        return 1;
-    default:
-        return 0;
-    }
 }

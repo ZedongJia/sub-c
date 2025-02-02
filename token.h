@@ -1,61 +1,53 @@
 #ifndef TOKEN
 #define TOKEN
-typedef enum TokenType
+typedef enum Token
 {
-    INT_LITERAL_TOKEN = 1,
-    STRING_LITERAL_TOKEN,
-    // tokenType-keywords
-    INT_TOKEN,
-    CHAR_TOKEN,
+    INT_LIT_T = 1,
+    STR_LIT_T,
+    // token-keywords
+    INT_T,
+    CHAR_T,
     // keywords
-    IDENTIFIER_TOKEN,
-    TRUE_TOKEN,
-    FALSE_TOKEN,
-    IF_TOKEN,
-    ELSE_TOKEN,
-    FOR_TOKEN,
-    WHILE_TOKEN,
+    ID_T,
+    TRUE_T,
+    FALSE_T,
+    IF_T,
+    ELSE_T,
+    FOR_T,
+    WHILE_T,
     // scope
-    LEFT_PARENTHESIS,
-    RIGHT_PARENTHESIS,
-    LEFT_BRACKET,
-    RIGHT_BRACKET,
-    LEFT_BRACE,
-    RIGHT_BRACE,
+    L_PAREN_T, // (
+    R_PAREN_T, // )
+    L_BRK_T,   // [
+    R_BRK_T,   // ]
+    L_BRC_T,   // {
+    R_BRC_T,   // }
     // operator
-    PLUS_TOKEN,
-    MINUS_TOKEN,
-    STAR_TOKEN,
-    SLASH_TOKEN,
-    EQUAL_TOKEN,
-    // operate
-    DIM_TOKEN,
-    CALL_TOKEN,
-    // logic
-    GREATER_TOKEN,
-    GREATER_EQUAL_TOKEN,
-    LESS_TOKEN,
-    LESS_EQUAL_TOKEN,
-    DOUBLE_EQUAL_TOKEN,
-    NOT_EQUAL_TOKEN,
-    DOUBLE_LOGIC_AND_TOKEN,
-    DOUBLE_LOGIC_OR_TOKEN,
-    LOGIC_AND_TOKEN,
-    LOGIC_OR_TOKEN,
-    LOGIC_NOT_TOKEN,
+    PLUS_T,   // \+
+    MIN_T,    // \-
+    STAR_T,   // \*
+    SLASH_T,  // /
+    EQ_T, // =
+    GT_T,     // >
+    GE_T,     // >=
+    LT_T,     // <
+    LE_T,     // <=
+    D_EQ_T,     // ==
+    NE_T,     // !=
+    D_AND_T,  // &&
+    D_OR_T,   // ||
+    AND_T,    // &
+    OR_T,     // |
+    NOT_T,    // !
     // separator
-    COMMA_TOKEN,
-    SEMI_COLON_TOKEN,
+    COMMA_T,      // ,
+    SEMI_COLON_T, // ;
     // other
-    END_OF_FILE_TOKEN
-} TokenType;
+    EOF_T // -1
+} Token;
 
-const char *getTokenTypeValue(TokenType tokenType);
-
+const char *tokenName(Token token);
 int isDigit(int ch);
 int isLetter(int ch);
 int canSkip(int ch);
-int getUnaryTokenPriority(TokenType tokenType);
-int getBinaryTokenPriority(TokenType tokenType);
-int getAssociation(TokenType tokenType);
 #endif

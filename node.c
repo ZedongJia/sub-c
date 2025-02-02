@@ -1,211 +1,188 @@
 #include "node.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-char *getNodeTypeValue(NodeType nodeType)
+const char *kindName(Kind kind)
 {
-    switch (nodeType)
+    switch (kind)
     {
-    case UNEXPECTED_NODE:
-        return "?";
-    case LITERAL_NODE:
+    case LIT_N:
         return "Literal";
-    case BINARY_OPERATE_NODE:
-        return "Binary Operator";
-    case UNARY_OPERATE_NODE:
-        return "Unary Operator";
-    case DECLARATION_NODE:
+    // unary operator
+    case ADDR_N:
+        return "*()";
+    case ADDR_OF_N:
+        return "&()";
+    case P_ADD_N:
+        return "+()";
+    case P_SUB_N:
+        return "-()?";
+    case NOT_N:
+        return "!()";
+    // binary operator
+    case ADD_N:
+        return "()+()";
+    case SUB_N:
+        return "()-()";
+    case MUL_N:
+        return "()*()";
+    case DIV_N:
+        return "()/()";
+    case ASSIGN_N:
+        return "()=()";
+    case GT_N:
+        return "()>()";
+    case GE_N:
+        return "()>=()";
+    case LT_N:
+        return "()<()";
+    case LE_N:
+        return "()<=()";
+    case EQ_N:
+        return "()==()";
+    case NE_N:
+        return "()!=()";
+    case AND_N:
+        return "()&&()";
+    case OR_N:
+        return "()||()";
+    case L_AND_N:
+        return "()&()";
+    case L_OR_N:
+        return "()|()";
+    // multi operator
+    case CALL_N:
+        return "call(...)";
+    case COMMA_N:
+        return "...,...";
+    case DEC_N:
         return "Declaration";
-    case LABEL_NODE:
+    case LABEL_N:
         return "Label";
-    case JUMP_IF_FALSE_NODE:
+    case JUMP_FALSE_N:
         return "Jump If False";
-    case JUMP_NODE:
+    case JUMP_N:
         return "Jump";
-    case SCOPE_NODE:
+    case SCOPE_N:
         return "Scope";
     default:
         return "?";
     }
 }
 
-Node *createNode(NodeType nodeType)
+int unaryPriority(Kind kind)
 {
-    Node *node = (Node *)malloc(sizeof(Node));
-    node->nodeType = nodeType;
-    return node;
-}
-
-void freeNode(void *node)
-{
-    // free data
-    switch (((Node *)node)->nodeType)
+    switch (kind)
     {
-    case LITERAL_NODE:
-        freeLiteral((Literal *)node);
-        break;
-    case BINARY_OPERATE_NODE:
-        freeBinaryOperator((BinaryOperator *)node);
-        break;
-    case UNARY_OPERATE_NODE:
-        freeUnaryOperator((UnaryOperator *)node);
-        break;
-    case DECLARATION_NODE:
-        freeDeclaration((Declaration *)node);
-        break;
-    case LABEL_NODE:
-        freeLabel((Label *)node);
-        break;
-    case JUMP_IF_FALSE_NODE:
-        freeJumpIfFalse((JumpIfFalse *)node);
-        break;
-    case JUMP_NODE:
-        freeJump((Jump *)node);
-        break;
-    case SCOPE_NODE:
-        freeScope((Scope *)node);
-        break;
+    case P_ADD_N:
+    case P_SUB_N:
+    case NOT_N:
+    case ADDR_N:
+    case ADDR_OF_N:
+        return 9;
     default:
-        free(node);
-        break;
+        return 0;
     }
 }
 
-Node *createLiteral(BaseType *baseType, TokenType tokenType, char *value)
+int binaryPriority(Kind kind)
 {
-    Literal *literal = (Literal *)malloc(sizeof(Literal));
-    literal->nodeType = LITERAL_NODE;
-    literal->baseType = baseType;
-    literal->tokenType = tokenType;
-    literal->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
-    strcpy(literal->value, value);
-    return (Node *)literal;
+    switch (kind)
+    {
+    case MUL_N:
+    case DIV_N:
+        return 8;
+    case ADD_N:
+    case SUB_N:
+        return 7;
+    case GT_N:
+    case GE_N:
+    case LT_N:
+    case LE_N:
+        return 6;
+    case EQ_N:
+    case NE_N:
+        return 5;
+    case AND_N:
+    case OR_N:
+        return 4;
+    case L_AND_N:
+    case L_OR_N:
+        return 3;
+    case ASSIGN_N:
+        return 2;
+    case COMMA_N:
+        return 1;
+    default:
+        return 0;
+    }
 }
 
-void freeLiteral(Literal *node)
+int assoc(Kind kind)
 {
-    free(node->value);
-    node->value = NULL;
-    freeBaseType(node->baseType);
-    node->baseType = NULL;
-    free(node);
+    switch (kind)
+    {
+    case ASSIGN_N:
+        return 1;
+    default:
+        return 0;
+    }
 }
 
-Node *createUnaryOperator(BaseType *baseType, TokenType tokenType, Node *operand)
+Kind unaryNode(Token token)
 {
-    UnaryOperator *unaryOperator = (UnaryOperator *)malloc(sizeof(UnaryOperator));
-    unaryOperator->nodeType = UNARY_OPERATE_NODE;
-    unaryOperator->baseType = baseType;
-    unaryOperator->tokenType = tokenType;
-    unaryOperator->operand = operand;
-    return (Node *)unaryOperator;
+    switch (token)
+    {
+    case PLUS_T:
+        return P_ADD_N;
+    case MIN_T:
+        return P_SUB_N;
+    case NOT_T:
+        return NOT_N;
+    case AND_T:
+        return ADDR_OF_N;
+    case STAR_T:
+        return ADDR_N;
+    default:
+        return 0;
+    }
 }
 
-void freeUnaryOperator(UnaryOperator *node)
+Kind binaryNode(Token token)
 {
-    freeBaseType(node->baseType);
-    node->baseType = NULL;
-    freeNode(node->operand);
-    node->operand = NULL;
-    free(node);
-}
-
-Node *createBinaryOperator(BaseType *baseType, Node *left, TokenType tokenType, Node *right)
-{
-    BinaryOperator *binaryOperator = (BinaryOperator *)malloc(sizeof(BinaryOperator));
-    binaryOperator->nodeType = BINARY_OPERATE_NODE;
-    binaryOperator->baseType = baseType;
-    binaryOperator->left = left;
-    binaryOperator->tokenType = tokenType;
-    binaryOperator->right = right;
-    return (Node *)binaryOperator;
-}
-
-void freeBinaryOperator(BinaryOperator *node)
-{
-    freeNode(node->left);
-    node->left = NULL;
-    freeNode(node->right);
-    node->right = NULL;
-    freeBaseType(node->baseType);
-    node->baseType = NULL;
-    free(node);
-}
-
-Node *createDeclaration(BaseType *baseType, const char *name)
-{
-    Declaration *declaration = (Declaration *)malloc(sizeof(Declaration));
-    declaration->nodeType = DECLARATION_NODE;
-    declaration->baseType = baseType;
-    declaration->name = (char *)malloc((strlen(name) + 1) * sizeof(char));
-    strcpy(declaration->name, name);
-    return (Node *)declaration;
-}
-
-void freeDeclaration(Declaration *node)
-{
-    freeBaseType(node->baseType);
-    node->baseType = NULL;
-    freeNode(node->name);
-    node->name = NULL;
-    free(node);
-}
-
-Node *createLabel(int number)
-{
-    Label *labelNumber = (Label *)malloc(sizeof(Label));
-    labelNumber->nodeType = LABEL_NODE;
-    labelNumber->number = number;
-    return (Node *)labelNumber;
-}
-
-void freeLabel(Label *node)
-{
-    free(node);
-}
-
-Node *createJumpIfFalse(Node *condition, int number)
-{
-    JumpIfFalse *jumpIfFalse = (JumpIfFalse *)malloc(sizeof(JumpIfFalse));
-    jumpIfFalse->nodeType = JUMP_IF_FALSE_NODE;
-    jumpIfFalse->condition = condition;
-    jumpIfFalse->number = number;
-    return (Node *)jumpIfFalse;
-}
-
-void freeJumpIfFalse(JumpIfFalse *node)
-{
-    freeNode(node->condition);
-    node->condition = NULL;
-    free(node);
-}
-
-Node *createJump(int number)
-{
-    Jump *jump = (Jump *)malloc(sizeof(Jump));
-    jump->nodeType = JUMP_NODE;
-    jump->number = number;
-    return (Node *)jump;
-}
-
-void freeJump(Jump *node)
-{
-    free(node);
-}
-
-Node *createScope(Scope *parentScope)
-{
-    Scope *scope = (Scope *)malloc(sizeof(Scope));
-    scope->nodeType = SCOPE_NODE;
-    scope->table.num_var = 0;
-    scope->parentScope = parentScope;
-    scope->list = createList();
-    return (Node *)scope;
-}
-
-void freeScope(Scope *node)
-{
-    freeList(node->list, freeNode);
-    free(node);
+    switch (token)
+    {
+    case STAR_T:
+        return MUL_N;
+    case SLASH_T:
+        return DIV_N;
+    case PLUS_T:
+        return ADD_N;
+    case MIN_T:
+        return SUB_N;
+    case GT_T:
+        return GT_N;
+    case GE_T:
+        return GE_N;
+    case LT_T:
+        return LT_N;
+    case LE_T:
+        return LE_N;
+    case D_EQ_T:
+        return EQ_N;
+    case NE_T:
+        return NE_N;
+    case D_AND_T:
+        return AND_N;
+    case D_OR_T:
+        return OR_N;
+    case AND_T:
+        return L_AND_N;
+    case OR_T:
+        return L_OR_N;
+    case EQ_T:
+        return ASSIGN_N;
+    case COMMA_T:
+        return COMMA_N;
+    default:
+        return 0;
+    }
 }

@@ -1,11 +1,11 @@
-#include "node.h"
+#include "ast.h"
 #ifndef TREE
 #define TREE
-void prettyTree(Node *node);
+void prettyTree(ASTNode *ASTNode);
 void __prettyPrefix(int *parr, int indent, int isLast, const char *end);
-void __prettyNodeType(NodeType nodeType);
-void __prettyTokenType(TokenType type);
+void __prettyASTNodeType(Kind kind);
+void __prettyTokenType(Token type);
 void __prettyPropertyName(const char *name);
 void __prettyBaseType(BaseType *baseType);
-void __prettyTree(Node *node, int *parr, int indent, int isLast);
+void __prettyTree(ASTNode *ASTNode, int *parr, int indent, int isLast);
 #endif

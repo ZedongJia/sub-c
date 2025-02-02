@@ -1,5 +1,5 @@
 #include "list.h"
-#include "token.h"
+#include "node.h"
 
 #ifndef TYPES
 #define TYPES
@@ -14,7 +14,7 @@ typedef enum ValueType
 } ValueType;
 
 char *getValueTypeValue(ValueType valueType);
-ValueType tokenTypeToValueType(TokenType tokenType);
+ValueType tokenTypeToValueType(Token tokenType);
 
 typedef struct BaseType
 {
@@ -56,6 +56,6 @@ BaseType *createArrayType(BaseType *baseType, int size);
 BaseType *cloneArrayType(BaseType *baseType);
 void freeArrayType(ArrayType *arrayType);
 
-BaseType *computeBinaryOperator(BaseType *left, TokenType tokenType, BaseType *right);
-BaseType *computeUnaryOperator(TokenType tokenType, BaseType *operand);
+BaseType *computeBinaryOperator(BaseType *left, Kind kind, BaseType *right);
+BaseType *computeUnaryOperator(Kind kind, BaseType *operand);
 #endif

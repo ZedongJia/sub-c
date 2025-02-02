@@ -9,9 +9,9 @@ int main()
     while (1)
     {
         printf("[IN]\n");
-        Node *root = parse(parser, stdin);
+        ASTNode *root = parse(parser, stdin);
         prettyTree(root);
-        freeNode(root);
+        freeASTNode(root);
     }
     freeParser(parser);
 }

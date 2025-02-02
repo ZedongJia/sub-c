@@ -22,13 +22,13 @@ char *getValueTypeValue(ValueType valueType)
     }
 }
 
-ValueType tokenTypeToValueType(TokenType tokenType)
+ValueType tokenTypeToValueType(Token tokenType)
 {
     switch (tokenType)
     {
-    case INT_TOKEN:
+    case INT_T:
         return INT_VALUE;
-    case CHAR_TOKEN:
+    case CHAR_T:
         return CHAR_VALUE;
     default:
         return UNEXPECTED_VALUE;
@@ -196,12 +196,12 @@ BaseType *matchRules(const int rules[][3], const int size, BaseType *left, BaseT
     return NULL;
 }
 
-BaseType *computeBinaryOperator(BaseType *left, TokenType tokenType, BaseType *right)
+BaseType *computeBinaryOperator(BaseType *left, Kind kind, BaseType *right)
 {
     BaseType *baseType;
-    switch (tokenType)
+    switch (kind)
     {
-    case PLUS_TOKEN: {
+    case ADD_N: {
         baseType = matchRules(__rules, __ruleSize, left, right);
         if (baseType != NULL)
             break;
@@ -213,7 +213,7 @@ BaseType *computeBinaryOperator(BaseType *left, TokenType tokenType, BaseType *r
             break;
         return NULL;
     }
-    case MINUS_TOKEN: {
+    case SUB_N: {
         baseType = matchRules(__rules, __ruleSize, left, right);
         if (baseType != NULL)
             break;
@@ -222,23 +222,23 @@ BaseType *computeBinaryOperator(BaseType *left, TokenType tokenType, BaseType *r
             break;
         return NULL;
     }
-    case LOGIC_AND_TOKEN:
-    case LOGIC_OR_TOKEN:
-    case STAR_TOKEN:
-    case SLASH_TOKEN: {
+    case L_AND_N:
+    case L_OR_N:
+    case MUL_N:
+    case DIV_N: {
         baseType = matchRules(__rules, __ruleSize, left, right);
         if (baseType != NULL)
             break;
         return NULL;
     }
-    case GREATER_TOKEN:
-    case GREATER_EQUAL_TOKEN:
-    case LESS_TOKEN:
-    case LESS_EQUAL_TOKEN:
-    case DOUBLE_EQUAL_TOKEN:
-    case NOT_EQUAL_TOKEN:
-    case DOUBLE_LOGIC_AND_TOKEN:
-    case DOUBLE_LOGIC_OR_TOKEN: {
+    case GT_N:
+    case GE_N:
+    case LT_N:
+    case LE_N:
+    case EQ_N:
+    case NE_N:
+    case AND_N:
+    case OR_N: {
         baseType = matchRules(__rules, __ruleSize, left, right);
         if (baseType != NULL)
         {
@@ -247,13 +247,13 @@ BaseType *computeBinaryOperator(BaseType *left, TokenType tokenType, BaseType *r
         }
         return NULL;
     }
-    case EQUAL_TOKEN: {
+    case ASSIGN_N: {
         baseType = matchRules(__assignRules, __assignRuleSize, left, right);
         if (baseType != NULL)
             break;
         return NULL;
     }
-    case COMMA_TOKEN: {
+    case COMMA_N: {
         baseType = right;
         break;
     }
@@ -263,13 +263,13 @@ BaseType *computeBinaryOperator(BaseType *left, TokenType tokenType, BaseType *r
     return cloneBaseType(baseType);
 }
 
-BaseType *computeUnaryOperator(TokenType tokenType, BaseType *operand)
+BaseType *computeUnaryOperator(Kind kind, BaseType *operand)
 {
     BaseType *baseType;
-    switch (tokenType)
+    switch (kind)
     {
-    case PLUS_TOKEN:
-    case MINUS_TOKEN: {
+    case P_ADD_N:
+    case P_SUB_N: {
         if (operand->valueType == INT_VALUE)
         {
             baseType = operand;
@@ -277,11 +277,11 @@ BaseType *computeUnaryOperator(TokenType tokenType, BaseType *operand)
         }
         return NULL;
     }
-    case LOGIC_NOT_TOKEN: {
+    case NOT_N: {
         baseType = createBaseType(BOOL_VALUE);
         break;
     }
-    case STAR_TOKEN: {
+    case ADDR_N: {
         if (operand->valueType == POINTER_VALUE)
         {
             baseType = ((PointerType *)operand)->baseType;
@@ -294,7 +294,7 @@ BaseType *computeUnaryOperator(TokenType tokenType, BaseType *operand)
         }
         return NULL;
     }
-    case LOGIC_AND_TOKEN: {
+    case ADDR_OF_N: {
         if (operand->valueType == POINTER_VALUE || operand->valueType == ARRAY_VALUE)
         {
             baseType = createPointerType(operand);

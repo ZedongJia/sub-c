@@ -1,19 +1,19 @@
+#include "ast.h"
 #include "lexer.h"
-#include "node.h"
 #ifndef PARSER
 #define PARSER
 typedef struct Parser
 {
-    int labelNumber;
-    Scope *currScope;
+    int number;    // label number
+    ASTNode *curr; // current scope
 } Parser;
 Parser *createParser();
 void freeParser(Parser *parser);
-Node *parsePrimaryExpression(Parser *parser, Lexer *lexer);
-Node *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority);
-Node *parseAccessExpression(Node *base, Parser *parser, Lexer *lexer);
-Node *parseBinaryExpression(Node *base, Parser *parser, Lexer *lexer, int parentPriority);
-Node *parseExpression(Parser *parser, Lexer *lexer, int parentPriority);
+ASTNode *parsePrimaryExpression(Parser *parser, Lexer *lexer);
+ASTNode *parseUnaryExpression(Parser *parser, Lexer *lexer, int parentPriority);
+ASTNode *parseAccessExpression(ASTNode *base, Parser *parser, Lexer *lexer);
+ASTNode *parseBinaryExpression(ASTNode *base, Parser *parser, Lexer *lexer, int parentPriority);
+ASTNode *parseExpression(Parser *parser, Lexer *lexer, int parentPriority);
 void parseStatement(Parser *parser, Lexer *lexer);
 BaseType *parsePointerType(BaseType *baseType, Parser *parser, Lexer *lexer);
 BaseType *parseArrayType(BaseType *baseType, Parser *parser, Lexer *lexer);
@@ -22,8 +22,8 @@ void parseIfStatement(Parser *parser, Lexer *lexer);
 void parseElseStatement(Parser *parser, Lexer *lexer);
 void parseForStatement(Parser *parser, Lexer *lexer);
 void parseWhileStatement(Parser *parser, Lexer *lexer);
-Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal);
-Node *parse(Parser *parser, FILE *in);
-Node *enterScope(Parser *parser);
+ASTNode *parseStatements(Parser *parser, Lexer *lexer, int isGlobal);
+ASTNode *parse(Parser *parser, FILE *in);
+ASTNode *enterScope(Parser *parser);
 void leaveScope(Parser *parser);
 #endif

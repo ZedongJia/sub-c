@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void prettyTree(Node *node)
+void prettyTree(ASTNode *node)
 {
     if (node == NULL)
         return;
@@ -23,14 +23,9 @@ void __prettyPrefix(int *parr, int indent, int isLast, const char *end)
     printf(isLast ? "└─%s " : "├─%s ", end);
 }
 
-void __prettyNodeType(NodeType nodeType)
+void __prettyASTNodeType(Kind kind)
 {
-    printf("\033[33;1m%s\033[0m", getNodeTypeValue(nodeType));
-}
-
-void __prettyTokenType(TokenType type)
-{
-    printf("\033[35;1m%s\033[0m", getTokenTypeValue(type));
+    printf("\033[33;1m%s\033[0m", kindName(kind));
 }
 
 void __prettyPropertyName(const char *name)
@@ -45,7 +40,7 @@ void __prettyBaseType(BaseType *baseType)
     {
     case POINTER_VALUE: {
         PointerType *pointerType = (PointerType *)baseType;
-        printf("_%d(", pointerType->dim);
+        printf("(");
         __prettyBaseType(pointerType->baseType);
         printf(")");
         break;
@@ -62,97 +57,34 @@ void __prettyBaseType(BaseType *baseType)
     }
 }
 
-void __prettyTree(Node *node, int *parr, int indent, int isLast)
+void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
 {
     __prettyPrefix(parr, indent, isLast, "─");
     parr[indent] = isLast ? 1 : 0;
-    __prettyNodeType(node->nodeType);
-    printf(" ");
-    switch (node->nodeType)
+    __prettyASTNodeType(node->kind);
+    // type
+    if (node->baseType != NULL)
     {
-    case LITERAL_NODE: {
-        Literal *literal = (Literal *)node;
-        // type
-        __prettyPrefix(parr, indent + 1, 0, "*");
+        __prettyPrefix(parr, indent + 1, node->value == NULL && node->children == NULL, "*");
         __prettyPropertyName("Type: ");
-        __prettyBaseType(literal->baseType);
-        printf(" %dbytes ", literal->baseType->offset);
-        // name
-        __prettyPrefix(parr, indent + 1, 1, "*");
+        __prettyBaseType(node->baseType);
+        printf(" %dbytes", node->baseType->offset);
+    }
+    // value
+    if (node->value != NULL)
+    {
+        __prettyPrefix(parr, indent + 1, node->children == NULL, "*");
         __prettyPropertyName("Value: ");
-        printf("%s", literal->value);
-        break;
+        printf("%s", node->value);
     }
-    case BINARY_OPERATE_NODE: {
-        BinaryOperator *binaryOperator = (BinaryOperator *)node;
-        // type
-        __prettyPrefix(parr, indent + 1, 0, "*");
-        __prettyPropertyName("Type: ");
-        __prettyBaseType(binaryOperator->baseType);
-        printf(" %dbytes ", binaryOperator->baseType->offset);
-        // operator
-        __prettyPrefix(parr, indent + 1, 0, "*");
-        __prettyPropertyName("Operator: ");
-        __prettyTokenType(binaryOperator->tokenType);
-        // left right
-        __prettyTree(binaryOperator->left, parr, indent + 1, 0);
-        __prettyTree(binaryOperator->right, parr, indent + 1, 1);
-        break;
-    }
-    case UNARY_OPERATE_NODE: {
-        UnaryOperator *unaryOperator = (UnaryOperator *)node;
-        // type
-        __prettyPrefix(parr, indent + 1, 0, "*");
-        __prettyPropertyName("Type: ");
-        __prettyBaseType(unaryOperator->baseType);
-        printf(" %dbytes ", unaryOperator->baseType->offset);
-        // operator
-        __prettyPrefix(parr, indent + 1, 0, "*");
-        __prettyPropertyName("Operator: ");
-        __prettyTokenType(unaryOperator->tokenType);
-        // operand
-        __prettyTree(unaryOperator->operand, parr, indent + 1, 1);
-        break;
-    }
-    case DECLARATION_NODE: {
-        Declaration *declaration = (Declaration *)node;
-        // type
-        __prettyPrefix(parr, indent + 1, 0, "*");
-        __prettyPropertyName("Type: ");
-        __prettyBaseType(declaration->baseType);
-        printf(" %dbytes ", declaration->baseType->offset);
-        // identifier
-        __prettyPrefix(parr, indent + 1, 1, "*");
-        __prettyPropertyName("Identifier: ");
-        printf("%s", declaration->name);
-        break;
-    }
-    case LABEL_NODE: {
-        Label *label = (Label *)node;
-        printf("%d", label->number);
-        break;
-    }
-    case JUMP_IF_FALSE_NODE: {
-        JumpIfFalse *jumpIfFalse = (JumpIfFalse *)node;
-        printf("%d", jumpIfFalse->number);
-        __prettyTree(jumpIfFalse->condition, parr, indent + 1, 1);
-        break;
-    case JUMP_NODE: {
-        Jump *jump = (Jump *)node;
-        printf("%d", jump->number);
-        break;
-    }
-    case SCOPE_NODE: {
-        Scope *scope = (Scope *)node;
-        ListNode *p = scope->list->head;
-        while (p != NULL)
+    // children
+    if (node->children != NULL)
+    {
+        ListNode *curr = node->children->head;
+        while (curr != NULL)
         {
-            __prettyTree((Node *)p->data, parr, indent + 1, p->next == NULL);
-            p = p->next;
+            __prettyTree((ASTNode *)curr->data, parr, indent + 1, curr->next == NULL);
+            curr = curr->next;
         }
-    }
-    default:
-        break;
-    }
     }
 }

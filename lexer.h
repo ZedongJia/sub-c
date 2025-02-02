@@ -9,7 +9,7 @@ typedef struct Lexer
     char buf[255]; // buf
     char __pc;       // putback char
     char __cc;       // current char
-    TokenType token;
+    Token token;
     int line;  // file line
     int start; // buf start
     int len;   // bug end
@@ -18,5 +18,5 @@ typedef struct Lexer
 void initLexer(Lexer *lexer, FILE *in);
 void next(Lexer *lexer);
 /// @brief match current token with `what`, go next and return 1 if success else conditionally go next and return 0
-int match(Lexer *lexer, TokenType expectedTokenType);
+int match(Lexer *lexer, Token what);
 #endif
