@@ -63,44 +63,46 @@ void parseDeclare(Parser *parser, Lexer *lexer)
 {
     Type type = toType(lexer->token);
     next(lexer);
-    ASTNode *declare, *init;
+    ASTNode *declare, *initializer;
     while (1)
     {
-        CType *ctype = createCType(type);
+        CType *ctype = createCType(type, 1);
         // parse pointer
         __parsePointer(ctype, parser, lexer);
         // parse identifier
         if (lexer->token != ID_T)
         {
-            // TODO: error info
+            // TODO: error
             freeCType(ctype);
             break;
         }
         int line = lexer->line;
         int start = lexer->start;
-        declare = cDeclare(ctype, lexer->buf);
+        char id[256];
+        sprintf(id, "%s", lexer->buf);
         // parse array type
         next(lexer);
         __parseArray(ctype, parser, lexer);
+        // parse initializer
+        if (lexer->token == EQ_T)
+        {
+            next(lexer);
+            initializer = parseExpression(parser, lexer, 0);
+        }
+        else
+        {
+            initializer = NULL;
+        }
+        declare = cDeclare(ctype, id, initializer);
         // check declare
         if (tryDeclare(parser->curr->table, ctype, declare->value))
         {
             appendToList(parser->curr->children, declare);
-            if (lexer->token == EQ_T)
-            {
-                init = parseBinary(cLiteral(declare->ctype, declare->value), parser, lexer, 0);
-                appendToList(parser->curr->children, init);
-            }
         }
         else
         {
             reportVariabledefined(line, start, declare->value);
             freeASTNode(declare);
-            while (lexer->token != COMMA_T || lexer->token != SEMI_COLON_T)
-            {
-                // drop init part
-                next(lexer);
-            }
         }
         if (lexer->token != COMMA_T)
             break;

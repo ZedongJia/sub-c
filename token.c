@@ -18,10 +18,6 @@ const char *tokenName(Token token)
     // keywords
     case ID_T:
         return "Identifier";
-    case TRUE_T:
-        return "True";
-    case FALSE_T:
-        return "False";
     case IF_T:
         return "If";
     case ELSE_T:

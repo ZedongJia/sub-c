@@ -19,19 +19,13 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
         match(lexer, R_BRC_T);
         return expression;
     }
-    case TRUE_T:
-    case FALSE_T: {
-        expression = cLiteral(createCType(BOOL_VALUE), lexer->buf);
-        next(lexer);
-        return expression;
-    }
     case INT_LIT_T: {
-        expression = cLiteral(createCType(INT_VALUE), lexer->buf);
+        expression = cLiteral(createCType(INT_TYPE, 0), lexer->buf);
         match(lexer, INT_LIT_T);
         return expression;
     }
     case STR_LIT_T: {
-        CType *ctype = createCType(CHAR_VALUE);
+        CType *ctype = createCType(CHAR_TYPE, 0);
         point(ctype);
         expression = cLiteral(ctype, lexer->buf);
         match(lexer, STR_LIT_T);
@@ -44,7 +38,8 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
             int index = tryLookUp(scope->table, lexer->buf);
             if (index != -1)
             {
-                expression = cLiteral(scope->table->variables[index].ctype, lexer->buf);
+                CType *ctype = scope->table->variables[index].ctype;
+                expression = cLiteral(cloneCType(ctype), lexer->buf);
                 break;
             }
             scope = scope->parent;
@@ -52,14 +47,14 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
         if (!expression)
         {
             reportVariableUndefined(lexer->line, lexer->start, lexer->buf);
-            expression = cLiteral(createCType(0), lexer->buf);
+            expression = cLiteral(createCType(0, 0), lexer->buf);
         }
         match(lexer, ID_T);
         return expression;
     }
     default: {
         reportUnexpectedToken(lexer->line, lexer->start, tokenName(lexer->token), "expression");
-        expression = cLiteral(createCType(INT_VALUE), "0");
+        expression = cLiteral(createCType(INT_TYPE, 0), "0");
         return expression;
     }
     }
@@ -77,13 +72,13 @@ ASTNode *parsePrefix(Parser *parser, Lexer *lexer, int parentPriority)
         int start = lexer->start;
         next(lexer);
         ASTNode *operand = parseExpression(parser, lexer, priority);
-        // CType *ctype = computeUnaryOperator(kind, operand->ctype);
-        // if (ctype == NULL)
-        // {
-        //     reportUnaryOperatorError(line, start, kindName(kind), typeName(operand->ctype->type));
-        //     ctype = operand->ctype;
-        // }
-        expression = cUnary(ukind, createCType(0), operand);
+        CType *ctype = unary_compatible(ukind, operand->ctype);
+        if (!ctype)
+        {
+            reportUnaryInCompatible(line, start, operand->ctype, kindName(ukind));
+            ctype = cloneCType(operand->ctype);
+        }
+        expression = cUnary(ukind, ctype, operand);
         return expression;
     }
     else
@@ -95,6 +90,7 @@ ASTNode *parsePrefix(Parser *parser, Lexer *lexer, int parentPriority)
 ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
 {
     ASTNode *right = NULL;
+    CType *ctype;
     int isDone = 0;
     while (!isDone)
     {
@@ -107,21 +103,20 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
             match(lexer, L_BRK_T);
             right = parseExpression(parser, lexer, 0);
             match(lexer, R_BRK_T);
-            // CType *ctype = computeBinaryOperator(left->ctype, ADD_N, right->ctype);
-            // if (ctype == NULL)
-            // {
-            //     reportBinaryOperatorError(line, start, typeName(left->ctype->valueType), kindName(ADD_N),
-            //                               typeName(right->ctype->valueType));
-            //     ctype = left->ctype;
-            // }
-            left = cBinary(ADD_N, createCType(0), left, right);
-            // ctype = computeUnaryOperator(ADDR_N, left->ctype);
-            // if (ctype == NULL)
-            // {
-            //     reportUnaryOperatorError(line, start, kindName(ADDR_N), typeName(left->ctype->valueType));
-            //     ctype = left->ctype;
-            // }
-            left = cUnary(ADDR_N, createCType(0), left);
+            ctype = binary_compatible(ADD_N, left->ctype, right->ctype);
+            if (!ctype)
+            {
+                reportBinaryInCompatible(line, start, left->ctype, kindName(ADD_N), right->ctype);
+                ctype = cloneCType(left->ctype);
+            }
+            left = cBinary(ADD_N, ctype, left, right);
+            ctype = unary_compatible(ADDR_N, left->ctype);
+            if (!ctype)
+            {
+                reportUnaryInCompatible(line, start, left->ctype, kindName(ADDR_N));
+                ctype = cloneCType(left->ctype);
+            }
+            left = cUnary(ADDR_N, ctype, left);
             break;
         }
         case L_PAREN_T: {
@@ -130,7 +125,7 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
             right = parseExpression(parser, lexer, 0);
             match(lexer, R_PAREN_T);
             // TODO: there should be callable check
-            left = cBinary(CALL_N, left->ctype, left, right);
+            left = cBinary(CALL_N, cloneCType(left->ctype), left, right);
             break;
         }
         default: {
@@ -145,6 +140,7 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
 ASTNode *parseBinary(ASTNode *left, Parser *parser, Lexer *lexer, int parentPriority)
 {
     ASTNode *right = NULL;
+    CType *ctype;
     Kind bkind;
     int priority;
     while (1)
@@ -159,14 +155,13 @@ ASTNode *parseBinary(ASTNode *left, Parser *parser, Lexer *lexer, int parentPrio
         int start = lexer->start;
         next(lexer);
         right = parseExpression(parser, lexer, priority);
-        // CType *ctype = computeBinaryOperator(left->ctype, bkind, right->ctype);
-        // if (ctype == NULL)
-        // {
-        //     reportBinaryOperatorError(line, start, typeName(left->ctype->type), kindName(bkind),
-        //                               typeName(right->ctype->type));
-        //     ctype = left->ctype;
-        // }
-        left = cBinary(bkind, createCType(0), left, right);
+        ctype = binary_compatible(bkind, left->ctype, right->ctype);
+        if (!ctype)
+        {
+            reportBinaryInCompatible(line, start, left->ctype, kindName(bkind), right->ctype);
+            ctype = cloneCType(left->ctype);
+        }
+        left = cBinary(bkind, ctype, left, right);
     }
     return left;
 }

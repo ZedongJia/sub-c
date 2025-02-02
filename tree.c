@@ -33,20 +33,16 @@ void __prettyPropertyName(const char *name)
     printf("\033[36;1m%s\033[0m", name);
 }
 
-void __prettyCType(CType *ctype)
+void __prettyCType(const CType *ctype)
 {
+    if (!ctype->modify)
+        printf("const ");
     printf("%s", typeName(ctype->type));
     if (ctype->ptr)
     {
         for (int i = 0; i < ctype->ptr; i++)
             printf("*");
     }
-    else if (ctype->dim)
-    {
-        for (int i = ctype->dim; i > 0; i--)
-            printf("[%d]", ctype->offset[i] / ctype->offset[i - 1]);
-    }
-    printf("(%dbytes)", ctype->offset[ctype->dim]);
 }
 
 void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
@@ -60,6 +56,7 @@ void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
         __prettyPrefix(parr, indent + 1, node->value == NULL && node->children == NULL, "*");
         __prettyPropertyName("Type: ");
         __prettyCType(node->ctype);
+        printf("(%dbytes)", node->ctype->offset[node->ctype->ptr]);
     }
     // value
     if (node->value != NULL)

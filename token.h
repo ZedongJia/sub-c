@@ -9,8 +9,6 @@ typedef enum Token
     CHAR_T,
     // keywords
     ID_T,
-    TRUE_T,
-    FALSE_T,
     IF_T,
     ELSE_T,
     FOR_T,

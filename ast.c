@@ -66,10 +66,15 @@ ASTNode *cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right)
     return node;
 }
 
-ASTNode *cDeclare(CType *ctype, char *value)
+ASTNode *cDeclare(CType *ctype, char *value, ASTNode *initializer)
 {
     ASTNode *node = __createASTNode(DEC_N, value);
     node->ctype = ctype;
+    if (initializer != NULL)
+    {
+        node->children = createList();
+        appendToList(node->children, (void *)initializer);
+    }
     return node;
 }
 

@@ -8,46 +8,46 @@ const char *kindName(Kind kind)
         return "Literal";
     // unary operator
     case ADDR_N:
-        return "*()";
+        return "*";
     case ADDR_OF_N:
-        return "&()";
+        return "&";
     case P_ADD_N:
-        return "+()";
+        return "+";
     case P_SUB_N:
-        return "-()?";
+        return "-";
     case NOT_N:
-        return "!()";
+        return "!";
     // binary operator
-    case ADD_N:
-        return "()+()";
-    case SUB_N:
-        return "()-()";
-    case MUL_N:
-        return "()*()";
-    case DIV_N:
-        return "()/()";
     case ASSIGN_N:
-        return "()=()";
+        return "=";
+    case ADD_N:
+        return "+";
+    case SUB_N:
+        return "-";
+    case MUL_N:
+        return "*";
+    case DIV_N:
+        return "/";
     case GT_N:
-        return "()>()";
+        return ">";
     case GE_N:
-        return "()>=()";
+        return ">=";
     case LT_N:
-        return "()<()";
+        return "<";
     case LE_N:
-        return "()<=()";
+        return "<=";
     case EQ_N:
-        return "()==()";
+        return "==";
     case NE_N:
-        return "()!=()";
+        return "!=";
     case AND_N:
-        return "()&&()";
+        return "&&";
     case OR_N:
-        return "()||()";
+        return "||";
     case L_AND_N:
-        return "()&()";
+        return "&";
     case L_OR_N:
-        return "()|()";
+        return "|";
     // multi operator
     case CALL_N:
         return "call(...)";

@@ -64,10 +64,6 @@ void __lexKeywordOrIdentifier(Lexer *lexer)
         lexer->token = FOR_T;
     else if (strcmp(lexer->buf, "while") == 0)
         lexer->token = WHILE_T;
-    else if (strcmp(lexer->buf, "true") == 0)
-        lexer->token = TRUE_T;
-    else if (strcmp(lexer->buf, "false") == 0)
-        lexer->token = FALSE_T;
     else
         lexer->token = ID_T;
 }
@@ -113,25 +109,11 @@ void __lexString(Lexer *lexer)
 }
 
 const int table[][4] = {
-    {'+', 0, PLUS_T, 0},
-    {'-', 0, MIN_T, 0},
-    {'*', 0, STAR_T, 0},
-    {'/', 0, SLASH_T, 0},
-    {'>', '=', GT_T, GE_T},
-    {'<', '=', LT_T, LE_T},
-    {'=', '=', EQ_T, D_EQ_T},
-    {'&', '&', AND_T, D_AND_T},
-    {'|', '|', OR_T, D_OR_T},
-    {'!', '=', NOT_T, NE_T},
-    {'(', 0, L_PAREN_T, 0},
-    {')', 0, R_PAREN_T, 0},
-    {'[', 0, L_BRK_T, 0},
-    {']', 0, R_BRK_T, 0},
-    {'{', 0, L_BRC_T, 0},
-    {'}', 0, R_BRC_T, 0},
-    {',', 0, COMMA_T, 0},
-    {';', 0, SEMI_COLON_T, 0},
-    {-1, 0, EOF_T, 0},
+    {'+', 0, PLUS_T, 0},      {'-', 0, MIN_T, 0},        {'*', 0, STAR_T, 0},      {'/', 0, SLASH_T, 0},
+    {'>', '=', GT_T, GE_T},   {'<', '=', LT_T, LE_T},    {'=', '=', EQ_T, D_EQ_T}, {'&', '&', AND_T, D_AND_T},
+    {'|', '|', OR_T, D_OR_T}, {'!', '=', NOT_T, NE_T},   {'(', 0, L_PAREN_T, 0},   {')', 0, R_PAREN_T, 0},
+    {'[', 0, L_BRK_T, 0},     {']', 0, R_BRK_T, 0},      {'{', 0, L_BRC_T, 0},     {'}', 0, R_BRC_T, 0},
+    {',', 0, COMMA_T, 0},     {';', 0, SEMI_COLON_T, 0}, {-1, 0, EOF_T, 0},
 };
 
 Token __matchTable(Lexer *lexer)
@@ -223,7 +205,7 @@ void initLexer(Lexer *lexer, FILE *in)
     lexer->buf[0] = '\0';
     lexer->__pc = '\0';
     lexer->__cc = '\0';
-    lexer->line = 0;
+    lexer->line = 1;
     lexer->start = 0;
     lexer->len = 0;
 }

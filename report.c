@@ -1,3 +1,4 @@
+#include "report.h"
 #include "stdio.h"
 
 void reportUnclosedString(int line, int column)
@@ -44,4 +45,20 @@ void reportAccessError(int line, int column, const char *name)
 void reportCallError(int line, int column, const char *name)
 {
     printf("\033[31;1mError at line:%d column:%d: Can't cal %s\033[0m\n", line, column, name);
+}
+
+void reportUnaryInCompatible(int line, int column, const CType *t, const char *op)
+{
+    printf("\033[31;1mError at line:%d column:%d: Incompatible %s ", line, column, op);
+    __prettyCType(t);
+    printf(" \033[0m\n");
+}
+
+void reportBinaryInCompatible(int line, int column, const CType *t1, const char *op, const CType *t2)
+{
+    printf("\033[31;1mError at line:%d column:%d: Incompatible ", line, column);
+    __prettyCType(t1);
+    printf(" %s ", op);
+    __prettyCType(t2);
+    printf(" \033[0m\n");
 }

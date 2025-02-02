@@ -13,11 +13,11 @@ typedef enum Kind
     P_SUB_N,   // \-()
     NOT_N,     // !
     // binary operator
-    ADD_N,    // \+
-    SUB_N,    // \-
+    ASSIGN_N, // =
     MUL_N,    // \*
     DIV_N,    // /
-    ASSIGN_N, // =
+    ADD_N,    // \+
+    SUB_N,    // \-
     GT_N,     // >
     GE_N,     // >=
     LT_N,     // <
