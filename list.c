@@ -2,28 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-List *createList()
+void __List_del(List *list)
 {
-    List *list = (List *)malloc(sizeof(List));
-    list->head = NULL;
-    list->tail = NULL;
-    return list;
-}
-
-void freeList(List *list, void (*freeData)(void *))
-{
-    ListNode *p = list->tail, *prev = NULL;
+    ListNode *p = list->head, *next = NULL;
     while (p != NULL)
     {
-        prev = p->prev;
-        freeData(p->data);
+        list->__delListNode(p->data);
+        next = p->next;
         free(p);
-        p = prev;
+        p = next;
     }
     free(list);
 }
 
-void appendToList(List *list, void *data)
+void __List_append(List *list, void *data)
 {
     ListNode *node = (ListNode *)malloc(sizeof(ListNode));
     node->data = data;
@@ -39,4 +31,15 @@ void appendToList(List *list, void *data)
         node->prev = list->tail;
         list->tail = list->tail->next;
     }
+}
+
+List *createList(void (*delListNode)(void *))
+{
+    List *list = (List *)malloc(sizeof(List));
+    list->head = NULL;
+    list->tail = NULL;
+    list->__delListNode = delListNode;
+    list->append = &__List_append;
+    list->del = &__List_del;
+    return list;
 }

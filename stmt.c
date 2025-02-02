@@ -1,5 +1,4 @@
-#include "stmt.h"
-#include "exp.h"
+#include "parser.h"
 #include <stdlib.h>
 
 void parseStatement(Parser *parser, Lexer *lexer)
@@ -22,7 +21,7 @@ void parseStatement(Parser *parser, Lexer *lexer)
     default: {
         ASTNode *statement = parseExpression(parser, lexer, 0);
         match(lexer, SEMI_COLON_T);
-        appendToList(parser->curr->children, statement);
+        parser->append(parser, statement);
         break;
     }
     }
@@ -93,16 +92,16 @@ void parseDeclare(Parser *parser, Lexer *lexer)
         {
             initializer = NULL;
         }
-        declare = cDeclare(ctype, id, initializer);
+        declare = ASTNode_cDeclare(ctype, id, initializer);
         // check declare
         if (tryDeclare(parser->curr->table, ctype, declare->value))
         {
-            appendToList(parser->curr->children, declare);
+            parser->append(parser, declare);
         }
         else
         {
             reportVariabledefined(line, start, declare->value);
-            freeASTNode(declare);
+            ASTNode_del(declare);
         }
         if (lexer->token != COMMA_T)
             break;
@@ -113,13 +112,12 @@ void parseDeclare(Parser *parser, Lexer *lexer)
 
 void parseIf(Parser *parser, Lexer *lexer)
 {
-    List *children = parser->curr->children;
     // if
     match(lexer, IF_T);
     // (jumpfalse true end)
     match(lexer, L_PAREN_T);
-    ASTNode *trueEnd = cLabel(parser->number++);
-    appendToList(children, cJumpFalse(parseExpression(parser, lexer, 0), trueEnd->value));
+    ASTNode *trueEnd = ASTNode_cLabel(parser->number++);
+    parser->append(parser, ASTNode_cJumpFalse(parseExpression(parser, lexer, 0), trueEnd->value));
     match(lexer, R_PAREN_T);
     // {}
     parseStatements(parser, lexer);
@@ -128,30 +126,27 @@ void parseIf(Parser *parser, Lexer *lexer)
         parseElse(parser, lexer, trueEnd);
     else
         // true end
-        appendToList(children, trueEnd);
+        parser->append(parser, trueEnd);
 }
 
 void parseElse(Parser *parser, Lexer *lexer, ASTNode *trueEnd)
 {
-    List *children = parser->curr->children;
-
-    ASTNode *falseEnd = cLabel(parser->number++);
+    ASTNode *falseEnd = ASTNode_cLabel(parser->number++);
     // jump false end
-    appendToList(children, cJump(falseEnd->value));
+    parser->append(parser, ASTNode_cJump(falseEnd->value));
     // true end
-    appendToList(children, trueEnd);
+    parser->append(parser, trueEnd);
     // else
     match(lexer, ELSE_T);
     // {}
     parseStatements(parser, lexer);
     // false end
-    appendToList(children, falseEnd);
+    parser->append(parser, falseEnd);
 }
 
 void parseFor(Parser *parser, Lexer *lexer)
 {
-    enterScope(parser);
-    List *children = parser->curr->children;
+    parser->enter(parser);
     // for
     match(lexer, FOR_T);
     // (
@@ -159,11 +154,11 @@ void parseFor(Parser *parser, Lexer *lexer)
     // (1;
     parseStatement(parser, lexer);
     // for start
-    ASTNode *forStart = cLabel(parser->number++);
-    appendToList(children, forStart);
+    ASTNode *forStart = ASTNode_cLabel(parser->number++);
+    parser->append(parser, forStart);
     // (1;2; jumpfalse for end
-    ASTNode *forEnd = cLabel(parser->number++);
-    appendToList(children, cJumpFalse(parseExpression(parser, lexer, 0), forEnd->value));
+    ASTNode *forEnd = ASTNode_cLabel(parser->number++);
+    parser->append(parser, ASTNode_cJumpFalse(parseExpression(parser, lexer, 0), forEnd->value));
     match(lexer, SEMI_COLON_T);
     // (1;2;3
     ASTNode *expression = parseExpression(parser, lexer, 0);
@@ -172,36 +167,34 @@ void parseFor(Parser *parser, Lexer *lexer)
     // {}
     parseStatements(parser, lexer);
     // 3
-    appendToList(children, expression);
+    parser->append(parser, expression);
     // jump for start
-    appendToList(children, cJump(forStart->value));
+    parser->append(parser, ASTNode_cJump(forStart->value));
     // for end
-    appendToList(children, forEnd);
-
-    leaveScope(parser);
+    parser->append(parser, forEnd);
+    parser->leave(parser);
 }
 
 void parseWhile(Parser *parser, Lexer *lexer)
 {
-    List *children = parser->curr->children;
     // while
     match(lexer, WHILE_T);
     // (
     match(lexer, L_PAREN_T);
     // while start
-    ASTNode *whileStart = cLabel(parser->number++);
-    appendToList(children, whileStart);
+    ASTNode *whileStart = ASTNode_cLabel(parser->number++);
+    parser->append(parser, whileStart);
     // jump false while end
-    ASTNode *whileEnd = cLabel(parser->number++);
-    appendToList(children, cJumpFalse(parseExpression(parser, lexer, 0), whileEnd->value));
+    ASTNode *whileEnd = ASTNode_cLabel(parser->number++);
+    parser->append(parser, ASTNode_cJumpFalse(parseExpression(parser, lexer, 0), whileEnd->value));
     // )
     match(lexer, R_PAREN_T);
     // {}
     parseStatements(parser, lexer);
     // jump while start
-    appendToList(children, cJump(whileStart->value));
+    parser->append(parser, ASTNode_cJump(whileStart->value));
     // while end
-    appendToList(children, whileEnd);
+    parser->append(parser, whileEnd);
 }
 
 /**
@@ -209,7 +202,7 @@ void parseWhile(Parser *parser, Lexer *lexer)
  */
 void parseStatements(Parser *parser, Lexer *lexer)
 {
-    enterScope(parser);
+    parser->enter(parser);
     if (lexer->token != L_BRC_T)
     {
         // stmt scope
@@ -223,17 +216,15 @@ void parseStatements(Parser *parser, Lexer *lexer)
             parseStatement(parser, lexer);
         match(lexer, R_BRC_T);
     }
-    leaveScope(parser);
+    parser->leave(parser);
 }
 
-ASTNode *parseProgram(Parser *parser, FILE *in)
+void parseProgram(Parser *parser, FILE *in)
 {
     Lexer lexer;
     initLexer(&lexer, in);
     next(&lexer);
-    parser->curr = cScope(NULL);
     while (lexer.token != EOF_T)
         parseStatement(parser, &lexer);
     match(&lexer, EOF_T);
-    return parser->curr;
 }

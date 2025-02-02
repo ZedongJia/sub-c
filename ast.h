@@ -16,13 +16,13 @@ typedef struct ASTNode
     struct ASTNode *parent; // scope chain
 } ASTNode;
 
-void freeASTNode(void *node);
-ASTNode *cLiteral(CType *ctype, char *value);
-ASTNode *cUnary(Kind kind, CType *ctype, ASTNode *operand);
-ASTNode *cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right);
-ASTNode *cDeclare(CType *ctype, char *value, ASTNode *initializer);
-ASTNode *cLabel(int number);
-ASTNode *cJumpFalse(ASTNode *condition, char *value);
-ASTNode *cJump(char *value);
-ASTNode *cScope(ASTNode *parent);
+void ASTNode_del(void *node);
+ASTNode *ASTNode_cLiteral(CType *ctype, char *value);
+ASTNode *ASTNode_cUnary(Kind kind, CType *ctype, ASTNode *operand);
+ASTNode *ASTNode_cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right);
+ASTNode *ASTNode_cDeclare(CType *ctype, char *value, ASTNode *initializer);
+ASTNode *ASTNode_cLabel(int number);
+ASTNode *ASTNode_cJumpFalse(ASTNode *condition, char *value);
+ASTNode *ASTNode_cJump(char *value);
+ASTNode *ASTNode_cScope(ASTNode *parent);
 #endif

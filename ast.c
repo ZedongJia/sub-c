@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-ASTNode *__createASTNode(Kind kind, const char *value)
+ASTNode *__ASTNode_create(Kind kind, const char *value)
 {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     // assign node type
@@ -26,7 +26,7 @@ ASTNode *__createASTNode(Kind kind, const char *value)
     return node;
 }
 
-void freeASTNode(void *node)
+void ASTNode_del(void *node)
 {
     ASTNode *_node = (ASTNode *)node;
     if (_node->ctype != NULL)
@@ -34,78 +34,78 @@ void freeASTNode(void *node)
     if (_node->value != NULL)
         free(_node->value);
     if (_node->children != NULL)
-        freeList(_node->children, freeASTNode);
+        _node->children->del(_node->children);
     if (_node->table != NULL)
         free(_node->table);
     free(node);
 }
 
-ASTNode *cLiteral(CType *ctype, char *value)
+ASTNode *ASTNode_cLiteral(CType *ctype, char *value)
 {
-    ASTNode *node = __createASTNode(LIT_N, value);
+    ASTNode *node = __ASTNode_create(LIT_N, value);
     node->ctype = ctype;
     return node;
 }
 
-ASTNode *cUnary(Kind kind, CType *ctype, ASTNode *operand)
+ASTNode *ASTNode_cUnary(Kind kind, CType *ctype, ASTNode *operand)
 {
-    ASTNode *node = __createASTNode(kind, NULL);
+    ASTNode *node = __ASTNode_create(kind, NULL);
     node->ctype = ctype;
-    node->children = createList();
-    appendToList(node->children, (void *)operand);
+    node->children = createList(ASTNode_del);
+    node->children->append(node->children, operand);
     return node;
 }
 
-ASTNode *cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right)
+ASTNode *ASTNode_cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right)
 {
-    ASTNode *node = __createASTNode(kind, NULL);
+    ASTNode *node = __ASTNode_create(kind, NULL);
     node->ctype = ctype;
-    node->children = createList();
-    appendToList(node->children, (void *)left);
-    appendToList(node->children, (void *)right);
+    node->children = createList(ASTNode_del);
+    node->children->append(node->children, left);
+    node->children->append(node->children, right);
     return node;
 }
 
-ASTNode *cDeclare(CType *ctype, char *value, ASTNode *initializer)
+ASTNode *ASTNode_cDeclare(CType *ctype, char *value, ASTNode *initializer)
 {
-    ASTNode *node = __createASTNode(DEC_N, value);
+    ASTNode *node = __ASTNode_create(DEC_N, value);
     node->ctype = ctype;
     if (initializer != NULL)
     {
-        node->children = createList();
-        appendToList(node->children, (void *)initializer);
+        node->children = createList(ASTNode_del);
+        node->children->append(node->children, initializer);
     }
     return node;
 }
 
-ASTNode *cLabel(int number)
+ASTNode *ASTNode_cLabel(int number)
 {
     char buf[127];
     sprintf(buf, "label:%d", number);
-    ASTNode *node = __createASTNode(LABEL_N, buf);
+    ASTNode *node = __ASTNode_create(LABEL_N, buf);
     return node;
 }
 
-ASTNode *cJumpFalse(ASTNode *condition, char *value)
+ASTNode *ASTNode_cJumpFalse(ASTNode *condition, char *value)
 {
-    ASTNode *node = __createASTNode(JUMP_FALSE_N, value);
-    node->children = createList();
-    appendToList(node->children, (void *)condition);
+    ASTNode *node = __ASTNode_create(JUMP_FALSE_N, value);
+    node->children = createList(ASTNode_del);
+    node->children->append(node->children, condition);
     return node;
 }
 
-ASTNode *cJump(char *value)
+ASTNode *ASTNode_cJump(char *value)
 {
-    ASTNode *node = __createASTNode(JUMP_N, value);
+    ASTNode *node = __ASTNode_create(JUMP_N, value);
     return node;
 }
 
-ASTNode *cScope(ASTNode *parent)
+ASTNode *ASTNode_cScope(ASTNode *parent)
 {
-    ASTNode *node = __createASTNode(SCOPE_N, NULL);
+    ASTNode *node = __ASTNode_create(SCOPE_N, NULL);
     node->parent = parent;
     node->table = (SymbolTable *)malloc(sizeof(SymbolTable));
     node->table->num_var = 0;
-    node->children = createList();
+    node->children = createList(ASTNode_del);
     return node;
 }

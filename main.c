@@ -1,5 +1,4 @@
 #include "parser.h"
-#include "stmt.h"
 #include "tree.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,9 +9,8 @@ int main(int argv, const char *argc[])
     while (1)
     {
         printf("[IN]\n");
-        ASTNode *root = parseProgram(parser, stdin);
-        prettyTree(root);
-        freeASTNode(root);
+        parseProgram(parser, stdin);
+        prettyTree(parser->curr);
     }
-    freeParser(parser);
+    parser->del(parser);
 }
