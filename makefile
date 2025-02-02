@@ -9,17 +9,19 @@ SRCS+=$(wildcard *.c)
 # obj files
 OBJS=$(addprefix $(BUILD)/, $(SRCS:%.c=%.o))
 
-all:$(BIN)/${TARGET}
+all:dirs $(BIN)/${TARGET}
+
+dirs:
+	@if test ! -d "$(BUILD)"; then mkdir "$(BUILD)"; fi
+	@if test ! -d "$(BIN)"  ; then mkdir "$(BIN)"  ; fi
 
 $(BIN)/${TARGET}: $(OBJS)
-	@mkdir -p "$(BIN)"
 	@$(CC) $(CFLAGS) $^ -o $@
 
 $(BUILD)/%.o:%.c
-	@mkdir -p "$(dir $@)"
 	@echo "CC $<"
 	@$(CC) $(CFLAGS) -c $< -o $@ 
 
 clean:
-	rm -r "$(BUILD)"
-	rm -r "$(BIN)"
+	@if test -d "$(BUILD)"; then rm -r "$(BUILD)"; fi
+	@if test -d "$(BIN)"  ; then rm -r "$(BIN)"  ; fi

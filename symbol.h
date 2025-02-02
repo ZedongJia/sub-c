@@ -1,10 +1,10 @@
-#include "types.h"
 #ifndef SYMBOL
 #define SYMBOL
+#include "types.h"
 
 typedef struct VariableSymbol
 {
-    BaseType *baseType;
+    CType *ctype;
     const char *name;
 } VariableSymbol;
 
@@ -15,5 +15,5 @@ typedef struct SymbolTable
 } SymbolTable;
 
 int tryLookUp(SymbolTable *table, const char *name);
-int tryDeclare(SymbolTable *table, BaseType *baseType, const char *name);
+int tryDeclare(SymbolTable *table, CType *ctype, const char *name);
 #endif

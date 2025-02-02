@@ -1,61 +1,30 @@
-#include "list.h"
-#include "node.h"
-
 #ifndef TYPES
 #define TYPES
-typedef enum ValueType
+#include "node.h"
+typedef enum Type
 {
-    UNEXPECTED_VALUE,
-    INT_VALUE,
+    BOOL_VALUE = 1,
     CHAR_VALUE,
-    BOOL_VALUE,
-    POINTER_VALUE,
-    ARRAY_VALUE,
-} ValueType;
+    INT_VALUE,
+} Type;
 
-char *getValueTypeValue(ValueType valueType);
-ValueType tokenTypeToValueType(Token tokenType);
+char *typeName(Type type);
+Type toType(Token token);
 
-typedef struct BaseType
+/// @brief Complex Type
+typedef struct CType
 {
-    // inhert
-    ValueType valueType;
-    int offset;
-} BaseType;
-
-BaseType *createBaseType(ValueType valueType);
-BaseType *cloneBaseType(BaseType *baseType);
-void freeBaseType(void *baseType);
-
-typedef struct PointerType
-{
-    // inhert
-    ValueType valueType;
-    int offset;
-    // extend
-    BaseType *baseType;
+    Type type;
+    int offset[16]; // max type recursive = 16
+    int ptr;
     int dim;
-} PointerType;
+} CType;
 
-BaseType *createPointerType(BaseType *baseType);
-BaseType *clonePointerType(BaseType *baseType);
-void freePointerType(PointerType *pointerType);
+CType *createCType(Type type);
+void freeCType(CType *ctype);
 
-typedef struct ArrayType
-{
-    // inhert
-    ValueType valueType;
-    int offset;
-    // extend
-    BaseType *baseType;
-    int size;
-    int dim;
-} ArrayType;
-
-BaseType *createArrayType(BaseType *baseType, int size);
-BaseType *cloneArrayType(BaseType *baseType);
-void freeArrayType(ArrayType *arrayType);
-
-BaseType *computeBinaryOperator(BaseType *left, Kind kind, BaseType *right);
-BaseType *computeUnaryOperator(Kind kind, BaseType *operand);
+/// @brief pointer to this ctype, modify inplace
+void point(CType *ctype);
+/// @brief array for this ctype, modify inplace
+void array(CType *ctype, int size);
 #endif

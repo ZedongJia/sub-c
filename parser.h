@@ -1,6 +1,6 @@
-#include "ast.h"
 #ifndef PARSER
 #define PARSER
+#include "ast.h"
 typedef struct Parser
 {
     int number;    // label number

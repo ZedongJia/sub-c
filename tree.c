@@ -33,28 +33,20 @@ void __prettyPropertyName(const char *name)
     printf("\033[36;1m%s\033[0m", name);
 }
 
-void __prettyBaseType(BaseType *baseType)
+void __prettyCType(CType *ctype)
 {
-    printf("%s", getValueTypeValue(baseType->valueType));
-    switch (baseType->valueType)
+    printf("%s", typeName(ctype->type));
+    if (ctype->ptr)
     {
-    case POINTER_VALUE: {
-        PointerType *pointerType = (PointerType *)baseType;
-        printf("(");
-        __prettyBaseType(pointerType->baseType);
-        printf(")");
-        break;
+        for (int i = 0; i < ctype->ptr; i++)
+            printf("*");
     }
-    case ARRAY_VALUE: {
-        ArrayType *arrayType = (ArrayType *)baseType;
-        printf("(%d*", arrayType->size);
-        __prettyBaseType(arrayType->baseType);
-        printf(")");
-        break;
+    else if (ctype->dim)
+    {
+        for (int i = ctype->dim; i > 0; i--)
+            printf("[%d]", ctype->offset[i] / ctype->offset[i - 1]);
     }
-    default:
-        break;
-    }
+    printf("(%dbytes)", ctype->offset[ctype->dim]);
 }
 
 void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
@@ -63,12 +55,11 @@ void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
     parr[indent] = isLast ? 1 : 0;
     __prettyASTNodeType(node->kind);
     // type
-    if (node->baseType != NULL)
+    if (node->ctype != NULL)
     {
         __prettyPrefix(parr, indent + 1, node->value == NULL && node->children == NULL, "*");
         __prettyPropertyName("Type: ");
-        __prettyBaseType(node->baseType);
-        printf(" %dbytes", node->baseType->offset);
+        __prettyCType(node->ctype);
     }
     // value
     if (node->value != NULL)

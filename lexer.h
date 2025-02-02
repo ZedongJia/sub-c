@@ -1,8 +1,8 @@
+#ifndef LEXER
+#define LEXER
 #include "report.h"
 #include "token.h"
 #include <stdio.h>
-#ifndef LEXER
-#define LEXER
 typedef struct Lexer
 {
     FILE *__in;      // lex file

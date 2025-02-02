@@ -19,7 +19,7 @@ ASTNode *__createASTNode(Kind kind, const char *value)
         node->value = NULL;
     }
     // set NULL
-    node->baseType = NULL;
+    node->ctype = NULL;
     node->children = NULL;
     node->table = NULL;
     node->parent = NULL;
@@ -29,8 +29,8 @@ ASTNode *__createASTNode(Kind kind, const char *value)
 void freeASTNode(void *node)
 {
     ASTNode *_node = (ASTNode *)node;
-    if (_node->baseType != NULL)
-        free(_node->baseType);
+    if (_node->ctype != NULL)
+        free(_node->ctype);
     if (_node->value != NULL)
         free(_node->value);
     if (_node->children != NULL)
@@ -40,36 +40,36 @@ void freeASTNode(void *node)
     free(node);
 }
 
-ASTNode *cLiteral(BaseType *baseType, char *value)
+ASTNode *cLiteral(CType *ctype, char *value)
 {
     ASTNode *node = __createASTNode(LIT_N, value);
-    node->baseType = baseType;
+    node->ctype = ctype;
     return node;
 }
 
-ASTNode *cUnary(Kind kind, BaseType *baseType, ASTNode *operand)
+ASTNode *cUnary(Kind kind, CType *ctype, ASTNode *operand)
 {
     ASTNode *node = __createASTNode(kind, NULL);
-    node->baseType = baseType;
+    node->ctype = ctype;
     node->children = createList();
     appendToList(node->children, (void *)operand);
     return node;
 }
 
-ASTNode *cBinary(Kind kind, BaseType *baseType, ASTNode *left, ASTNode *right)
+ASTNode *cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right)
 {
     ASTNode *node = __createASTNode(kind, NULL);
-    node->baseType = baseType;
+    node->ctype = ctype;
     node->children = createList();
     appendToList(node->children, (void *)left);
     appendToList(node->children, (void *)right);
     return node;
 }
 
-ASTNode *cDeclare(BaseType *baseType, char *value)
+ASTNode *cDeclare(CType *ctype, char *value)
 {
     ASTNode *node = __createASTNode(DEC_N, value);
-    node->baseType = baseType;
+    node->ctype = ctype;
     return node;
 }
 

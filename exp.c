@@ -21,17 +21,19 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
     }
     case TRUE_T:
     case FALSE_T: {
-        expression = cLiteral(createBaseType(BOOL_VALUE), lexer->buf);
+        expression = cLiteral(createCType(BOOL_VALUE), lexer->buf);
         next(lexer);
         return expression;
     }
     case INT_LIT_T: {
-        expression = cLiteral(createBaseType(INT_VALUE), lexer->buf);
+        expression = cLiteral(createCType(INT_VALUE), lexer->buf);
         match(lexer, INT_LIT_T);
         return expression;
     }
     case STR_LIT_T: {
-        expression = cLiteral(createPointerType(createBaseType(CHAR_VALUE)), lexer->buf);
+        CType *ctype = createCType(CHAR_VALUE);
+        point(ctype);
+        expression = cLiteral(ctype, lexer->buf);
         match(lexer, STR_LIT_T);
         return expression;
     }
@@ -42,7 +44,7 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
             int index = tryLookUp(scope->table, lexer->buf);
             if (index != -1)
             {
-                expression = cLiteral(scope->table->variables[index].baseType, lexer->buf);
+                expression = cLiteral(scope->table->variables[index].ctype, lexer->buf);
                 break;
             }
             scope = scope->parent;
@@ -50,14 +52,14 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
         if (!expression)
         {
             reportVariableUndefined(lexer->line, lexer->start, lexer->buf);
-            expression = cLiteral(createBaseType(UNEXPECTED_VALUE), lexer->buf);
+            expression = cLiteral(createCType(0), lexer->buf);
         }
         match(lexer, ID_T);
         return expression;
     }
     default: {
         reportUnexpectedToken(lexer->line, lexer->start, tokenName(lexer->token), "expression");
-        expression = cLiteral(createBaseType(INT_LIT_T), "0");
+        expression = cLiteral(createCType(INT_VALUE), "0");
         return expression;
     }
     }
@@ -66,8 +68,8 @@ ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
 ASTNode *parsePrefix(Parser *parser, Lexer *lexer, int parentPriority)
 {
     ASTNode *expression;
-    int kind = unaryNode(lexer->token);
-    int priority = unaryPriority(kind);
+    int ukind = toUKind(lexer->token);
+    int priority = unaryPriority(ukind);
     if (priority != 0 && priority >= parentPriority)
     {
         // right association
@@ -75,13 +77,13 @@ ASTNode *parsePrefix(Parser *parser, Lexer *lexer, int parentPriority)
         int start = lexer->start;
         next(lexer);
         ASTNode *operand = parseExpression(parser, lexer, priority);
-        BaseType *baseType = computeUnaryOperator(kind, operand->baseType);
-        if (baseType == NULL)
-        {
-            reportUnaryOperatorError(line, start, kindName(kind), getValueTypeValue(operand->baseType->valueType));
-            baseType = operand->baseType;
-        }
-        expression = cUnary(kind, baseType, operand);
+        // CType *ctype = computeUnaryOperator(kind, operand->ctype);
+        // if (ctype == NULL)
+        // {
+        //     reportUnaryOperatorError(line, start, kindName(kind), typeName(operand->ctype->type));
+        //     ctype = operand->ctype;
+        // }
+        expression = cUnary(ukind, createCType(0), operand);
         return expression;
     }
     else
@@ -105,21 +107,21 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
             match(lexer, L_BRK_T);
             right = parseExpression(parser, lexer, 0);
             match(lexer, R_BRK_T);
-            BaseType *baseType = computeBinaryOperator(left->baseType, ADD_N, right->baseType);
-            if (baseType == NULL)
-            {
-                reportBinaryOperatorError(line, start, getValueTypeValue(left->baseType->valueType), kindName(ADD_N),
-                                          getValueTypeValue(right->baseType->valueType));
-                baseType = left->baseType;
-            }
-            left = cBinary(ADD_N, baseType, left, right);
-            baseType = computeUnaryOperator(ADDR_N, left->baseType);
-            if (baseType == NULL)
-            {
-                reportUnaryOperatorError(line, start, kindName(ADDR_N), getValueTypeValue(left->baseType->valueType));
-                baseType = left->baseType;
-            }
-            left = cUnary(ADDR_N, baseType, left);
+            // CType *ctype = computeBinaryOperator(left->ctype, ADD_N, right->ctype);
+            // if (ctype == NULL)
+            // {
+            //     reportBinaryOperatorError(line, start, typeName(left->ctype->valueType), kindName(ADD_N),
+            //                               typeName(right->ctype->valueType));
+            //     ctype = left->ctype;
+            // }
+            left = cBinary(ADD_N, createCType(0), left, right);
+            // ctype = computeUnaryOperator(ADDR_N, left->ctype);
+            // if (ctype == NULL)
+            // {
+            //     reportUnaryOperatorError(line, start, kindName(ADDR_N), typeName(left->ctype->valueType));
+            //     ctype = left->ctype;
+            // }
+            left = cUnary(ADDR_N, createCType(0), left);
             break;
         }
         case L_PAREN_T: {
@@ -128,7 +130,7 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
             right = parseExpression(parser, lexer, 0);
             match(lexer, R_PAREN_T);
             // TODO: there should be callable check
-            left = cBinary(CALL_N, left->baseType, left, right);
+            left = cBinary(CALL_N, left->ctype, left, right);
             break;
         }
         default: {
@@ -143,28 +145,28 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
 ASTNode *parseBinary(ASTNode *left, Parser *parser, Lexer *lexer, int parentPriority)
 {
     ASTNode *right = NULL;
-    Kind kind;
+    Kind bkind;
     int priority;
     while (1)
     {
-        kind = binaryNode(lexer->token);
-        if (!kind)
+        bkind = toBKind(lexer->token);
+        if (!bkind)
             break;
-        priority = binaryPriority(kind);
-        if (assoc(kind) ? priority < parentPriority : priority <= parentPriority)
+        priority = binaryPriority(bkind);
+        if (assoc(bkind) ? priority < parentPriority : priority <= parentPriority)
             break;
         int line = lexer->line;
         int start = lexer->start;
         next(lexer);
         right = parseExpression(parser, lexer, priority);
-        BaseType *baseType = computeBinaryOperator(left->baseType, kind, right->baseType);
-        if (baseType == NULL)
-        {
-            reportBinaryOperatorError(line, start, getValueTypeValue(left->baseType->valueType), kindName(kind),
-                                      getValueTypeValue(right->baseType->valueType));
-            baseType = left->baseType;
-        }
-        left = cBinary(kind, baseType, left, right);
+        // CType *ctype = computeBinaryOperator(left->ctype, bkind, right->ctype);
+        // if (ctype == NULL)
+        // {
+        //     reportBinaryOperatorError(line, start, typeName(left->ctype->type), kindName(bkind),
+        //                               typeName(right->ctype->type));
+        //     ctype = left->ctype;
+        // }
+        left = cBinary(bkind, createCType(0), left, right);
     }
     return left;
 }
@@ -172,7 +174,8 @@ ASTNode *parseBinary(ASTNode *left, Parser *parser, Lexer *lexer, int parentPrio
 ASTNode *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
 {
     // op expression
-    ASTNode *left = parsePrefix(parser, lexer, parentPriority);
+    ASTNode *left;
+    left = parsePrefix(parser, lexer, parentPriority);
     left = parseSuffix(left, parser, lexer);
     left = parseBinary(left, parser, lexer, parentPriority);
     return left;

@@ -7,20 +7,20 @@
 
 typedef struct ASTNode
 {
-    Kind kind;          // ast node kind
-    BaseType *baseType; // ast value type (only expression valid)
-    char *value;        // ast value
-    List *children;     // ast children
+    Kind kind;      // ast node kind
+    CType *ctype;   // ast value type (only expression valid)
+    char *value;    // ast value
+    List *children; // ast children
 
     SymbolTable *table;     // symbol
     struct ASTNode *parent; // scope chain
 } ASTNode;
 
 void freeASTNode(void *node);
-ASTNode *cLiteral(BaseType *baseType, char *value);
-ASTNode *cUnary(Kind kind, BaseType *baseType, ASTNode *operand);
-ASTNode *cBinary(Kind kind, BaseType *baseType, ASTNode *left, ASTNode *right);
-ASTNode *cDeclare(BaseType *baseType, char *value);
+ASTNode *cLiteral(CType *ctype, char *value);
+ASTNode *cUnary(Kind kind, CType *ctype, ASTNode *operand);
+ASTNode *cBinary(Kind kind, CType *ctype, ASTNode *left, ASTNode *right);
+ASTNode *cDeclare(CType *ctype, char *value);
 ASTNode *cLabel(int number);
 ASTNode *cJumpFalse(ASTNode *condition, char *value);
 ASTNode *cJump(char *value);

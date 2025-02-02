@@ -127,7 +127,7 @@ int assoc(Kind kind)
     }
 }
 
-Kind unaryNode(Token token)
+Kind toUKind(Token token)
 {
     switch (token)
     {
@@ -146,7 +146,7 @@ Kind unaryNode(Token token)
     }
 }
 
-Kind binaryNode(Token token)
+Kind toBKind(Token token)
 {
     switch (token)
     {

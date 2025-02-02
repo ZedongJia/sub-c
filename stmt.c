@@ -28,17 +28,17 @@ void parseStatement(Parser *parser, Lexer *lexer)
     }
 }
 
-BaseType *__parsePointerType(BaseType *baseType, Parser *parser, Lexer *lexer)
+void __parsePointer(CType *ctype, Parser *parser, Lexer *lexer)
 {
     if (lexer->token == STAR_T)
     {
         next(lexer);
-        baseType = createPointerType(__parsePointerType(baseType, parser, lexer));
+        __parsePointer(ctype, parser, lexer);
+        point(ctype);
     }
-    return baseType;
 }
 
-BaseType *__parseArrayType(BaseType *baseType, Parser *parser, Lexer *lexer)
+void __parseArray(CType *ctype, Parser *parser, Lexer *lexer)
 {
     if (lexer->token == L_BRK_T)
     {
@@ -46,49 +46,49 @@ BaseType *__parseArrayType(BaseType *baseType, Parser *parser, Lexer *lexer)
         int size = 0;
         if (lexer->token != INT_LIT_T)
         {
-            // error info
-            match(lexer, R_BRK_T);
-            return createArrayType(baseType, size);
+            // TODO: error info
         }
-        size = atoi(lexer->buf);
-        next(lexer);
+        else
+        {
+            size = atoi(lexer->buf);
+            next(lexer);
+        }
         match(lexer, R_BRK_T);
-        baseType = createArrayType(__parseArrayType(baseType, parser, lexer), size);
+        __parseArray(ctype, parser, lexer);
+        array(ctype, size);
     }
-    return baseType;
 }
 
 void parseDeclare(Parser *parser, Lexer *lexer)
 {
-    ValueType valueType = tokenTypeToValueType(lexer->token);
+    Type type = toType(lexer->token);
     next(lexer);
     ASTNode *declare, *init;
     while (1)
     {
-        BaseType *baseType = createBaseType(valueType);
+        CType *ctype = createCType(type);
         // parse pointer
-        baseType = __parsePointerType(baseType, parser, lexer);
+        __parsePointer(ctype, parser, lexer);
         // parse identifier
         if (lexer->token != ID_T)
         {
             // TODO: error info
-            freeBaseType(baseType);
+            freeCType(ctype);
             break;
         }
         int line = lexer->line;
         int start = lexer->start;
-        declare = cDeclare(baseType, lexer->buf);
+        declare = cDeclare(ctype, lexer->buf);
         // parse array type
         next(lexer);
-        baseType = __parseArrayType(baseType, parser, lexer);
-        // declare
-        declare->baseType = baseType;
-        if (tryDeclare(parser->curr->table, baseType, declare->value))
+        __parseArray(ctype, parser, lexer);
+        // check declare
+        if (tryDeclare(parser->curr->table, ctype, declare->value))
         {
             appendToList(parser->curr->children, declare);
-            if (lexer->token == D_EQ_T)
+            if (lexer->token == EQ_T)
             {
-                init = parseBinary(cLiteral(declare->baseType, declare->value), parser, lexer, 0);
+                init = parseBinary(cLiteral(declare->ctype, declare->value), parser, lexer, 0);
                 appendToList(parser->curr->children, init);
             }
         }

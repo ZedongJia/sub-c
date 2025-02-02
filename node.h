@@ -44,6 +44,8 @@ int unaryPriority(Kind kind);
 int binaryPriority(Kind kind);
 /// @brief association, 0 means left, 1 means right
 int assoc(Kind kind);
-Kind unaryNode(Token token);
-Kind binaryNode(Token token);
+/// @brief to unary kind
+Kind toUKind(Token token);
+/// @brief to binary kind
+Kind toBKind(Token token);
 #endif

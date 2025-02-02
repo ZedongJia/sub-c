@@ -11,7 +11,7 @@ int tryLookUp(SymbolTable *table, const char *name)
     return -1;
 }
 
-int tryDeclare(SymbolTable *table, BaseType *baseType, const char *name)
+int tryDeclare(SymbolTable *table, CType *ctype, const char *name)
 {
     if (tryLookUp(table, name) != -1)
     {
@@ -20,7 +20,7 @@ int tryDeclare(SymbolTable *table, BaseType *baseType, const char *name)
     else
     {
         // insert
-        table->variables[table->num_var].baseType = baseType;
+        table->variables[table->num_var].ctype = ctype;
         table->variables[table->num_var].name = name;
         table->num_var++;
         return 1;
