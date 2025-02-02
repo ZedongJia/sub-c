@@ -1,4 +1,4 @@
-#include "syntax/node.h"
+#include "node.h"
 #ifndef TREE
 #define TREE
 void prettyTree(Node *node);

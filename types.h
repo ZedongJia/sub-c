@@ -1,4 +1,4 @@
-#include "collection/list.h"
+#include "list.h"
 #include "token.h"
 
 #ifndef TYPES

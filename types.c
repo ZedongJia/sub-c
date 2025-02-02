@@ -1,4 +1,4 @@
-#include "syntax/types.h"
+#include "types.h"
 #include <stdlib.h>
 
 char *getValueTypeValue(ValueType valueType)

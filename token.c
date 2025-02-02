@@ -1,4 +1,4 @@
-#include "syntax/token.h"
+#include "token.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -88,8 +88,6 @@ const char *getTokenTypeValue(TokenType tokenType)
     case SEMI_COLON_TOKEN:
         return ";";
     // other
-    case WHITE_SPACE_TOKEN:
-        return " ";
     case END_OF_FILE_TOKEN:
         return "EOF";
     default:
@@ -105,6 +103,11 @@ int isDigit(int ch)
 int isLetter(int ch)
 {
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+}
+
+int canSkip(int ch)
+{
+    return ch == ' ' || ch == '\r' || ch == '\t';
 }
 
 int getUnaryTokenPriority(TokenType tokenType)
@@ -165,35 +168,4 @@ int getAssociation(TokenType tokenType)
     default:
         return 0;
     }
-}
-
-Token *createToken(TokenType tokenType, char *value, int line, int column)
-{
-    Token *token = (Token *)malloc(sizeof(Token));
-    token->tokenType = tokenType;
-    token->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
-    strcpy(token->value, value);
-    token->line = line;
-    token->column = column;
-    return token;
-}
-
-Token *createSymbolToken(TokenType tokenType, int line, int column)
-{
-    Token *token = (Token *)malloc(sizeof(Token));
-    token->tokenType = tokenType;
-    token->value = NULL;
-    token->line = line;
-    token->column = column;
-    return token;
-}
-
-void freeToken(Token *token)
-{
-    if (token == NULL)
-        return;
-    if (token->value != NULL)
-        free(token->value);
-    token->value = NULL;
-    free(token);
 }

@@ -1,7 +1,7 @@
-#include "collection/list.h"
-#include "syntax/symbol.h"
-#include "syntax/token.h"
-#include "syntax/types.h"
+#include "list.h"
+#include "symbol.h"
+#include "token.h"
+#include "types.h"
 #ifndef NODE
 #define NODE
 

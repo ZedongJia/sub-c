@@ -1,4 +1,4 @@
-#include "syntax/symbol.h"
+#include "symbol.h"
 #include <string.h>
 
 int tryLookUp(SymbolTable *table, const char *name)

@@ -1,5 +1,5 @@
-#include "syntax/lexer.h"
-#include "syntax/node.h"
+#include "lexer.h"
+#include "node.h"
 #ifndef PARSER
 #define PARSER
 typedef struct Parser
@@ -23,7 +23,7 @@ void parseElseStatement(Parser *parser, Lexer *lexer);
 void parseForStatement(Parser *parser, Lexer *lexer);
 void parseWhileStatement(Parser *parser, Lexer *lexer);
 Node *parseStatements(Parser *parser, Lexer *lexer, int isGlobal);
-Node *parse(Parser *parser, FILE *file);
+Node *parse(Parser *parser, FILE *in);
 Node *enterScope(Parser *parser);
 void leaveScope(Parser *parser);
 #endif

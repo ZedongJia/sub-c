@@ -1,4 +1,4 @@
-#include "syntax/types.h"
+#include "types.h"
 #ifndef SYMBOL
 #define SYMBOL
 

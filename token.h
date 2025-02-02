@@ -2,7 +2,7 @@
 #define TOKEN
 typedef enum TokenType
 {
-    INT_LITERAL_TOKEN,
+    INT_LITERAL_TOKEN = 1,
     STRING_LITERAL_TOKEN,
     // tokenType-keywords
     INT_TOKEN,
@@ -47,27 +47,15 @@ typedef enum TokenType
     COMMA_TOKEN,
     SEMI_COLON_TOKEN,
     // other
-    WHITE_SPACE_TOKEN,
     END_OF_FILE_TOKEN
 } TokenType;
 
 const char *getTokenTypeValue(TokenType tokenType);
 
-typedef struct Token
-{
-    TokenType tokenType;
-    char *value;
-
-    // position
-    int line;
-    int column;
-} Token;
 int isDigit(int ch);
 int isLetter(int ch);
+int canSkip(int ch);
 int getUnaryTokenPriority(TokenType tokenType);
 int getBinaryTokenPriority(TokenType tokenType);
 int getAssociation(TokenType tokenType);
-Token *createToken(TokenType tokenType, char *value, int line, int column);
-Token *createSymbolToken(TokenType tokenType, int line, int column);
-void freeToken(Token *token);
 #endif

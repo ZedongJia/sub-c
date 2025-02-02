@@ -1,5 +1,5 @@
-#include "output/tree.h"
-#include "syntax/parser.h"
+#include "parser.h"
+#include "tree.h"
 #include <stdio.h>
 #include <stdlib.h>
 

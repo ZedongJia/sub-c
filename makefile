@@ -1,14 +1,11 @@
 CC=gcc
-CFLAGS=-Wall -g -Iinc -fexec-charset=GBK
+CFLAGS=-Wall -g -fexec-charset=GBK
 TARGET=cc
 BUILD=build
 BIN=bin
 
 # src files
-SRCS+=$(wildcard src/*.c)
-SRCS+=$(wildcard src/collection/*.c)
-SRCS+=$(wildcard src/output/*.c)
-SRCS+=$(wildcard src/syntax/*.c)
+SRCS+=$(wildcard *.c)
 # obj files
 OBJS=$(addprefix $(BUILD)/, $(SRCS:%.c=%.o))
 
