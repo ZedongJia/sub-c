@@ -1,198 +1,198 @@
-#include "parser.h"
+#include "defs.h"
+#include "utils.h"
 #include <stdlib.h>
 
-void parseStatement(Parser *parser, Lexer *lexer)
+void parse_statement(struct Parser *parser)
 {
-    switch (lexer->token)
+    switch (parser->token(parser))
     {
     case INT_T:
     case CHAR_T:
-        parseDeclare(parser, lexer);
+        parse_declare(parser);
         break;
     case IF_T:
-        parseIf(parser, lexer);
+        parse_if(parser);
         break;
     case FOR_T:
-        parseFor(parser, lexer);
+        parse_for(parser);
         break;
     case WHILE_T:
-        parseWhile(parser, lexer);
+        parse_while(parser);
         break;
     default: {
-        ASTNode *statement = parseExpression(parser, lexer, 0);
-        match(lexer, SEMI_COLON_T);
+        struct ASTNode *statement = parse_expression(parser, 0);
+        parser->match(parser, SEMI_COLON_T);
         parser->append(parser, statement);
         break;
     }
     }
 }
 
-void __parsePointer(CType *ctype, Parser *parser, Lexer *lexer)
+void __parsePointer(struct CType *ctype, struct Parser *parser)
 {
-    if (lexer->token == STAR_T)
+    if (parser->token(parser) == STAR_T)
     {
-        next(lexer);
-        __parsePointer(ctype, parser, lexer);
+        parser->next(parser);
+        __parsePointer(ctype, parser);
         point(ctype);
     }
 }
 
-void __parseArray(CType *ctype, Parser *parser, Lexer *lexer)
+void __parseArray(struct CType *ctype, struct Parser *parser)
 {
-    if (lexer->token == L_BRK_T)
+    if (parser->token(parser) == L_BRK_T)
     {
-        next(lexer);
+        parser->next(parser);
         int size = 0;
-        if (lexer->token != INT_LIT_T)
+        if (parser->token(parser) != INT_LIT_T)
         {
             // TODO: error info
         }
         else
         {
-            size = atoi(lexer->buf);
-            next(lexer);
+            size = atoi(parser->value(parser));
+            parser->next(parser);
         }
-        match(lexer, R_BRK_T);
-        __parseArray(ctype, parser, lexer);
+        parser->match(parser, R_BRK_T);
+        __parseArray(ctype, parser);
         array(ctype, size);
     }
 }
 
-void parseDeclare(Parser *parser, Lexer *lexer)
+void parse_declare(struct Parser *parser)
 {
-    Type type = toType(lexer->token);
-    next(lexer);
-    ASTNode *declare, *initializer;
+    Type type = to_type(parser->token(parser));
+    parser->next(parser);
+    struct ASTNode *declare, *initializer;
     while (1)
     {
-        CType *ctype = createCType(type, 1);
+        struct CType *ctype = create_CType(type, 1);
         // parse pointer
-        __parsePointer(ctype, parser, lexer);
+        __parsePointer(ctype, parser);
         // parse identifier
-        if (lexer->token != ID_T)
+        if (parser->token(parser) != ID_T)
         {
             // TODO: error
-            freeCType(ctype);
+            ctype->del(ctype);
             break;
         }
-        int line = lexer->line;
-        int start = lexer->start;
+        struct Span span = parser->span(parser);
         char id[256];
-        sprintf(id, "%s", lexer->buf);
+        sprintf(id, "%s", parser->value(parser));
         // parse array type
-        next(lexer);
-        __parseArray(ctype, parser, lexer);
+        parser->next(parser);
+        __parseArray(ctype, parser);
         // parse initializer
-        if (lexer->token == EQ_T)
+        if (parser->token(parser) == EQ_T)
         {
-            next(lexer);
-            initializer = parseExpression(parser, lexer, 0);
+            parser->next(parser);
+            initializer = parse_expression(parser, 0);
         }
         else
         {
             initializer = NULL;
         }
-        declare = ASTNode_cDeclare(ctype, id, initializer);
+        declare = ASTNode_cdeclare(ctype, id, initializer);
         // check declare
-        if (tryDeclare(parser->curr->table, ctype, declare->value))
+        if (try_declare(parser->curr->table, ctype, declare->value))
         {
             parser->append(parser, declare);
         }
         else
         {
-            reportVariabledefined(line, start, declare->value);
-            ASTNode_del(declare);
+            __err_var_defined(&span, declare->value);
+            declare->del(declare);
         }
-        if (lexer->token != COMMA_T)
+        if (parser->token(parser) != COMMA_T)
             break;
-        match(lexer, COMMA_T);
+        parser->match(parser, COMMA_T);
     }
-    match(lexer, SEMI_COLON_T);
+    parser->match(parser, SEMI_COLON_T);
 }
 
-void parseIf(Parser *parser, Lexer *lexer)
+void parse_if(struct Parser *parser)
 {
     // if
-    match(lexer, IF_T);
+    parser->match(parser, IF_T);
     // (jumpfalse true end)
-    match(lexer, L_PAREN_T);
-    ASTNode *trueEnd = ASTNode_cLabel(parser->number++);
-    parser->append(parser, ASTNode_cJumpFalse(parseExpression(parser, lexer, 0), trueEnd->value));
-    match(lexer, R_PAREN_T);
+    parser->match(parser, L_PAREN_T);
+    struct ASTNode *trueEnd = ASTNode_clabel(parser->number++);
+    parser->append(parser, ASTNode_cjump_false(parse_expression(parser, 0), trueEnd->value));
+    parser->match(parser, R_PAREN_T);
     // {}
-    parseStatements(parser, lexer);
-    if (lexer->token == ELSE_T)
+    parse_statements(parser);
+    if (parser->token(parser) == ELSE_T)
         // else
-        parseElse(parser, lexer, trueEnd);
+        parse_else(parser, trueEnd);
     else
         // true end
         parser->append(parser, trueEnd);
 }
 
-void parseElse(Parser *parser, Lexer *lexer, ASTNode *trueEnd)
+void parse_else(struct Parser *parser, struct ASTNode *trueEnd)
 {
-    ASTNode *falseEnd = ASTNode_cLabel(parser->number++);
+    struct ASTNode *falseEnd = ASTNode_clabel(parser->number++);
     // jump false end
-    parser->append(parser, ASTNode_cJump(falseEnd->value));
+    parser->append(parser, ASTNode_cjump(falseEnd->value));
     // true end
     parser->append(parser, trueEnd);
     // else
-    match(lexer, ELSE_T);
+    parser->match(parser, ELSE_T);
     // {}
-    parseStatements(parser, lexer);
+    parse_statements(parser);
     // false end
     parser->append(parser, falseEnd);
 }
 
-void parseFor(Parser *parser, Lexer *lexer)
+void parse_for(struct Parser *parser)
 {
     parser->enter(parser);
     // for
-    match(lexer, FOR_T);
+    parser->match(parser, FOR_T);
     // (
-    match(lexer, L_PAREN_T);
+    parser->match(parser, L_PAREN_T);
     // (1;
-    parseStatement(parser, lexer);
+    parse_statement(parser);
     // for start
-    ASTNode *forStart = ASTNode_cLabel(parser->number++);
+    struct ASTNode *forStart = ASTNode_clabel(parser->number++);
     parser->append(parser, forStart);
     // (1;2; jumpfalse for end
-    ASTNode *forEnd = ASTNode_cLabel(parser->number++);
-    parser->append(parser, ASTNode_cJumpFalse(parseExpression(parser, lexer, 0), forEnd->value));
-    match(lexer, SEMI_COLON_T);
+    struct ASTNode *forEnd = ASTNode_clabel(parser->number++);
+    parser->append(parser, ASTNode_cjump_false(parse_expression(parser, 0), forEnd->value));
+    parser->match(parser, SEMI_COLON_T);
     // (1;2;3
-    ASTNode *expression = parseExpression(parser, lexer, 0);
+    struct ASTNode *expression = parse_expression(parser, 0);
     // (1;2;3)
-    match(lexer, R_PAREN_T);
+    parser->match(parser, R_PAREN_T);
     // {}
-    parseStatements(parser, lexer);
+    parse_statements(parser);
     // 3
     parser->append(parser, expression);
     // jump for start
-    parser->append(parser, ASTNode_cJump(forStart->value));
+    parser->append(parser, ASTNode_cjump(forStart->value));
     // for end
     parser->append(parser, forEnd);
     parser->leave(parser);
 }
 
-void parseWhile(Parser *parser, Lexer *lexer)
+void parse_while(struct Parser *parser)
 {
     // while
-    match(lexer, WHILE_T);
+    parser->match(parser, WHILE_T);
     // (
-    match(lexer, L_PAREN_T);
+    parser->match(parser, L_PAREN_T);
     // while start
-    ASTNode *whileStart = ASTNode_cLabel(parser->number++);
+    struct ASTNode *whileStart = ASTNode_clabel(parser->number++);
     parser->append(parser, whileStart);
     // jump false while end
-    ASTNode *whileEnd = ASTNode_cLabel(parser->number++);
-    parser->append(parser, ASTNode_cJumpFalse(parseExpression(parser, lexer, 0), whileEnd->value));
+    struct ASTNode *whileEnd = ASTNode_clabel(parser->number++);
+    parser->append(parser, ASTNode_cjump_false(parse_expression(parser, 0), whileEnd->value));
     // )
-    match(lexer, R_PAREN_T);
+    parser->match(parser, R_PAREN_T);
     // {}
-    parseStatements(parser, lexer);
+    parse_statements(parser);
     // jump while start
-    parser->append(parser, ASTNode_cJump(whileStart->value));
+    parser->append(parser, ASTNode_cjump(whileStart->value));
     // while end
     parser->append(parser, whileEnd);
 }
@@ -200,31 +200,29 @@ void parseWhile(Parser *parser, Lexer *lexer)
 /**
  * return this scope for additional option
  */
-void parseStatements(Parser *parser, Lexer *lexer)
+void parse_statements(struct Parser *parser)
 {
     parser->enter(parser);
-    if (lexer->token != L_BRC_T)
+    if (parser->token(parser) != L_BRC_T)
     {
         // stmt scope
-        parseStatement(parser, lexer);
+        parse_statement(parser);
     }
     else
     {
         // stmts scope
-        match(lexer, L_BRC_T);
-        while (lexer->token != R_BRC_T)
-            parseStatement(parser, lexer);
-        match(lexer, R_BRC_T);
+        parser->match(parser, L_BRC_T);
+        while (parser->token(parser) != R_BRC_T)
+            parse_statement(parser);
+        parser->match(parser, R_BRC_T);
     }
     parser->leave(parser);
 }
 
-void parseProgram(Parser *parser, FILE *in)
+void parse_program(struct Parser *parser)
 {
-    Lexer lexer;
-    initLexer(&lexer, in);
-    next(&lexer);
-    while (lexer.token != EOF_T)
-        parseStatement(parser, &lexer);
-    match(&lexer, EOF_T);
+    parser->next(parser);
+    while (parser->token(parser) != EOF_T)
+        parse_statement(parser);
+    parser->match(parser, EOF_T);
 }

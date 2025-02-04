@@ -1,131 +1,132 @@
-#include "parser.h"
+#include "defs.h"
+#include "utils.h"
 
-ASTNode *parsePrimary(Parser *parser, Lexer *lexer)
+struct ASTNode *parse_primary(struct Parser *parser)
 {
-    ASTNode *expression = NULL;
-    switch (lexer->token)
+    struct ASTNode *expression = NULL;
+    switch (parser->token(parser))
     {
     case L_PAREN_T: {
         // ( expression )
-        match(lexer, L_PAREN_T);
-        expression = parseExpression(parser, lexer, 0);
-        match(lexer, R_PAREN_T);
+        parser->match(parser, L_PAREN_T);
+        expression = parse_expression(parser, 0);
+        parser->match(parser, R_PAREN_T);
         return expression;
     }
     case L_BRC_T: {
         // { expression }
-        match(lexer, L_BRC_T);
-        expression = parseExpression(parser, lexer, 0);
-        match(lexer, R_BRC_T);
+        parser->match(parser, L_BRC_T);
+        expression = parse_expression(parser, 0);
+        parser->match(parser, R_BRC_T);
         return expression;
     }
     case INT_LIT_T: {
-        expression = ASTNode_cLiteral(createCType(INT_TYPE, 0), lexer->buf);
-        match(lexer, INT_LIT_T);
+        expression = ASTNode_cliteral(create_CType(INT_TYPE, 0), parser->value(parser));
+        parser->match(parser, INT_LIT_T);
         return expression;
     }
     case STR_LIT_T: {
-        CType *ctype = createCType(CHAR_TYPE, 0);
+        struct CType *ctype = create_CType(CHAR_TYPE, 0);
         point(ctype);
-        expression = ASTNode_cLiteral(ctype, lexer->buf);
-        match(lexer, STR_LIT_T);
+        expression = ASTNode_cliteral(ctype, parser->value(parser));
+        parser->match(parser, STR_LIT_T);
         return expression;
     }
     case ID_T: {
-        ASTNode *scope = parser->curr;
+        struct ASTNode *scope = parser->curr;
         while (scope != NULL)
         {
-            int index = tryLookUp(scope->table, lexer->buf);
+            int index = try_look_up(scope->table, parser->value(parser));
             if (index != -1)
             {
-                CType *ctype = scope->table->variables[index].ctype;
-                expression = ASTNode_cLiteral(cloneCType(ctype), lexer->buf);
+                struct CType *ctype = scope->table->variables[index].ctype;
+                expression = ASTNode_cliteral(ctype->clone(ctype), parser->value(parser));
                 break;
             }
-            scope = scope->parent;
+            scope = scope->prt;
         }
         if (!expression)
         {
-            reportVariableUndefined(lexer->line, lexer->start, lexer->buf);
-            expression = ASTNode_cLiteral(createCType(0, 0), lexer->buf);
+            struct Span span = parser->span(parser);
+            __err_var_undefined(&span, parser->value(parser));
+            expression = ASTNode_cliteral(create_CType(0, 0), parser->value(parser));
         }
-        match(lexer, ID_T);
+        parser->match(parser, ID_T);
         return expression;
     }
     default: {
-        reportUnexpectedToken(lexer->line, lexer->start, tokenName(lexer->token), "expression");
-        expression = ASTNode_cLiteral(createCType(INT_TYPE, 0), "0");
+        struct Span span = parser->span(parser);
+        __err_unexpect_token(&span, parser->token(parser));
+        expression = ASTNode_cliteral(create_CType(INT_TYPE, 0), "0");
         return expression;
     }
     }
 }
 
-ASTNode *parsePrefix(Parser *parser, Lexer *lexer, int parentPriority)
+struct ASTNode *parse_prefix(struct Parser *parser, int prt_prior)
 {
-    ASTNode *expression;
-    int ukind = toUKind(lexer->token);
-    int priority = unaryPriority(ukind);
-    if (priority != 0 && priority >= parentPriority)
+    struct ASTNode *expression;
+    int ukind = to_ukind(parser->token(parser));
+    int prior = uprior(ukind);
+    if (prior != 0 && prior >= prt_prior)
     {
         // right association
-        int line = lexer->line;
-        int start = lexer->start;
-        next(lexer);
-        ASTNode *operand = parseExpression(parser, lexer, priority);
-        CType *ctype = unary_compatible(ukind, operand->ctype);
+        struct Span span = parser->span(parser);
+        parser->next(parser);
+        struct ASTNode *operand = parse_expression(parser, prior);
+        struct CType *ctype = unary_compatible(ukind, operand->ctype);
         if (!ctype)
         {
-            reportUnaryInCompatible(line, start, operand->ctype, kindName(ukind));
-            ctype = cloneCType(operand->ctype);
+            __err_incompat_unary(&span, ukind, operand->ctype);
+            ctype = operand->ctype->clone(operand->ctype);
         }
-        expression = ASTNode_cUnary(ukind, ctype, operand);
+        expression = ASTNode_cunary(ukind, ctype, operand);
         return expression;
     }
     else
     {
-        return parsePrimary(parser, lexer);
+        return parse_primary(parser);
     }
 }
 
-ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
+struct ASTNode *parse_suffix(struct ASTNode *left, struct Parser *parser)
 {
-    ASTNode *right = NULL;
-    CType *ctype;
+    struct ASTNode *right = NULL;
+    struct CType *ctype;
     int isDone = 0;
     while (!isDone)
     {
-        switch (lexer->token)
+        switch (parser->token(parser))
         {
         case L_BRK_T: {
             // []
-            int line = lexer->line;
-            int start = lexer->start;
-            match(lexer, L_BRK_T);
-            right = parseExpression(parser, lexer, 0);
-            match(lexer, R_BRK_T);
+            struct Span span = parser->span(parser);
+            parser->match(parser, L_BRK_T);
+            right = parse_expression(parser, 0);
+            parser->match(parser, R_BRK_T);
             ctype = binary_compatible(ADD_N, left->ctype, right->ctype);
             if (!ctype)
             {
-                reportBinaryInCompatible(line, start, left->ctype, kindName(ADD_N), right->ctype);
-                ctype = cloneCType(left->ctype);
+                __err_incompat_binary(&span, left->ctype, ADD_N, right->ctype);
+                ctype = left->ctype->clone(left->ctype);
             }
-            left = ASTNode_cBinary(ADD_N, ctype, left, right);
+            left = ASTNode_cbinary(ADD_N, ctype, left, right);
             ctype = unary_compatible(ADDR_N, left->ctype);
             if (!ctype)
             {
-                reportUnaryInCompatible(line, start, left->ctype, kindName(ADDR_N));
-                ctype = cloneCType(left->ctype);
+                __err_incompat_unary(&span, ADDR_N, left->ctype);
+                ctype = left->ctype->clone(left->ctype);
             }
-            left = ASTNode_cUnary(ADDR_N, ctype, left);
+            left = ASTNode_cunary(ADDR_N, ctype, left);
             break;
         }
         case L_PAREN_T: {
             // call()
-            match(lexer, L_PAREN_T);
-            right = parseExpression(parser, lexer, 0);
-            match(lexer, R_PAREN_T);
+            parser->match(parser, L_PAREN_T);
+            right = parse_expression(parser, 0);
+            parser->match(parser, R_PAREN_T);
             // TODO: there should be callable check
-            left = ASTNode_cBinary(CALL_N, cloneCType(left->ctype), left, right);
+            left = ASTNode_cbinary(CALL_N, left->ctype->clone(left->ctype), left, right);
             break;
         }
         default: {
@@ -137,41 +138,40 @@ ASTNode *parseSuffix(ASTNode *left, Parser *parser, Lexer *lexer)
     return left;
 }
 
-ASTNode *parseBinary(ASTNode *left, Parser *parser, Lexer *lexer, int parentPriority)
+struct ASTNode *parse_binary(struct ASTNode *left, struct Parser *parser, int prt_prior)
 {
-    ASTNode *right = NULL;
-    CType *ctype;
+    struct ASTNode *right = NULL;
+    struct CType *ctype;
     Kind bkind;
-    int priority;
+    int prior;
     while (1)
     {
-        bkind = toBKind(lexer->token);
+        bkind = to_bkind(parser->token(parser));
         if (!bkind)
             break;
-        priority = binaryPriority(bkind);
-        if (assoc(bkind) ? priority < parentPriority : priority <= parentPriority)
+        prior = bprior(bkind);
+        if (assoc(bkind) ? prior < prt_prior : prior <= prt_prior)
             break;
-        int line = lexer->line;
-        int start = lexer->start;
-        next(lexer);
-        right = parseExpression(parser, lexer, priority);
+        struct Span span = parser->span(parser);
+        parser->next(parser);
+        right = parse_expression(parser, prior);
         ctype = binary_compatible(bkind, left->ctype, right->ctype);
         if (!ctype)
         {
-            reportBinaryInCompatible(line, start, left->ctype, kindName(bkind), right->ctype);
-            ctype = cloneCType(left->ctype);
+            __err_incompat_binary(&span, left->ctype, bkind, right->ctype);
+            ctype = left->ctype->clone(left->ctype);
         }
-        left = ASTNode_cBinary(bkind, ctype, left, right);
+        left = ASTNode_cbinary(bkind, ctype, left, right);
     }
     return left;
 }
 
-ASTNode *parseExpression(Parser *parser, Lexer *lexer, int parentPriority)
+struct ASTNode *parse_expression(struct Parser *parser, int prt_prior)
 {
     // op expression
-    ASTNode *left;
-    left = parsePrefix(parser, lexer, parentPriority);
-    left = parseSuffix(left, parser, lexer);
-    left = parseBinary(left, parser, lexer, parentPriority);
+    struct ASTNode *left;
+    left = parse_prefix(parser, prt_prior);
+    left = parse_suffix(left, parser);
+    left = parse_binary(left, parser, prt_prior);
     return left;
 }

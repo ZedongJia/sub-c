@@ -1,7 +1,7 @@
-#include "symbol.h"
+#include "defs.h"
 #include <string.h>
 
-int tryLookUp(SymbolTable *table, const char *name)
+int try_look_up(struct SymbolTable *table, const char *name)
 {
     for (int i = 0; i < table->num_var; i++)
     {
@@ -11,9 +11,9 @@ int tryLookUp(SymbolTable *table, const char *name)
     return -1;
 }
 
-int tryDeclare(SymbolTable *table, CType *ctype, const char *name)
+int try_declare(struct SymbolTable *table, struct CType *ctype, const char *name)
 {
-    if (tryLookUp(table, name) != -1)
+    if (try_look_up(table, name) != -1)
     {
         return 0;
     }

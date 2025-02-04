@@ -2,44 +2,73 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void __List_del(List *list)
+void __List_del(struct List *list)
 {
-    ListNode *p = list->head, *next = NULL;
+    struct ListNode *p = list->__head, *next = NULL;
     while (p != NULL)
     {
-        list->__delListNode(p->data);
-        next = p->next;
+        p->__del(p->__data);
+        next = p->__next;
         free(p);
         p = next;
     }
     free(list);
 }
 
-void __List_append(List *list, void *data)
+void __List_append(struct List *list, void *data, void (*del)(void *))
 {
-    ListNode *node = (ListNode *)malloc(sizeof(ListNode));
-    node->data = data;
-    node->next = NULL;
-    node->prev = NULL;
-    if (list->head == NULL)
+    struct ListNode *node = (struct ListNode *)malloc(sizeof(struct ListNode));
+    node->__data = data;
+    node->__next = NULL;
+    node->__prev = NULL;
+    node->__del = del;
+    if (list->__head == NULL)
     {
-        list->head = list->tail = node;
+        list->__head = list->__tail = node;
     }
     else
     {
-        list->tail->next = node;
-        node->prev = list->tail;
-        list->tail = list->tail->next;
+        list->__tail->__next = node;
+        node->__prev = list->__tail;
+        list->__tail = list->__tail->__next;
     }
 }
 
-List *createList(void (*delListNode)(void *))
+struct List *create_list()
 {
-    List *list = (List *)malloc(sizeof(List));
-    list->head = NULL;
-    list->tail = NULL;
-    list->__delListNode = delListNode;
+    struct List *list = (struct List *)malloc(sizeof(struct List));
+    list->__head = NULL;
+    list->__tail = NULL;
     list->append = &__List_append;
     list->del = &__List_del;
     return list;
+}
+
+void *__ListIterator_data(struct ListIterator *iter)
+{
+    if (iter->__curr != NULL)
+        return iter->__curr->__data;
+    else
+        return NULL;
+}
+
+void __ListIterator_next(struct ListIterator *iter)
+{
+    if (iter->__curr != NULL)
+        iter->__curr = iter->__curr->__next;
+}
+
+int __ListIterator_end(struct ListIterator *iter)
+{
+    return iter->__curr == NULL;
+}
+
+struct ListIterator *create_list_iterator(struct List *list)
+{
+    struct ListIterator *iter = (struct ListIterator *)malloc(sizeof(struct ListIterator));
+    iter->__curr = list->__head;
+    iter->data = &__ListIterator_data;
+    iter->next = &__ListIterator_next;
+    iter->end = &__ListIterator_end;
+    return iter;
 }

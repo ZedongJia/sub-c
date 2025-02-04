@@ -1,19 +1,6 @@
-#include "tree.h"
+#include "utils.h"
 #include <stdio.h>
 #include <string.h>
-
-void prettyTree(ASTNode *node)
-{
-    if (node == NULL)
-        return;
-    int parr[256];
-    for (int i = 0; i < 256; i++)
-        parr[i] = 0;
-
-    printf("[Tree]");
-    __prettyTree(node, parr, 0, 1);
-    printf("\n");
-}
 
 void __prettyPrefix(int *parr, int indent, int isLast, const char *end)
 {
@@ -25,7 +12,7 @@ void __prettyPrefix(int *parr, int indent, int isLast, const char *end)
 
 void __prettyASTNodeType(Kind kind)
 {
-    printf("\033[33;1m%s\033[0m", kindName(kind));
+    printf("\033[33;1m%s\033[0m", kind_name(kind));
 }
 
 void __prettyPropertyName(const char *name)
@@ -33,11 +20,11 @@ void __prettyPropertyName(const char *name)
     printf("\033[36;1m%s\033[0m", name);
 }
 
-void __prettyCType(const CType *ctype)
+void __debug_print_CType(const struct CType *ctype)
 {
-    if (!ctype->modify)
+    if (!ctype->mod)
         printf("const ");
-    printf("%s", typeName(ctype->type));
+    printf("%s", type_name(ctype->type));
     if (ctype->ptr)
     {
         for (int i = 0; i < ctype->ptr; i++)
@@ -45,7 +32,7 @@ void __prettyCType(const CType *ctype)
     }
 }
 
-void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
+void __prettyTree(struct ASTNode *node, int *parr, int indent, int isLast)
 {
     __prettyPrefix(parr, indent, isLast, "─");
     parr[indent] = isLast ? 1 : 0;
@@ -55,7 +42,7 @@ void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
     {
         __prettyPrefix(parr, indent + 1, node->value == NULL && node->children == NULL, "*");
         __prettyPropertyName("Type: ");
-        __prettyCType(node->ctype);
+        __debug_print_CType(node->ctype);
         printf("(%dbytes)", node->ctype->offset[node->ctype->ptr]);
     }
     // value
@@ -68,11 +55,25 @@ void __prettyTree(ASTNode *node, int *parr, int indent, int isLast)
     // children
     if (node->children != NULL)
     {
-        ListNode *curr = node->children->head;
-        while (curr != NULL)
+        struct ListIterator *iter = create_list_iterator(node->children);
+        while (!iter->end(iter))
         {
-            __prettyTree((ASTNode *)curr->data, parr, indent + 1, curr->next == NULL);
-            curr = curr->next;
+            void *data = iter->data(iter);
+            iter->next(iter);
+            __prettyTree((struct ASTNode *)data, parr, indent + 1, iter->end(iter));
         }
     }
+}
+
+void __debug_pretty_tree(struct ASTNode *node)
+{
+    if (node == NULL)
+        return;
+    int parr[256];
+    for (int i = 0; i < 256; i++)
+        parr[i] = 0;
+
+    printf("[Tree]");
+    __prettyTree(node, parr, 0, 1);
+    printf("\n");
 }

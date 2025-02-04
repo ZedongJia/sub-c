@@ -1,16 +1,16 @@
-#include "parser.h"
-#include "tree.h"
+#include "defs.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 int main(int argv, const char *argc[])
 {
-    Parser *parser = createParser();
+    struct Parser *parser = create_parser(stdin);
     while (1)
     {
         printf("[IN]\n");
-        parseProgram(parser, stdin);
-        prettyTree(parser->curr);
+        parse_program(parser);
+        __debug_pretty_tree(parser->curr);
     }
     parser->del(parser);
 }

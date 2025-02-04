@@ -1,6 +1,89 @@
-#include "node.h"
+#include "enums.h"
 
-const char *kindName(Kind kind)
+const char *token_name(Token token)
+{
+    switch (token)
+    {
+    case INT_LIT_T:
+        return "Int Literal";
+    case STR_LIT_T:
+        return "String Literal";
+    // token-keywords
+    case INT_T:
+        return "Int";
+    case CHAR_T:
+        return "Char";
+    // keywords
+    case ID_T:
+        return "Identifier";
+    case IF_T:
+        return "If";
+    case ELSE_T:
+        return "Else";
+    case FOR_T:
+        return "For";
+    case WHILE_T:
+        return "While";
+    // scope
+    case L_PAREN_T:
+        return "(";
+    case R_PAREN_T:
+        return ")";
+    case L_BRK_T:
+        return "[";
+    case R_BRK_T:
+        return "]";
+    case L_BRC_T:
+        return "{";
+    case R_BRC_T:
+        return "}";
+    // operator
+    case PLUS_T:
+        return "+";
+    case MIN_T:
+        return "-";
+    case STAR_T:
+        return "*";
+    case SLASH_T:
+        return "/";
+    case EQ_T:
+        return "=";
+    case GT_T:
+        return ">";
+    case GE_T:
+        return ">=";
+    case LT_T:
+        return "<";
+    case LE_T:
+        return "<=";
+    case D_EQ_T:
+        return "==";
+    case NE_T:
+        return "!=";
+    case D_AND_T:
+        return "&&";
+    case D_OR_T:
+        return "||";
+    case AND_T:
+        return "&";
+    case OR_T:
+        return "|";
+    case NOT_T:
+        return "!";
+    // separator
+    case COMMA_T:
+        return ",";
+    case SEMI_COLON_T:
+        return ";";
+    // other
+    case EOF_T:
+        return "EOF";
+    default:
+        return "?";
+    }
+}
+
+const char *kind_name(Kind kind)
 {
     switch (kind)
     {
@@ -68,7 +151,7 @@ const char *kindName(Kind kind)
     }
 }
 
-int unaryPriority(Kind kind)
+int uprior(Kind kind)
 {
     switch (kind)
     {
@@ -83,7 +166,7 @@ int unaryPriority(Kind kind)
     }
 }
 
-int binaryPriority(Kind kind)
+int bprior(Kind kind)
 {
     switch (kind)
     {
@@ -127,7 +210,7 @@ int assoc(Kind kind)
     }
 }
 
-Kind toUKind(Token token)
+Kind to_ukind(Token token)
 {
     switch (token)
     {
@@ -146,7 +229,7 @@ Kind toUKind(Token token)
     }
 }
 
-Kind toBKind(Token token)
+Kind to_bkind(Token token)
 {
     switch (token)
     {
@@ -182,6 +265,45 @@ Kind toBKind(Token token)
         return ASSIGN_N;
     case COMMA_T:
         return COMMA_N;
+    default:
+        return 0;
+    }
+}
+
+char *type_name(Type valueType)
+{
+    switch (valueType)
+    {
+    case INT_TYPE:
+        return "int";
+    case CHAR_TYPE:
+        return "char";
+    default:
+        return "?";
+    }
+}
+
+Type to_type(Token tokenType)
+{
+    switch (tokenType)
+    {
+    case INT_T:
+        return INT_TYPE;
+    case CHAR_T:
+        return CHAR_TYPE;
+    default:
+        return 0;
+    }
+}
+
+int type_size(Type type)
+{
+    switch (type)
+    {
+    case INT_TYPE:
+        return 4;
+    case CHAR_TYPE:
+        return 1;
     default:
         return 0;
     }

@@ -1,39 +1,75 @@
-#include "parser.h"
+#include "defs.h"
 #include <stdlib.h>
 
-void __Parser_append(Parser *self, void *data)
+void __Parser_append(struct Parser *self, struct ASTNode *data)
 {
-    List *list = self->curr->children;
-    list->append(list, data);
+    struct List *list = self->curr->children;
+    list->append(list, data, data->del);
 }
 
-void __Parser_del(Parser *self)
+void __Parser_del(struct Parser *self)
 {
-    ASTNode_del(self->curr);
+    self->curr->del(self->curr);
+    self->lexer->del(self->lexer);
     free(self);
 }
 
-void __Parser_enter(Parser *self)
+void __Parser_enter(struct Parser *self)
 {
     // enter new scope
-    self->curr = ASTNode_cScope(self->curr);
+    self->curr = ASTNode_cscope(self->curr);
 }
 
-void __Parser_leave(Parser *self)
+void __Parser_leave(struct Parser *self)
 {
-    // back to parent scope
-    if (self->curr->parent == NULL)
+    // back to prt scope
+    if (self->curr->prt == NULL)
         return;
-    ASTNode *scope = self->curr;
-    self->curr = scope->parent;
+    struct ASTNode *scope = self->curr;
+    self->curr = scope->prt;
     self->append(self, scope);
 }
 
-Parser *createParser()
+void __Parser_next(struct Parser *self)
 {
-    Parser *parser = (Parser *)malloc(sizeof(Parser));
+    self->lexer->next(self->lexer);
+}
+
+const char *__Parser_value(struct Parser *self)
+{
+    return self->lexer->text;
+}
+
+Token __Parser_token(struct Parser *self)
+{
+    return self->lexer->token;
+}
+
+struct Span __Parser_span(struct Parser *self)
+{
+    return self->lexer->span;
+}
+
+int __Parser_match(struct Parser *self, Token what)
+{
+    return self->lexer->match(self->lexer, what);
+}
+
+struct Parser *create_parser(FILE *in)
+{
+    struct Parser *parser = (struct Parser *)malloc(sizeof(struct Parser));
     parser->number = 0;
-    parser->curr = ASTNode_cScope(NULL);
+
+    // bind lexer
+    parser->lexer = create_lexer(in);
+    parser->next = &__Parser_next;
+    parser->token = &__Parser_token;
+    parser->span = &__Parser_span;
+    parser->value = &__Parser_value;
+    parser->match = &__Parser_match;
+
+    // bind list
+    parser->curr = ASTNode_cscope(NULL);
     parser->append = &__Parser_append;
     parser->enter = &__Parser_enter;
     parser->leave = &__Parser_leave;

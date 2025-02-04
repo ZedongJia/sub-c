@@ -1,110 +1,102 @@
-#include "lexer.h"
+#include "defs.h"
+#include "utils.h"
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-void __putback(Lexer *lexer)
+void __Lexer_putbackc(struct Lexer *lexer)
 {
     lexer->__pc = lexer->__cc;
 }
 
-void __next(Lexer *lexer)
+void __Lexer_getc(struct Lexer *lexer)
 {
-    lexer->start++;
+    lexer->span.col++;
     if (lexer->__pc != '\0')
     {
         lexer->__cc = lexer->__pc;
         lexer->__pc = '\0';
     }
     else
-    {
         lexer->__cc = getc(lexer->__in);
-    }
 }
 
-void __lexNumber(Lexer *lexer)
+void __Lexer_putc(struct Lexer *lexer)
 {
-    lexer->buf[lexer->len] = lexer->__cc;
+    lexer->text[lexer->len] = lexer->__cc;
     lexer->len++;
-    __next(lexer);
-    while (isDigit(lexer->__cc))
-    {
-        lexer->buf[lexer->len] = lexer->__cc;
-        lexer->len++;
-        __next(lexer);
-    }
-    __putback(lexer);
-    lexer->buf[lexer->len] = '\0';
+    __Lexer_getc(lexer);
+}
+
+void __Lexer_endc(struct Lexer *lexer)
+{
+    lexer->text[lexer->len] = '\0';
     lexer->len++;
+    __Lexer_putbackc(lexer);
+}
+
+int __Lexer_can_skip(int ch)
+{
+    return ch == ' ' || ch == '\r' || ch == '\t';
+}
+
+void __Lexer_lex_number(struct Lexer *lexer)
+{
+    __Lexer_putc(lexer);
+    while (isdigit(lexer->__cc))
+        __Lexer_putc(lexer);
+    __Lexer_endc(lexer);
     lexer->token = INT_LIT_T;
 }
 
-void __lexKeywordOrIdentifier(Lexer *lexer)
+void __Lexer_lex_kw_id(struct Lexer *lexer)
 {
-    lexer->buf[lexer->len] = lexer->__cc;
-    lexer->len++;
-    __next(lexer);
-    while (isLetter(lexer->__cc) || lexer->__cc == '_' || isDigit(lexer->__cc))
-    {
-        lexer->buf[lexer->len] = lexer->__cc;
-        lexer->len++;
-        __next(lexer);
-    }
-    __putback(lexer);
-    lexer->buf[lexer->len] = '\0';
-    lexer->len++;
-    if (strcmp(lexer->buf, "int") == 0)
+    __Lexer_putc(lexer);
+    while (isalnum(lexer->__cc) || lexer->__cc == '_')
+        __Lexer_putc(lexer);
+    __Lexer_endc(lexer);
+    if (strcmp(lexer->text, "int") == 0)
         lexer->token = INT_T;
-    else if (strcmp(lexer->buf, "char") == 0)
+    else if (strcmp(lexer->text, "char") == 0)
         lexer->token = CHAR_T;
-    else if (strcmp(lexer->buf, "if") == 0)
+    else if (strcmp(lexer->text, "if") == 0)
         lexer->token = IF_T;
-    else if (strcmp(lexer->buf, "else") == 0)
+    else if (strcmp(lexer->text, "else") == 0)
         lexer->token = ELSE_T;
-    else if (strcmp(lexer->buf, "for") == 0)
+    else if (strcmp(lexer->text, "for") == 0)
         lexer->token = FOR_T;
-    else if (strcmp(lexer->buf, "while") == 0)
+    else if (strcmp(lexer->text, "while") == 0)
         lexer->token = WHILE_T;
     else
         lexer->token = ID_T;
 }
 
-void __lexString(Lexer *lexer)
+void __Lexer_lex_string(struct Lexer *lexer)
 {
-    lexer->buf[lexer->len] = lexer->__cc;
-    lexer->len++;
-    __next(lexer);
-    int isDone = 0, isError = 0;
-    while (!isDone)
+    __Lexer_putc(lexer);
+    while (1)
     {
-        switch (lexer->__cc)
+        if (lexer->__cc == '\\')
         {
-        case '\\': {
-            lexer->buf[lexer->len] = lexer->__cc;
-            lexer->len++;
-            __next(lexer);
+            __Lexer_putc(lexer);
+            __Lexer_putc(lexer);
+        }
+        else if (lexer->__cc == '\"')
+        {
+            __Lexer_putc(lexer);
             break;
         }
-        case '\"': {
-            isDone = 1;
+        else if (lexer->__cc == '\n' || lexer->__cc == -1)
+        {
+            __err_unclosed_str(&lexer->span);
             break;
         }
-        case '\n':
-        case -1: {
-            // err
-            reportUnclosedString(lexer->line, lexer->start);
-            isError = 1;
-            break;
+        else
+        {
+            __Lexer_putc(lexer);
         }
-        }
-        if (isError)
-            break;
-        lexer->buf[lexer->len] = lexer->__cc;
-        lexer->len++;
-        __next(lexer);
     }
-    __putback(lexer);
-    lexer->buf[lexer->len] = lexer->__cc;
-    lexer->len++;
+    __Lexer_endc(lexer);
     lexer->token = STR_LIT_T;
 }
 
@@ -116,126 +108,129 @@ const int table[][4] = {
     {',', 0, COMMA_T, 0},     {';', 0, SEMI_COLON_T, 0}, {-1, 0, EOF_T, 0},
 };
 
-Token __matchTable(Lexer *lexer)
+Token __Lexer_match_table(struct Lexer *lexer)
 {
-    int isDone = 0;
+    Token token = 0;
     int index = 0;
-    while (!isDone)
+    while (table[index][0] != -1)
     {
-        if (table[index][0] == -1)
-            isDone = 1;
+        // match first
         if (table[index][0] == lexer->__cc)
         {
-            // match first
-            if (table[index][1])
+            __Lexer_putc(lexer);
+            token = table[index][2];
+            // match second
+            if (table[index][1] && table[index][1] == lexer->__cc)
             {
-                __next(lexer);
-                if (table[index][1] == lexer->__cc)
-                {
-                    lexer->buf[lexer->len] = lexer->__cc;
-                    lexer->len++;
-                    lexer->buf[lexer->len] = '\0';
-                    lexer->len++;
-                    // match second
-                    return table[index][3];
-                }
-                // match fail, put back
-                __putback(lexer);
+                __Lexer_putc(lexer);
+                token = table[index][3];
             }
-            lexer->buf[lexer->len] = '\0';
-            lexer->len++;
-            return table[index][2];
+            __Lexer_endc(lexer);
+            break;
         }
         index++;
     }
-    return 0;
+    return token;
 }
 
-void __lex(Lexer *lexer)
+void __Lexer_lex(struct Lexer *lexer)
 {
-    lexer->buf[0] = '\0';
+    lexer->text[0] = '\0';
     lexer->len = 0;
-    __next(lexer);
-    if (isDigit(lexer->__cc))
+    __Lexer_getc(lexer);
+    if (isdigit(lexer->__cc))
     {
         // lex number
-        __lexNumber(lexer);
+        __Lexer_lex_number(lexer);
     }
-    else if (isLetter(lexer->__cc) || lexer->__cc == '_')
+    else if (isalpha(lexer->__cc) || lexer->__cc == '_')
     {
         // lexer keyword iddentifier
-        __lexKeywordOrIdentifier(lexer);
+        __Lexer_lex_kw_id(lexer);
     }
     else if (lexer->__cc == '\"')
     {
         // string
-        __lexString(lexer);
+        __Lexer_lex_string(lexer);
+    }
+    else if (__Lexer_can_skip(lexer->__cc))
+    {
+        __Lexer_lex(lexer);
+    }
+    else if (lexer->__cc == '\n')
+    {
+        lexer->span.row++;
+        lexer->span.col = 0;
+        __Lexer_lex(lexer);
+    }
+    else if (lexer->__cc == -1)
+    {
+        lexer->token = EOF_T;
     }
     else
     {
-        // op
-        lexer->buf[lexer->len] = lexer->__cc;
-        lexer->len++;
-        if (canSkip(lexer->__cc))
+        lexer->token = __Lexer_match_table(lexer);
+        if (!lexer->token)
         {
-            __lex(lexer);
-        }
-        else if (lexer->__cc == '\n')
-        {
-            lexer->line++;
-            lexer->start = 0;
-            __lex(lexer);
-        }
-        else
-        {
-            lexer->token = __matchTable(lexer);
-            if (!lexer->token)
-            {
-                reportUnexpectedChar(lexer->line, lexer->start, lexer->__cc);
-                __lex(lexer);
-            }
+            __err_unexpect_char(&lexer->span, lexer->__cc);
+            __Lexer_lex(lexer);
         }
     }
 }
 
-void initLexer(Lexer *lexer, FILE *in)
+/// @brief match current token with `what`, go next and return 1 if success else conditionally go next and return 0
+void __Lexer_next(struct Lexer *lexer)
 {
-    // initialize lexer
-    lexer->__in = in;
-    lexer->buf[0] = '\0';
-    lexer->__pc = '\0';
-    lexer->__cc = '\0';
-    lexer->line = 1;
-    lexer->start = 0;
-    lexer->len = 0;
+    __Lexer_lex(lexer);
 }
 
-void next(Lexer *lexer)
-{
-    if (lexer->token != EOF_T)
-        __lex(lexer);
-}
-
-int match(Lexer *lexer, Token what)
+int __Lexer_match(struct Lexer *lexer, Token what)
 {
     if (lexer->token == what)
     {
-        next(lexer);
+        if (lexer->token != EOF_T)
+            __Lexer_next(lexer);
         return 1;
     }
     else
     {
-        reportUnexpectedToken(lexer->line, lexer->start, tokenName(lexer->token), tokenName(what));
+        __err_unexpect_token(&lexer->span, lexer->token);
         switch (lexer->token)
         {
         case R_BRC_T:
         case R_BRK_T:
         case R_PAREN_T:
         case ELSE_T:
-            next(lexer); // drop tokens which can't appear alone
+            __Lexer_next(lexer); // drop tokens which can't appear alone
             break;
         default:;
         }
         return 0;
     }
+}
+
+void __Lexer_del(struct Lexer *lexer)
+{
+    free(lexer);
+}
+
+struct Lexer *create_lexer(FILE *in)
+{
+    struct Lexer *lexer = (struct Lexer *)malloc(sizeof(struct Lexer));
+    // initialize lexer
+    lexer->__in = in;
+    lexer->__pc = '\0';
+    lexer->__cc = '\0';
+
+    // initialize span
+    lexer->text[0] = '\0';
+    lexer->len = 0;
+    lexer->span.row = 1;
+    lexer->span.col = 0;
+
+    // bind function
+    lexer->next = &__Lexer_next;
+    lexer->match = &__Lexer_match;
+    lexer->del = &__Lexer_del;
+    return lexer;
 }
