@@ -7,7 +7,7 @@ void __List_del(struct List *list)
     struct ListNode *p = list->__head, *next = NULL;
     while (p != NULL)
     {
-        p->__del(p->__data);
+        p->__del_data(p->__data);
         next = p->__next;
         free(p);
         p = next;
@@ -21,7 +21,7 @@ void __List_append(struct List *list, void *data, void (*del)(void *))
     node->__data = data;
     node->__next = NULL;
     node->__prev = NULL;
-    node->__del = del;
+    node->__del_data = del;
     if (list->__head == NULL)
     {
         list->__head = list->__tail = node;
@@ -63,6 +63,11 @@ int __ListIterator_end(struct ListIterator *iter)
     return iter->__curr == NULL;
 }
 
+void __ListIterator_del(struct ListIterator *iter)
+{
+    free(iter);
+}
+
 struct ListIterator *create_list_iterator(struct List *list)
 {
     struct ListIterator *iter = (struct ListIterator *)malloc(sizeof(struct ListIterator));
@@ -70,5 +75,6 @@ struct ListIterator *create_list_iterator(struct List *list)
     iter->data = &__ListIterator_data;
     iter->next = &__ListIterator_next;
     iter->end = &__ListIterator_end;
+    iter->del = &__ListIterator_del;
     return iter;
 }

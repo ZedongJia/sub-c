@@ -62,6 +62,7 @@ void __prettyTree(struct ASTNode *node, int *parr, int indent, int isLast)
             iter->next(iter);
             __prettyTree((struct ASTNode *)data, parr, indent + 1, iter->end(iter));
         }
+        iter->del(iter);
     }
 }
 

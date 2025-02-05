@@ -5,7 +5,7 @@ struct ListNode
     void *__data;
     struct ListNode *__next;
     struct ListNode *__prev;
-    void (*__del)(void *);
+    void (*__del_data)(void *);
 };
 
 struct ListIterator
@@ -14,6 +14,7 @@ struct ListIterator
     void *(*data)(struct ListIterator *);
     void (*next)(struct ListIterator *);
     int (*end)(struct ListIterator *);
+    void (*del)(struct ListIterator *);
 };
 
 struct List
