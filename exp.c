@@ -21,14 +21,14 @@ struct ASTNode *parse_primary(struct Parser *parser)
         return expression;
     }
     case INT_LIT_T: {
-        expression = ASTNode_cliteral(create_CType(INT_TYPE, 0), parser->value(parser));
+        expression = new_literal(new_CType(INT_TYPE, 0), parser->value(parser));
         parser->match(parser, INT_LIT_T);
         return expression;
     }
     case STR_LIT_T: {
-        struct CType *ctype = create_CType(CHAR_TYPE, 0);
+        struct CType *ctype = new_CType(CHAR_TYPE, 0);
         point(ctype);
-        expression = ASTNode_cliteral(ctype, parser->value(parser));
+        expression = new_literal(ctype, parser->value(parser));
         parser->match(parser, STR_LIT_T);
         return expression;
     }
@@ -40,7 +40,7 @@ struct ASTNode *parse_primary(struct Parser *parser)
             if (index != -1)
             {
                 struct CType *ctype = scope->table->variables[index].ctype;
-                expression = ASTNode_cliteral(ctype->clone(ctype), parser->value(parser));
+                expression = new_literal(ctype->clone(ctype), parser->value(parser));
                 break;
             }
             scope = scope->prt;
@@ -49,7 +49,7 @@ struct ASTNode *parse_primary(struct Parser *parser)
         {
             struct Span span = parser->span(parser);
             __err_var_undefined(&span, parser->value(parser));
-            expression = ASTNode_cliteral(create_CType(0, 0), parser->value(parser));
+            expression = new_literal(new_CType(0, 0), parser->value(parser));
         }
         parser->match(parser, ID_T);
         return expression;
@@ -57,7 +57,7 @@ struct ASTNode *parse_primary(struct Parser *parser)
     default: {
         struct Span span = parser->span(parser);
         __err_unexpect_token(&span, parser->token(parser));
-        expression = ASTNode_cliteral(create_CType(INT_TYPE, 0), "0");
+        expression = new_literal(new_CType(INT_TYPE, 0), "0");
         return expression;
     }
     }
@@ -80,7 +80,7 @@ struct ASTNode *parse_prefix(struct Parser *parser, int prt_prior)
             __err_incompat_unary(&span, ukind, operand->ctype);
             ctype = operand->ctype->clone(operand->ctype);
         }
-        expression = ASTNode_cunary(ukind, ctype, operand);
+        expression = new_unary(ukind, ctype, operand);
         return expression;
     }
     else
@@ -110,14 +110,14 @@ struct ASTNode *parse_suffix(struct ASTNode *left, struct Parser *parser)
                 __err_incompat_binary(&span, left->ctype, ADD_N, right->ctype);
                 ctype = left->ctype->clone(left->ctype);
             }
-            left = ASTNode_cbinary(ADD_N, ctype, left, right);
+            left = new_binary(ADD_N, ctype, left, right);
             ctype = unary_compatible(ADDR_N, left->ctype);
             if (!ctype)
             {
                 __err_incompat_unary(&span, ADDR_N, left->ctype);
                 ctype = left->ctype->clone(left->ctype);
             }
-            left = ASTNode_cunary(ADDR_N, ctype, left);
+            left = new_unary(ADDR_N, ctype, left);
             break;
         }
         case L_PAREN_T: {
@@ -126,7 +126,7 @@ struct ASTNode *parse_suffix(struct ASTNode *left, struct Parser *parser)
             right = parse_expression(parser, 0);
             parser->match(parser, R_PAREN_T);
             // TODO: there should be callable check
-            left = ASTNode_cbinary(CALL_N, left->ctype->clone(left->ctype), left, right);
+            left = new_binary(CALL_N, left->ctype->clone(left->ctype), left, right);
             break;
         }
         default: {
@@ -161,7 +161,7 @@ struct ASTNode *parse_binary(struct ASTNode *left, struct Parser *parser, int pr
             __err_incompat_binary(&span, left->ctype, bkind, right->ctype);
             ctype = left->ctype->clone(left->ctype);
         }
-        left = ASTNode_cbinary(bkind, ctype, left, right);
+        left = new_binary(bkind, ctype, left, right);
     }
     return left;
 }

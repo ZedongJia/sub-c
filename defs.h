@@ -28,7 +28,7 @@ struct Lexer
     void (*del)(struct Lexer *lexer);
 };
 
-struct Lexer *create_lexer(FILE *in);
+struct Lexer *new_lexer(FILE *in);
 
 /**
  *     Define struct CType
@@ -43,7 +43,7 @@ struct CType
     void (*del)(struct CType *);
 };
 
-struct CType *create_CType(Type type, int mod);
+struct CType *new_CType(Type type, int mod);
 
 /// @brief pointer to this ctype, mod inplace
 void point(struct CType *ctype);
@@ -96,14 +96,14 @@ struct ASTNode
     void (*del)(void *);       // del AST Tree
 };
 
-struct ASTNode *ASTNode_cliteral(struct CType *ctype, const char *value);
-struct ASTNode *ASTNode_cunary(Kind kind, struct CType *ctype, struct ASTNode *operand);
-struct ASTNode *ASTNode_cbinary(Kind kind, struct CType *ctype, struct ASTNode *left, struct ASTNode *right);
-struct ASTNode *ASTNode_cdeclare(struct CType *ctype, const char *value, struct ASTNode *initializer);
-struct ASTNode *ASTNode_clabel(int number);
-struct ASTNode *ASTNode_cjump_false(struct ASTNode *condition, const char *value);
-struct ASTNode *ASTNode_cjump(const char *value);
-struct ASTNode *ASTNode_cscope(struct ASTNode *prt);
+struct ASTNode *new_literal(struct CType *ctype, const char *value);
+struct ASTNode *new_unary(Kind kind, struct CType *ctype, struct ASTNode *operand);
+struct ASTNode *new_binary(Kind kind, struct CType *ctype, struct ASTNode *left, struct ASTNode *right);
+struct ASTNode *new_declare(struct CType *ctype, const char *value, struct ASTNode *initializer);
+struct ASTNode *new_label(int number);
+struct ASTNode *new_jump_false(struct ASTNode *condition, const char *value);
+struct ASTNode *new_jump(const char *value);
+struct ASTNode *new_scope(struct ASTNode *prt);
 
 /**
  *     Define struct Parser
@@ -126,7 +126,7 @@ struct Parser
     void (*del)(struct Parser *parser);                          // del parser
 };
 
-struct Parser *create_parser(FILE *in);
+struct Parser *new_parser(FILE *in);
 
 /**
  *     Expression

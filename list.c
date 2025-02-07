@@ -34,7 +34,7 @@ void __List_append(struct List *list, void *data, void (*del)(void *))
     }
 }
 
-struct List *create_list()
+struct List *new_list()
 {
     struct List *list = (struct List *)malloc(sizeof(struct List));
     list->__head = NULL;
@@ -68,7 +68,7 @@ void __ListIterator_del(struct ListIterator *iter)
     free(iter);
 }
 
-struct ListIterator *create_list_iterator(struct List *list)
+struct ListIterator *new_list_iterator(struct List *list)
 {
     struct ListIterator *iter = (struct ListIterator *)malloc(sizeof(struct ListIterator));
     iter->__curr = list->__head;

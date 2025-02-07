@@ -5,7 +5,7 @@
 
 int main(int argv, const char *argc[])
 {
-    struct Parser *parser = create_parser(stdin);
+    struct Parser *parser = new_parser(stdin);
     while (1)
     {
         printf("[IN]\n");

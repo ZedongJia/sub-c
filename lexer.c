@@ -214,7 +214,7 @@ void __Lexer_del(struct Lexer *lexer)
     free(lexer);
 }
 
-struct Lexer *create_lexer(FILE *in)
+struct Lexer *new_lexer(FILE *in)
 {
     struct Lexer *lexer = (struct Lexer *)malloc(sizeof(struct Lexer));
     // initialize lexer

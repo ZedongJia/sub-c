@@ -55,7 +55,7 @@ void __prettyTree(struct ASTNode *node, int *parr, int indent, int isLast)
     // children
     if (node->children != NULL)
     {
-        struct ListIterator *iter = create_list_iterator(node->children);
+        struct ListIterator *iter = new_list_iterator(node->children);
         while (!iter->end(iter))
         {
             void *data = iter->data(iter);

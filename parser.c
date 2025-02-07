@@ -17,7 +17,7 @@ void __Parser_del(struct Parser *self)
 void __Parser_enter(struct Parser *self)
 {
     // enter new scope
-    self->curr = ASTNode_cscope(self->curr);
+    self->curr = new_scope(self->curr);
 }
 
 void __Parser_leave(struct Parser *self)
@@ -55,13 +55,13 @@ int __Parser_match(struct Parser *self, Token what)
     return self->lexer->match(self->lexer, what);
 }
 
-struct Parser *create_parser(FILE *in)
+struct Parser *new_parser(FILE *in)
 {
     struct Parser *parser = (struct Parser *)malloc(sizeof(struct Parser));
     parser->number = 0;
 
     // bind lexer
-    parser->lexer = create_lexer(in);
+    parser->lexer = new_lexer(in);
     parser->next = &__Parser_next;
     parser->token = &__Parser_token;
     parser->span = &__Parser_span;
@@ -69,7 +69,7 @@ struct Parser *create_parser(FILE *in)
     parser->match = &__Parser_match;
 
     // bind list
-    parser->curr = ASTNode_cscope(NULL);
+    parser->curr = new_scope(NULL);
     parser->append = &__Parser_append;
     parser->enter = &__Parser_enter;
     parser->leave = &__Parser_leave;

@@ -25,6 +25,6 @@ struct List
     void (*del)(struct List *list);
 };
 
-struct List *create_list();
-struct ListIterator *create_list_iterator(struct List *list);
+struct List *new_list();
+struct ListIterator *new_list_iterator(struct List *list);
 #endif

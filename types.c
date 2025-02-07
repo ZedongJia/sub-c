@@ -3,7 +3,7 @@
 
 struct CType *__CType__clone(struct CType *ctype)
 {
-    struct CType *_ctype = create_CType(ctype->type, ctype->mod);
+    struct CType *_ctype = new_CType(ctype->type, ctype->mod);
     _ctype->ptr = ctype->ptr;
     for (int i = 1; i <= ctype->ptr; i++)
         _ctype->offset[i] = ctype->offset[i];
@@ -15,7 +15,7 @@ void __CType_del(struct CType *ctype)
     free(ctype);
 }
 
-struct CType *create_CType(Type type, int mod)
+struct CType *new_CType(Type type, int mod)
 {
     struct CType *ctype = (struct CType *)malloc(sizeof(struct CType));
     ctype->type = type;
@@ -76,7 +76,7 @@ struct CType *unary_compatible(Kind kind, struct CType *left)
         break;
     }
     case NOT_N: {
-        ctype = create_CType(INT_TYPE, 0);
+        ctype = new_CType(INT_TYPE, 0);
         break;
     }
     default: {
@@ -107,7 +107,7 @@ struct CType *binary_compatible(Kind kind, struct CType *left, struct CType *rig
         {
             if (kind >= SUB_N && kind <= L_OR_N)
             {
-                ctype = create_CType(INT_TYPE, 0);
+                ctype = new_CType(INT_TYPE, 0);
             }
         }
         else if (left->ptr)

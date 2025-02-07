@@ -66,7 +66,7 @@ void parse_declare(struct Parser *parser)
     struct ASTNode *declare, *initializer;
     while (1)
     {
-        struct CType *ctype = create_CType(type, 1);
+        struct CType *ctype = new_CType(type, 1);
         // parse pointer
         __parsePointer(ctype, parser);
         // parse identifier
@@ -92,7 +92,7 @@ void parse_declare(struct Parser *parser)
         {
             initializer = NULL;
         }
-        declare = ASTNode_cdeclare(ctype, id, initializer);
+        declare = new_declare(ctype, id, initializer);
         // check declare
         if (try_declare(parser->curr->table, ctype, declare->value))
         {
@@ -116,8 +116,8 @@ void parse_if(struct Parser *parser)
     parser->match(parser, IF_T);
     // (jumpfalse true end)
     parser->match(parser, L_PAREN_T);
-    struct ASTNode *trueEnd = ASTNode_clabel(parser->number++);
-    parser->append(parser, ASTNode_cjump_false(parse_expression(parser, 0), trueEnd->value));
+    struct ASTNode *trueEnd = new_label(parser->number++);
+    parser->append(parser, new_jump_false(parse_expression(parser, 0), trueEnd->value));
     parser->match(parser, R_PAREN_T);
     // {}
     parse_statements(parser);
@@ -131,9 +131,9 @@ void parse_if(struct Parser *parser)
 
 void parse_else(struct Parser *parser, struct ASTNode *trueEnd)
 {
-    struct ASTNode *falseEnd = ASTNode_clabel(parser->number++);
+    struct ASTNode *falseEnd = new_label(parser->number++);
     // jump false end
-    parser->append(parser, ASTNode_cjump(falseEnd->value));
+    parser->append(parser, new_jump(falseEnd->value));
     // true end
     parser->append(parser, trueEnd);
     // else
@@ -154,11 +154,11 @@ void parse_for(struct Parser *parser)
     // (1;
     parse_statement(parser);
     // for start
-    struct ASTNode *forStart = ASTNode_clabel(parser->number++);
+    struct ASTNode *forStart = new_label(parser->number++);
     parser->append(parser, forStart);
     // (1;2; jumpfalse for end
-    struct ASTNode *forEnd = ASTNode_clabel(parser->number++);
-    parser->append(parser, ASTNode_cjump_false(parse_expression(parser, 0), forEnd->value));
+    struct ASTNode *forEnd = new_label(parser->number++);
+    parser->append(parser, new_jump_false(parse_expression(parser, 0), forEnd->value));
     parser->match(parser, SEMI_COLON_T);
     // (1;2;3
     struct ASTNode *expression = parse_expression(parser, 0);
@@ -169,7 +169,7 @@ void parse_for(struct Parser *parser)
     // 3
     parser->append(parser, expression);
     // jump for start
-    parser->append(parser, ASTNode_cjump(forStart->value));
+    parser->append(parser, new_jump(forStart->value));
     // for end
     parser->append(parser, forEnd);
     parser->leave(parser);
@@ -182,17 +182,17 @@ void parse_while(struct Parser *parser)
     // (
     parser->match(parser, L_PAREN_T);
     // while start
-    struct ASTNode *whileStart = ASTNode_clabel(parser->number++);
+    struct ASTNode *whileStart = new_label(parser->number++);
     parser->append(parser, whileStart);
     // jump false while end
-    struct ASTNode *whileEnd = ASTNode_clabel(parser->number++);
-    parser->append(parser, ASTNode_cjump_false(parse_expression(parser, 0), whileEnd->value));
+    struct ASTNode *whileEnd = new_label(parser->number++);
+    parser->append(parser, new_jump_false(parse_expression(parser, 0), whileEnd->value));
     // )
     parser->match(parser, R_PAREN_T);
     // {}
     parse_statements(parser);
     // jump while start
-    parser->append(parser, ASTNode_cjump(whileStart->value));
+    parser->append(parser, new_jump(whileStart->value));
     // while end
     parser->append(parser, whileEnd);
 }
