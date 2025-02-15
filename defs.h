@@ -38,20 +38,20 @@ struct CType
     Type type;
     int offset[16]; // max type recursive = 16
     int ptr;
-    int mod;
-    struct CType *(*clone)(struct CType *);
-    void (*del)(struct CType *);
+    int mut;
+    struct CType *(*clone)(struct CType *ctype);
+    void (*del)(struct CType *ctype);
 };
 
-struct CType *new_CType(Type type, int mod);
+struct CType *new_ctype(Type type, int mut);
 
-/// @brief pointer to this ctype, mod inplace
+/// @brief pointer to this ctype, mut inplace
 void point(struct CType *ctype);
 
-/// @brief depointer to this ctype, mod inplace
+/// @brief depointer to this ctype, mut inplace
 void depoint(struct CType *ctype);
 
-/// @brief array for this ctype, mod inplace
+/// @brief array for this ctype, mut inplace
 void array(struct CType *ctype, int size);
 
 /// @brief return widen one
@@ -74,12 +74,12 @@ struct VariableSymbol
 
 struct SymbolTable
 {
-    struct VariableSymbol variables[256];
-    int num_var;
+    struct VariableSymbol vars[256];
+    int var_size;
+    int (*try_look_up_var)(struct SymbolTable *symbol_table, const char *name);
+    int (*try_declare_var)(struct SymbolTable *symbol_table, struct CType *ctype, const char *name);
 };
-
-int try_look_up(struct SymbolTable *table, const char *name);
-int try_declare(struct SymbolTable *table, struct CType *ctype, const char *name);
+struct SymbolTable *new_symbol_table();
 
 /**
  *     Define AST Tree Node
@@ -91,9 +91,11 @@ struct ASTNode
     char *value;           // ast value
     struct List *children; // ast children
 
-    struct SymbolTable *table; // symbol
-    struct ASTNode *prt;       // scope chain
-    void (*del)(void *);       // del AST Tree
+    struct SymbolTable *table;   // symbol
+    struct ASTNode *prt;         // scope chain
+    const struct ASTNode *begin; // scope ref begin
+    const struct ASTNode *end;   // scope ref end
+    void (*del)(void *ast_node); // del AST Tree
 };
 
 struct ASTNode *new_literal(struct CType *ctype, const char *value);
@@ -112,12 +114,13 @@ struct Parser
 {
     int number; // label number
 
-    struct Lexer *lexer;                              // lexer
-    void (*next)(struct Parser *parser);              // next token
-    Token (*token)(struct Parser *parser);            // current token
-    struct Span (*span)(struct Parser *parser);       // current token
-    const char *(*value)(struct Parser *parser);      // current token value
-    int (*match)(struct Parser *parser, Token token); // match token
+    struct Lexer *lexer;                             // lexer
+    void (*next)(struct Parser *parser);             // next token
+    Token (*token)(struct Parser *parser);           // current token
+    struct Span (*span)(struct Parser *parser);      // current token span
+    const char *(*value)(struct Parser *parser);     // current token value
+    int (*match)(struct Parser *parser, Token what); // match current token with `what`, go next and return 1 if success
+                                                     // else conditionally go next and return 0
 
     struct ASTNode *curr;                                        // current scope
     void (*append)(struct Parser *parser, struct ASTNode *data); // append statement

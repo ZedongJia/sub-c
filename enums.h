@@ -16,6 +16,8 @@ typedef enum Token
     ELSE_T,
     FOR_T,
     WHILE_T,
+    CONTINUE_T,
+    BREAK_T,
     // scope
     L_PAREN_T, // (
     R_PAREN_T, // )

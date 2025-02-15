@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "output.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -20,10 +20,12 @@ void __prettyPropertyName(const char *name)
     printf("\033[36;1m%s\033[0m", name);
 }
 
-void __debug_print_CType(const struct CType *ctype)
+void debug_print_CType(const struct CType *ctype)
 {
-    if (!ctype->mod)
+    if (!ctype->mut)
         printf("const ");
+    else
+        printf("mutable ");
     printf("%s", type_name(ctype->type));
     if (ctype->ptr)
     {
@@ -42,7 +44,7 @@ void __prettyTree(struct ASTNode *node, int *parr, int indent, int isLast)
     {
         __prettyPrefix(parr, indent + 1, node->value == NULL && node->children == NULL, "*");
         __prettyPropertyName("Type: ");
-        __debug_print_CType(node->ctype);
+        debug_print_CType(node->ctype);
         printf("(%dbytes)", node->ctype->offset[node->ctype->ptr]);
     }
     // value
@@ -66,7 +68,7 @@ void __prettyTree(struct ASTNode *node, int *parr, int indent, int isLast)
     }
 }
 
-void __debug_pretty_tree(struct ASTNode *node)
+void debug_pretty_tree(struct ASTNode *node)
 {
     if (node == NULL)
         return;

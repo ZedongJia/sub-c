@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void __List_del(struct List *list)
+void __List_del(struct List *self)
 {
-    struct ListNode *p = list->__head, *next = NULL;
+    struct ListNode *p = self->__head, *next = NULL;
     while (p != NULL)
     {
         p->__del_data(p->__data);
@@ -12,66 +12,66 @@ void __List_del(struct List *list)
         free(p);
         p = next;
     }
-    free(list);
+    free(self);
 }
 
-void __List_append(struct List *list, void *data, void (*del)(void *))
+void __List_append(struct List *self, void *data, void (*del)(void *))
 {
     struct ListNode *node = (struct ListNode *)malloc(sizeof(struct ListNode));
     node->__data = data;
     node->__next = NULL;
     node->__prev = NULL;
     node->__del_data = del;
-    if (list->__head == NULL)
+    if (self->__head == NULL)
     {
-        list->__head = list->__tail = node;
+        self->__head = self->__tail = node;
     }
     else
     {
-        list->__tail->__next = node;
-        node->__prev = list->__tail;
-        list->__tail = list->__tail->__next;
+        self->__tail->__next = node;
+        node->__prev = self->__tail;
+        self->__tail = self->__tail->__next;
     }
 }
 
 struct List *new_list()
 {
-    struct List *list = (struct List *)malloc(sizeof(struct List));
-    list->__head = NULL;
-    list->__tail = NULL;
-    list->append = &__List_append;
-    list->del = &__List_del;
-    return list;
+    struct List *self = (struct List *)malloc(sizeof(struct List));
+    self->__head = NULL;
+    self->__tail = NULL;
+    self->append = &__List_append;
+    self->del = &__List_del;
+    return self;
 }
 
-void *__ListIterator_data(struct ListIterator *iter)
+void *__ListIterator_data(struct ListIterator *self)
 {
-    if (iter->__curr != NULL)
-        return iter->__curr->__data;
+    if (self->__curr != NULL)
+        return self->__curr->__data;
     else
         return NULL;
 }
 
-void __ListIterator_next(struct ListIterator *iter)
+void __ListIterator_next(struct ListIterator *self)
 {
-    if (iter->__curr != NULL)
-        iter->__curr = iter->__curr->__next;
+    if (self->__curr != NULL)
+        self->__curr = self->__curr->__next;
 }
 
-int __ListIterator_end(struct ListIterator *iter)
+int __ListIterator_end(struct ListIterator *self)
 {
-    return iter->__curr == NULL;
+    return self->__curr == NULL;
 }
 
-void __ListIterator_del(struct ListIterator *iter)
+void __ListIterator_del(struct ListIterator *self)
 {
-    free(iter);
+    free(self);
 }
 
-struct ListIterator *new_list_iterator(struct List *list)
+struct ListIterator *new_list_iterator(struct List *self)
 {
     struct ListIterator *iter = (struct ListIterator *)malloc(sizeof(struct ListIterator));
-    iter->__curr = list->__head;
+    iter->__curr = self->__head;
     iter->data = &__ListIterator_data;
     iter->next = &__ListIterator_next;
     iter->end = &__ListIterator_end;

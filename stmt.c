@@ -1,5 +1,5 @@
 #include "defs.h"
-#include "utils.h"
+#include "output.h"
 #include <stdlib.h>
 
 void parse_statement(struct Parser *parser)
@@ -19,6 +19,40 @@ void parse_statement(struct Parser *parser)
     case WHILE_T:
         parse_while(parser);
         break;
+    case CONTINUE_T: {
+        struct Span span = parser->span(parser);
+        parser->match(parser, CONTINUE_T);
+        if (parser->curr->begin != NULL)
+        {
+            struct ASTNode *statement = new_jump(parser->curr->begin->value);
+            parser->append(parser, statement);
+        }
+        else
+        {
+            err_continus(&span);
+        }
+        parser->match(parser, SEMI_COLON_T);
+        break;
+    }
+    case BREAK_T: {
+        struct Span span = parser->span(parser);
+        parser->match(parser, BREAK_T);
+        if (parser->curr->end != NULL)
+        {
+            struct ASTNode *statement = new_jump(parser->curr->end->value);
+            parser->append(parser, statement);
+        }
+        else
+        {
+            err_break(&span);
+        }
+        parser->match(parser, SEMI_COLON_T);
+        break;
+    }
+    case SEMI_COLON_T: {
+        parser->match(parser, SEMI_COLON_T);
+        break;
+    }
     default: {
         struct ASTNode *statement = parse_expression(parser, 0);
         parser->match(parser, SEMI_COLON_T);
@@ -63,10 +97,10 @@ void parse_declare(struct Parser *parser)
 {
     Type type = to_type(parser->token(parser));
     parser->next(parser);
-    struct ASTNode *declare, *initializer;
+    struct ASTNode *decl, *init;
     while (1)
     {
-        struct CType *ctype = new_CType(type, 1);
+        struct CType *ctype = new_ctype(type, 1);
         // parse pointer
         __parsePointer(ctype, parser);
         // parse identifier
@@ -86,22 +120,22 @@ void parse_declare(struct Parser *parser)
         if (parser->token(parser) == EQ_T)
         {
             parser->next(parser);
-            initializer = parse_expression(parser, 0);
+            init = parse_expression(parser, 0);
         }
         else
         {
-            initializer = NULL;
+            init = NULL;
         }
-        declare = new_declare(ctype, id, initializer);
+        decl = new_declare(ctype, id, init);
         // check declare
-        if (try_declare(parser->curr->table, ctype, declare->value))
+        if (parser->curr->table->try_declare_var(parser->curr->table, ctype, decl->value))
         {
-            parser->append(parser, declare);
+            parser->append(parser, decl);
         }
         else
         {
-            __err_var_defined(&span, declare->value);
-            declare->del(declare);
+            err_var_defined(&span, decl->value);
+            decl->del(decl);
         }
         if (parser->token(parser) != COMMA_T)
             break;
@@ -147,6 +181,11 @@ void parse_else(struct Parser *parser, struct ASTNode *trueEnd)
 void parse_for(struct Parser *parser)
 {
     parser->enter(parser);
+    // labels
+    struct ASTNode *forStart = new_label(parser->number++);
+    parser->curr->begin = forStart;
+    struct ASTNode *forEnd = new_label(parser->number++);
+    parser->curr->end = forEnd;
     // for
     parser->match(parser, FOR_T);
     // (
@@ -154,20 +193,24 @@ void parse_for(struct Parser *parser)
     // (1;
     parse_statement(parser);
     // for start
-    struct ASTNode *forStart = new_label(parser->number++);
     parser->append(parser, forStart);
     // (1;2; jumpfalse for end
-    struct ASTNode *forEnd = new_label(parser->number++);
-    parser->append(parser, new_jump_false(parse_expression(parser, 0), forEnd->value));
+    if (parser->token(parser) == SEMI_COLON_T)
+        parser->append(parser, new_jump_false(new_literal(new_ctype(INT_TYPE, 0), "1"), forEnd->value));
+    else
+        parser->append(parser, new_jump_false(parse_expression(parser, 0), forEnd->value));
     parser->match(parser, SEMI_COLON_T);
     // (1;2;3
-    struct ASTNode *expression = parse_expression(parser, 0);
+    struct ASTNode *expression = NULL;
+    if (parser->token(parser) != R_PAREN_T)
+        expression = parse_expression(parser, 0);
     // (1;2;3)
     parser->match(parser, R_PAREN_T);
     // {}
     parse_statements(parser);
     // 3
-    parser->append(parser, expression);
+    if (expression != NULL)
+        parser->append(parser, expression);
     // jump for start
     parser->append(parser, new_jump(forStart->value));
     // for end
@@ -177,15 +220,18 @@ void parse_for(struct Parser *parser)
 
 void parse_while(struct Parser *parser)
 {
+    // label
+    struct ASTNode *whileStart = new_label(parser->number++);
+    parser->curr->begin = whileStart;
+    struct ASTNode *whileEnd = new_label(parser->number++);
+    parser->curr->end = whileEnd;
     // while
     parser->match(parser, WHILE_T);
     // (
     parser->match(parser, L_PAREN_T);
     // while start
-    struct ASTNode *whileStart = new_label(parser->number++);
     parser->append(parser, whileStart);
     // jump false while end
-    struct ASTNode *whileEnd = new_label(parser->number++);
     parser->append(parser, new_jump_false(parse_expression(parser, 0), whileEnd->value));
     // )
     parser->match(parser, R_PAREN_T);
@@ -197,9 +243,6 @@ void parse_while(struct Parser *parser)
     parser->append(parser, whileEnd);
 }
 
-/**
- * return this scope for additional option
- */
 void parse_statements(struct Parser *parser)
 {
     parser->enter(parser);

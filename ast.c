@@ -37,6 +37,8 @@ struct ASTNode *__ASTNode_new(Kind kind, const char *value)
     node->children = NULL;
     node->table = NULL;
     node->prt = NULL;
+    node->begin = NULL;
+    node->end = NULL;
     node->del = &__ASTNode_del;
     return node;
 }
@@ -105,8 +107,12 @@ struct ASTNode *new_scope(struct ASTNode *prt)
 {
     struct ASTNode *node = __ASTNode_new(SCOPE_N, NULL);
     node->prt = prt;
-    node->table = (struct SymbolTable *)malloc(sizeof(struct SymbolTable));
-    node->table->num_var = 0;
+    node->table = new_symbol_table();
     node->children = new_list();
+    if (prt != NULL)
+    {
+        node->begin = prt->begin;
+        node->end = prt->end;
+    }
     return node;
 }

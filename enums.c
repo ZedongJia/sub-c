@@ -24,6 +24,10 @@ const char *token_name(Token token)
         return "For";
     case WHILE_T:
         return "While";
+    case CONTINUE_T:
+        return "Continue";
+    case BREAK_T:
+        return "Break";
     // scope
     case L_PAREN_T:
         return "(";
@@ -270,9 +274,9 @@ Kind to_bkind(Token token)
     }
 }
 
-char *type_name(Type valueType)
+char *type_name(Type type)
 {
-    switch (valueType)
+    switch (type)
     {
     case INT_TYPE:
         return "int";
@@ -283,9 +287,9 @@ char *type_name(Type valueType)
     }
 }
 
-Type to_type(Token tokenType)
+Type to_type(Token token)
 {
-    switch (tokenType)
+    switch (token)
     {
     case INT_T:
         return INT_TYPE;

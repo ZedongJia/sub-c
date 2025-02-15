@@ -1,5 +1,5 @@
 #include "defs.h"
-#include "utils.h"
+#include "output.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +67,10 @@ void __Lexer_lex_kw_id(struct Lexer *lexer)
         lexer->token = FOR_T;
     else if (strcmp(lexer->text, "while") == 0)
         lexer->token = WHILE_T;
+    else if (strcmp(lexer->text, "continue") == 0)
+        lexer->token = CONTINUE_T;
+    else if (strcmp(lexer->text, "break") == 0)
+        lexer->token = BREAK_T;
     else
         lexer->token = ID_T;
 }
@@ -88,7 +92,7 @@ void __Lexer_lex_string(struct Lexer *lexer)
         }
         else if (lexer->__cc == '\n' || lexer->__cc == -1)
         {
-            __err_unclosed_str(&lexer->span);
+            err_unclosed_str(&lexer->span);
             break;
         }
         else
@@ -172,18 +176,18 @@ void __Lexer_lex(struct Lexer *lexer)
         lexer->token = __Lexer_match_table(lexer);
         if (!lexer->token)
         {
-            __err_unexpect_char(&lexer->span, lexer->__cc);
+            err_unexpect_char(&lexer->span, lexer->__cc);
             __Lexer_lex(lexer);
         }
     }
 }
 
-/// @brief match current token with `what`, go next and return 1 if success else conditionally go next and return 0
 void __Lexer_next(struct Lexer *lexer)
 {
     __Lexer_lex(lexer);
 }
 
+/// @brief match current token with `what`, go next and return 1 if success else conditionally go next and return 0
 int __Lexer_match(struct Lexer *lexer, Token what)
 {
     if (lexer->token == what)
@@ -194,7 +198,7 @@ int __Lexer_match(struct Lexer *lexer, Token what)
     }
     else
     {
-        __err_unexpect_token(&lexer->span, lexer->token);
+        err_unexpect_token(&lexer->span, lexer->token);
         switch (lexer->token)
         {
         case R_BRC_T:
