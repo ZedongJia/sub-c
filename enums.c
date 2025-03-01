@@ -1,6 +1,6 @@
-#include "enums.h"
+#include "defs.h"
 
-const char *token_name(Token token)
+const char *token_name(token_t token)
 {
     switch (token)
     {
@@ -87,194 +87,198 @@ const char *token_name(Token token)
     }
 }
 
-const char *kind_name(Kind kind)
+const char *syntax_kind_name(syntax_kind_t kind)
 {
     switch (kind)
     {
-    case LIT_N:
+    case IMM_KIND:
+        return "Immediate";
+    case LIT_KIND:
         return "Literal";
+    case VAR_KIND:
+        return "Variable";
     // unary operator
-    case ADDR_N:
+    case ADDR_KIND:
         return "*";
-    case ADDR_OF_N:
+    case ADDR_OF_KIND:
         return "&";
-    case P_ADD_N:
+    case P_ADD_KIND:
         return "+";
-    case P_SUB_N:
+    case P_SUB_KIND:
         return "-";
-    case NOT_N:
+    case NOT_KIND:
         return "!";
     // binary operator
-    case ASSIGN_N:
+    case ASSIGN_KIND:
         return "=";
-    case ADD_N:
+    case ADD_KIND:
         return "+";
-    case SUB_N:
+    case SUB_KIND:
         return "-";
-    case MUL_N:
+    case MUL_KIND:
         return "*";
-    case DIV_N:
+    case DIV_KIND:
         return "/";
-    case GT_N:
+    case GT_KIND:
         return ">";
-    case GE_N:
+    case GE_KIND:
         return ">=";
-    case LT_N:
+    case LT_KIND:
         return "<";
-    case LE_N:
+    case LE_KIND:
         return "<=";
-    case EQ_N:
+    case EQ_KIND:
         return "==";
-    case NE_N:
+    case NE_KIND:
         return "!=";
-    case AND_N:
+    case AND_KIND:
         return "&&";
-    case OR_N:
+    case OR_KIND:
         return "||";
-    case L_AND_N:
+    case L_AND_KIND:
         return "&";
-    case L_OR_N:
+    case L_OR_KIND:
         return "|";
     // multi operator
-    case CALL_N:
+    case CALL_KIND:
         return "call(...)";
-    case COMMA_N:
+    case COMMA_KIND:
         return "...,...";
-    case DEC_N:
+    case DEC_KIND:
         return "Declaration";
-    case LABEL_N:
+    case LABEL_KIND:
         return "Label";
-    case JUMP_FALSE_N:
+    case JUMP_FALSE_KIND:
         return "Jump If False";
-    case JUMP_N:
+    case JUMP_KIND:
         return "Jump";
-    case SCOPE_N:
+    case SCOPE_KIND:
         return "Scope";
     default:
         return "?";
     }
 }
 
-int uprior(Kind kind)
+int uprior(syntax_kind_t kind)
 {
     switch (kind)
     {
-    case P_ADD_N:
-    case P_SUB_N:
-    case NOT_N:
-    case ADDR_N:
-    case ADDR_OF_N:
+    case P_ADD_KIND:
+    case P_SUB_KIND:
+    case NOT_KIND:
+    case ADDR_KIND:
+    case ADDR_OF_KIND:
         return 9;
     default:
         return 0;
     }
 }
 
-int bprior(Kind kind)
+int bprior(syntax_kind_t kind)
 {
     switch (kind)
     {
-    case MUL_N:
-    case DIV_N:
+    case MUL_KIND:
+    case DIV_KIND:
         return 8;
-    case ADD_N:
-    case SUB_N:
+    case ADD_KIND:
+    case SUB_KIND:
         return 7;
-    case GT_N:
-    case GE_N:
-    case LT_N:
-    case LE_N:
+    case GT_KIND:
+    case GE_KIND:
+    case LT_KIND:
+    case LE_KIND:
         return 6;
-    case EQ_N:
-    case NE_N:
+    case EQ_KIND:
+    case NE_KIND:
         return 5;
-    case AND_N:
-    case OR_N:
+    case AND_KIND:
+    case OR_KIND:
         return 4;
-    case L_AND_N:
-    case L_OR_N:
+    case L_AND_KIND:
+    case L_OR_KIND:
         return 3;
-    case ASSIGN_N:
+    case ASSIGN_KIND:
         return 2;
-    case COMMA_N:
+    case COMMA_KIND:
         return 1;
     default:
         return 0;
     }
 }
 
-int assoc(Kind kind)
+int assoc(syntax_kind_t kind)
 {
     switch (kind)
     {
-    case ASSIGN_N:
+    case ASSIGN_KIND:
         return 1;
     default:
         return 0;
     }
 }
 
-Kind to_ukind(Token token)
+syntax_kind_t to_usyntax_kind(token_t token)
 {
     switch (token)
     {
     case PLUS_T:
-        return P_ADD_N;
+        return P_ADD_KIND;
     case MIN_T:
-        return P_SUB_N;
+        return P_SUB_KIND;
     case NOT_T:
-        return NOT_N;
+        return NOT_KIND;
     case AND_T:
-        return ADDR_OF_N;
+        return ADDR_OF_KIND;
     case STAR_T:
-        return ADDR_N;
+        return ADDR_KIND;
     default:
         return 0;
     }
 }
 
-Kind to_bkind(Token token)
+syntax_kind_t to_bsyntax_kind(token_t token)
 {
     switch (token)
     {
     case STAR_T:
-        return MUL_N;
+        return MUL_KIND;
     case SLASH_T:
-        return DIV_N;
+        return DIV_KIND;
     case PLUS_T:
-        return ADD_N;
+        return ADD_KIND;
     case MIN_T:
-        return SUB_N;
+        return SUB_KIND;
     case GT_T:
-        return GT_N;
+        return GT_KIND;
     case GE_T:
-        return GE_N;
+        return GE_KIND;
     case LT_T:
-        return LT_N;
+        return LT_KIND;
     case LE_T:
-        return LE_N;
+        return LE_KIND;
     case D_EQ_T:
-        return EQ_N;
+        return EQ_KIND;
     case NE_T:
-        return NE_N;
+        return NE_KIND;
     case D_AND_T:
-        return AND_N;
+        return AND_KIND;
     case D_OR_T:
-        return OR_N;
+        return OR_KIND;
     case AND_T:
-        return L_AND_N;
+        return L_AND_KIND;
     case OR_T:
-        return L_OR_N;
+        return L_OR_KIND;
     case EQ_T:
-        return ASSIGN_N;
+        return ASSIGN_KIND;
     case COMMA_T:
-        return COMMA_N;
+        return COMMA_KIND;
     default:
         return 0;
     }
 }
 
-char *type_name(Type type)
+char *type_name(type_t type)
 {
     switch (type)
     {
@@ -287,7 +291,7 @@ char *type_name(Type type)
     }
 }
 
-Type to_type(Token token)
+type_t to_type(token_t token)
 {
     switch (token)
     {
@@ -300,7 +304,7 @@ Type to_type(Token token)
     }
 }
 
-int type_size(Type type)
+int type_size(type_t type)
 {
     switch (type)
     {

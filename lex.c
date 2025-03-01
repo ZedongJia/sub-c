@@ -1,60 +1,59 @@
 #include "defs.h"
-#include "output.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-void __Lexer_putbackc(struct Lexer *lexer)
+void lexer_putbackc(lexer_t *lexer)
 {
-    lexer->__pc = lexer->__cc;
+    lexer->pc = lexer->cc;
 }
 
-void __Lexer_getc(struct Lexer *lexer)
+void lexer_getc(lexer_t *lexer)
 {
     lexer->span.col++;
-    if (lexer->__pc != '\0')
+    if (lexer->pc != '\0')
     {
-        lexer->__cc = lexer->__pc;
-        lexer->__pc = '\0';
+        lexer->cc = lexer->pc;
+        lexer->pc = '\0';
     }
     else
-        lexer->__cc = getc(lexer->__in);
+        lexer->cc = getc(lexer->in);
 }
 
-void __Lexer_putc(struct Lexer *lexer)
+void lexer_putc(lexer_t *lexer)
 {
-    lexer->text[lexer->len] = lexer->__cc;
+    lexer->text[lexer->len] = lexer->cc;
     lexer->len++;
-    __Lexer_getc(lexer);
+    lexer_getc(lexer);
 }
 
-void __Lexer_endc(struct Lexer *lexer)
+void lexer_endc(lexer_t *lexer)
 {
     lexer->text[lexer->len] = '\0';
     lexer->len++;
-    __Lexer_putbackc(lexer);
+    lexer_putbackc(lexer);
 }
 
-int __Lexer_can_skip(int ch)
+int lexer_can_skip(int ch)
 {
     return ch == ' ' || ch == '\r' || ch == '\t';
 }
 
-void __Lexer_lex_number(struct Lexer *lexer)
+void lexer_parse_number(lexer_t *lexer)
 {
-    __Lexer_putc(lexer);
-    while (isdigit(lexer->__cc))
-        __Lexer_putc(lexer);
-    __Lexer_endc(lexer);
+    lexer_putc(lexer);
+    while (isdigit(lexer->cc))
+        lexer_putc(lexer);
+    lexer_endc(lexer);
     lexer->token = INT_LIT_T;
 }
 
-void __Lexer_lex_kw_id(struct Lexer *lexer)
+void lexer_parse_kw_id(lexer_t *lexer)
 {
-    __Lexer_putc(lexer);
-    while (isalnum(lexer->__cc) || lexer->__cc == '_')
-        __Lexer_putc(lexer);
-    __Lexer_endc(lexer);
+    lexer_putc(lexer);
+    while (isalnum(lexer->cc) || lexer->cc == '_')
+        lexer_putc(lexer);
+    lexer_endc(lexer);
     if (strcmp(lexer->text, "int") == 0)
         lexer->token = INT_T;
     else if (strcmp(lexer->text, "char") == 0)
@@ -75,36 +74,36 @@ void __Lexer_lex_kw_id(struct Lexer *lexer)
         lexer->token = ID_T;
 }
 
-void __Lexer_lex_string(struct Lexer *lexer)
+void lexer_parse_string(lexer_t *lexer)
 {
-    __Lexer_putc(lexer);
+    lexer_getc(lexer);
     while (1)
     {
-        if (lexer->__cc == '\\')
+        if (lexer->cc == '\\')
         {
-            __Lexer_putc(lexer);
-            __Lexer_putc(lexer);
+            lexer_putc(lexer);
+            lexer_putc(lexer);
         }
-        else if (lexer->__cc == '\"')
+        else if (lexer->cc == '\"')
         {
-            __Lexer_putc(lexer);
+            lexer_getc(lexer);
             break;
         }
-        else if (lexer->__cc == '\n' || lexer->__cc == -1)
+        else if (lexer->cc == '\n' || lexer->cc == -1)
         {
             err_unclosed_str(&lexer->span);
             break;
         }
         else
         {
-            __Lexer_putc(lexer);
+            lexer_putc(lexer);
         }
     }
-    __Lexer_endc(lexer);
+    lexer_endc(lexer);
     lexer->token = STR_LIT_T;
 }
 
-const int table[][4] = {
+const int op_table[][4] = {
     {'+', 0, PLUS_T, 0},      {'-', 0, MIN_T, 0},        {'*', 0, STAR_T, 0},      {'/', 0, SLASH_T, 0},
     {'>', '=', GT_T, GE_T},   {'<', '=', LT_T, LE_T},    {'=', '=', EQ_T, D_EQ_T}, {'&', '&', AND_T, D_AND_T},
     {'|', '|', OR_T, D_OR_T}, {'!', '=', NOT_T, NE_T},   {'(', 0, L_PAREN_T, 0},   {')', 0, R_PAREN_T, 0},
@@ -112,24 +111,24 @@ const int table[][4] = {
     {',', 0, COMMA_T, 0},     {';', 0, SEMI_COLON_T, 0}, {-1, 0, EOF_T, 0},
 };
 
-Token __Lexer_match_table(struct Lexer *lexer)
+token_t lexer_match_operator(lexer_t *lexer)
 {
-    Token token = 0;
+    token_t token = 0;
     int index = 0;
-    while (table[index][0] != -1)
+    while (op_table[index][0] != -1)
     {
         // match first
-        if (table[index][0] == lexer->__cc)
+        if (op_table[index][0] == lexer->cc)
         {
-            __Lexer_putc(lexer);
-            token = table[index][2];
+            lexer_putc(lexer);
+            token = op_table[index][2];
             // match second
-            if (table[index][1] && table[index][1] == lexer->__cc)
+            if (op_table[index][1] && op_table[index][1] == lexer->cc)
             {
-                __Lexer_putc(lexer);
-                token = table[index][3];
+                lexer_putc(lexer);
+                token = op_table[index][3];
             }
-            __Lexer_endc(lexer);
+            lexer_endc(lexer);
             break;
         }
         index++;
@@ -137,63 +136,63 @@ Token __Lexer_match_table(struct Lexer *lexer)
     return token;
 }
 
-void __Lexer_lex(struct Lexer *lexer)
+void lexer_lex(lexer_t *lexer)
 {
     lexer->text[0] = '\0';
     lexer->len = 0;
-    __Lexer_getc(lexer);
-    if (isdigit(lexer->__cc))
+    lexer_getc(lexer);
+    if (isdigit(lexer->cc))
     {
         // lex number
-        __Lexer_lex_number(lexer);
+        lexer_parse_number(lexer);
     }
-    else if (isalpha(lexer->__cc) || lexer->__cc == '_')
+    else if (isalpha(lexer->cc) || lexer->cc == '_')
     {
         // lexer keyword iddentifier
-        __Lexer_lex_kw_id(lexer);
+        lexer_parse_kw_id(lexer);
     }
-    else if (lexer->__cc == '\"')
+    else if (lexer->cc == '\"')
     {
         // string
-        __Lexer_lex_string(lexer);
+        lexer_parse_string(lexer);
     }
-    else if (__Lexer_can_skip(lexer->__cc))
+    else if (lexer_can_skip(lexer->cc))
     {
-        __Lexer_lex(lexer);
+        lexer_lex(lexer);
     }
-    else if (lexer->__cc == '\n')
+    else if (lexer->cc == '\n')
     {
         lexer->span.row++;
         lexer->span.col = 0;
-        __Lexer_lex(lexer);
+        lexer_lex(lexer);
     }
-    else if (lexer->__cc == -1)
+    else if (lexer->cc == -1)
     {
         lexer->token = EOF_T;
     }
     else
     {
-        lexer->token = __Lexer_match_table(lexer);
+        lexer->token = lexer_match_operator(lexer);
         if (!lexer->token)
         {
-            err_unexpect_char(&lexer->span, lexer->__cc);
-            __Lexer_lex(lexer);
+            err_unexpect_char(&lexer->span, lexer->cc);
+            lexer_lex(lexer);
         }
     }
 }
 
-void __Lexer_next(struct Lexer *lexer)
+void lexer_next(lexer_t *lexer)
 {
-    __Lexer_lex(lexer);
+    lexer_lex(lexer);
 }
 
 /// @brief match current token with `what`, go next and return 1 if success else conditionally go next and return 0
-int __Lexer_match(struct Lexer *lexer, Token what)
+int lexer_match(lexer_t *lexer, token_t what)
 {
     if (lexer->token == what)
     {
         if (lexer->token != EOF_T)
-            __Lexer_next(lexer);
+            lexer_next(lexer);
         return 1;
     }
     else
@@ -205,7 +204,7 @@ int __Lexer_match(struct Lexer *lexer, Token what)
         case R_BRK_T:
         case R_PAREN_T:
         case ELSE_T:
-            __Lexer_next(lexer); // drop tokens which can't appear alone
+            lexer_next(lexer); // drop tokens which can't appear alone
             break;
         default:;
         }
@@ -213,18 +212,18 @@ int __Lexer_match(struct Lexer *lexer, Token what)
     }
 }
 
-void __Lexer_del(struct Lexer *lexer)
+void lexer_del(lexer_t *lexer)
 {
     free(lexer);
 }
 
-struct Lexer *new_lexer(FILE *in)
+lexer_t *new_lexer(FILE *in)
 {
-    struct Lexer *lexer = (struct Lexer *)malloc(sizeof(struct Lexer));
+    lexer_t *lexer = (lexer_t *)malloc(sizeof(lexer_t));
     // initialize lexer
-    lexer->__in = in;
-    lexer->__pc = '\0';
-    lexer->__cc = '\0';
+    lexer->in = in;
+    lexer->pc = '\0';
+    lexer->cc = '\0';
 
     // initialize span
     lexer->text[0] = '\0';
@@ -233,8 +232,8 @@ struct Lexer *new_lexer(FILE *in)
     lexer->span.col = 0;
 
     // bind function
-    lexer->next = &__Lexer_next;
-    lexer->match = &__Lexer_match;
-    lexer->del = &__Lexer_del;
+    lexer->next = &lexer_next;
+    lexer->match = &lexer_match;
+    lexer->del = &lexer_del;
     return lexer;
 }

@@ -2,37 +2,80 @@
 #include <stdlib.h>
 #include <string.h>
 
-int __SymbolTable_try_look_up_var(struct SymbolTable *self, const char *name)
+const symbol_t *symbol_table_look_up(symbol_table_t *self, const char *name)
 {
-    for (int i = 0; i < self->var_size; i++)
+    symbol_t *symbol;
+    /***
+     * Try to find this symbol with this name
+     */
+    list_iterator_t *iter = self->symbols->get_iter(self->symbols);
+    while (!iter->is_end(iter))
     {
-        if (strcmp(name, self->vars[i].name) == 0)
-            return i;
+        symbol = (symbol_t *)iter->get(iter);
+        if (strcmp(name, symbol->name) == 0)
+            return symbol;
+        iter->next(iter);
     }
-    return -1;
+    iter->del(iter);
+    /***
+     * Didn't find this
+     */
+    return NULL;
 }
 
-int __SymbolTable_try_declare_var(struct SymbolTable *self, struct CType *ctype, const char *name)
+const symbol_t *__symbol_table_declare(symbol_table_t *self, const ctype_t *ctype, const char *name,
+                                       const list_t *params_ctype)
 {
-    if (__SymbolTable_try_look_up_var(self, name) != -1)
-    {
-        return 0;
-    }
-    else
-    {
-        // insert
-        self->vars[self->var_size].ctype = ctype;
-        self->vars[self->var_size].name = name;
-        self->var_size++;
-        return 1;
-    }
+    // declare
+    symbol_t *symbol = (symbol_t *)malloc(sizeof(symbol_t));
+    symbol->ctype = ctype;
+    symbol->name = name;
+    symbol->params_ctype = params_ctype;
+    self->offset += ctype_offset(ctype);
+    symbol->offset = self->offset;
+    // insert
+    self->symbols->append(self->symbols, symbol, free);
+    return symbol;
 }
 
-struct SymbolTable *new_symbol_table()
+const symbol_t *symbol_table_try_declare(symbol_table_t *self, const ctype_t *ctype, const char *name,
+                                         const list_t *params_ctype)
 {
-    struct SymbolTable *table = (struct SymbolTable *)malloc(sizeof(struct SymbolTable));
-    table->var_size = 0;
-    table->try_look_up_var = &__SymbolTable_try_look_up_var;
-    table->try_declare_var = &__SymbolTable_try_declare_var;
-    return table;
+    const symbol_t *symbol = symbol_table_look_up(self, name);
+    if (symbol == NULL)
+    {
+        symbol = __symbol_table_declare(self, ctype, name, params_ctype);
+    }
+    return symbol;
+}
+
+int symbol_table_declare(symbol_table_t *self, const ctype_t *ctype, const char *name, const list_t *params_ctype)
+{
+    int success = 0;
+    if (symbol_table_look_up(self, name) == NULL)
+    {
+        __symbol_table_declare(self, ctype, name, params_ctype);
+        success = 1;
+    }
+    return success;
+}
+
+void symbol_table_del(symbol_table_t *self)
+{
+    self->symbols->del(self->symbols);
+    free(self);
+}
+
+symbol_table_t *new_symbol_table(symbol_table_t *prt)
+{
+    symbol_table_t *symbol_list = (symbol_table_t *)malloc(sizeof(symbol_table_t));
+    symbol_list->symbols = new_list();
+    symbol_list->offset = 0;
+    symbol_list->call_offset = 0;
+    symbol_list->look_up = &symbol_table_look_up;
+    symbol_list->try_declare = &symbol_table_try_declare;
+    symbol_list->declare = &symbol_table_declare;
+    symbol_list->del = &symbol_table_del;
+    symbol_list->prt = prt;
+    return symbol_list;
 }

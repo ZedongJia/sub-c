@@ -1,30 +1,30 @@
 #ifndef LIST
 #define LIST
-struct ListNode
+typedef struct list_node
 {
-    void *__data;
-    struct ListNode *__next;
-    struct ListNode *__prev;
-    void (*__del_data)(void *);
-};
+    void *data;
+    struct list_node *next;
+    struct list_node *prev;
+    void (*__del_data)(void *data);
+} list_node_t;
 
-struct ListIterator
+typedef struct list_iterator
 {
-    struct ListNode *__curr;
-    void *(*data)(struct ListIterator *);
-    void (*next)(struct ListIterator *);
-    int (*end)(struct ListIterator *);
-    void (*del)(struct ListIterator *);
-};
+    list_node_t *curr;
+    void *(*get)(struct list_iterator *);
+    void (*next)(struct list_iterator *);
+    int (*is_end)(struct list_iterator *);
+    void (*del)(struct list_iterator *);
+} list_iterator_t;
 
-struct List
+typedef struct list
 {
-    struct ListNode *__head;
-    struct ListNode *__tail;
-    void (*append)(struct List *list, void *data, void (*del)(void *));
-    void (*del)(struct List *list);
-};
+    list_node_t *head;
+    list_node_t *tail;
+    void (*append)(struct list *list, void *data, void (*del)(void *));
+    list_iterator_t *(*get_iter)(const struct list *list);
+    void (*del)(struct list *list);
+} list_t;
 
-struct List *new_list();
-struct ListIterator *new_list_iterator(struct List *list);
+list_t *new_list();
 #endif

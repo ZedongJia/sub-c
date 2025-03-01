@@ -3,116 +3,149 @@
 #include <stdlib.h>
 #include <string.h>
 
-void __ASTNode_del(void *node)
+void ast_append(struct ast *self, struct ast *ast)
 {
-    struct ASTNode *_node = (struct ASTNode *)node;
-    if (_node->ctype != NULL)
-        free(_node->ctype);
-    if (_node->value != NULL)
-        free(_node->value);
-    if (_node->children != NULL)
-        _node->children->del(_node->children);
-    if (_node->table != NULL)
-        free(_node->table);
-    free(node);
+    self->children->append(self->children, ast, ast->del);
 }
 
-struct ASTNode *__ASTNode_new(Kind kind, const char *value)
+list_iterator_t *ast_get_iter(struct ast *self)
 {
-    struct ASTNode *node = (struct ASTNode *)malloc(sizeof(struct ASTNode));
-    // assign node type
-    node->kind = kind;
+    return self->children->get_iter(self->children);
+}
+
+void ast_del(void *ast)
+{
+    ast_t *_ast = (ast_t *)ast;
+    if (_ast->ctype != NULL)
+        free(_ast->ctype);
+    if (_ast->value != NULL)
+        free(_ast->value);
+    if (_ast->children != NULL)
+        _ast->children->del(_ast->children);
+    if (_ast->var_table != NULL)
+        _ast->var_table->del(_ast->var_table);
+    free(ast);
+}
+
+ast_t *ast_new(syntax_kind_t kind, const char *value)
+{
+    ast_t *ast = (ast_t *)malloc(sizeof(ast_t));
+    // assign ast type
+    ast->kind = kind;
     // copy value
     if (value != NULL)
     {
-        node->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
-        strcpy(node->value, value);
+        ast->value = (char *)malloc((strlen(value) + 1) * sizeof(char));
+        strcpy(ast->value, value);
     }
     else
     {
-        node->value = NULL;
+        ast->value = NULL;
     }
     // set NULL
-    node->ctype = NULL;
-    node->children = NULL;
-    node->table = NULL;
-    node->prt = NULL;
-    node->begin = NULL;
-    node->end = NULL;
-    node->del = &__ASTNode_del;
-    return node;
+    ast->symbol = NULL;
+    ast->ctype = NULL;
+    ast->children = NULL;
+    ast->append = &ast_append;
+    ast->get_iter = &ast_get_iter;
+    ast->var_table = NULL;
+    ast->prt = NULL;
+    ast->begin = NULL;
+    ast->end = NULL;
+    ast->del = &ast_del;
+    return ast;
 }
 
-struct ASTNode *new_literal(struct CType *ctype, const char *value)
+ast_t *new_imm(ctype_t *ctype, const char *value)
 {
-    struct ASTNode *node = __ASTNode_new(LIT_N, value);
-    node->ctype = ctype;
-    return node;
+    ast_t *ast = ast_new(IMM_KIND, value);
+    ast->ctype = ctype;
+    return ast;
 }
 
-struct ASTNode *new_unary(Kind kind, struct CType *ctype, struct ASTNode *operand)
+ast_t *new_literal(ctype_t *ctype, const symbol_t *symbol, const char *value)
 {
-    struct ASTNode *node = __ASTNode_new(kind, NULL);
-    node->ctype = ctype;
-    node->children = new_list();
-    node->children->append(node->children, operand, operand->del);
-    return node;
+    ast_t *ast = ast_new(LIT_KIND, value);
+    ast->symbol = symbol;
+    ast->ctype = ctype;
+    return ast;
 }
 
-struct ASTNode *new_binary(Kind kind, struct CType *ctype, struct ASTNode *left, struct ASTNode *right)
+ast_t *new_var(ctype_t *ctype, const symbol_t *symbol, const char *name)
 {
-    struct ASTNode *node = __ASTNode_new(kind, NULL);
-    node->ctype = ctype;
-    node->children = new_list();
-    node->children->append(node->children, left, left->del);
-    node->children->append(node->children, right, right->del);
-    return node;
+    ast_t *ast = ast_new(VAR_KIND, name);
+    ast->symbol = symbol;
+    ast->ctype = ctype;
+    return ast;
 }
 
-struct ASTNode *new_declare(struct CType *ctype, const char *value, struct ASTNode *initializer)
+ast_t *new_unary(syntax_kind_t kind, ctype_t *ctype, ast_t *operand)
 {
-    struct ASTNode *node = __ASTNode_new(DEC_N, value);
-    node->ctype = ctype;
+    ast_t *ast = ast_new(kind, NULL);
+    ast->ctype = ctype;
+    ast->children = new_list();
+    ast->append(ast, operand);
+    return ast;
+}
+
+ast_t *new_binary(syntax_kind_t kind, ctype_t *ctype, ast_t *left, ast_t *right)
+{
+    ast_t *ast = ast_new(kind, NULL);
+    ast->ctype = ctype;
+    ast->children = new_list();
+    ast->append(ast, left);
+    ast->append(ast, right);
+    return ast;
+}
+
+ast_t *new_declare(ctype_t *ctype, const char *value, ast_t *initializer)
+{
+    ast_t *ast = ast_new(DEC_KIND, value);
+    ast->ctype = ctype;
     if (initializer != NULL)
     {
-        node->children = new_list();
-        node->children->append(node->children, initializer, initializer->del);
+        ast->children = new_list();
+        ast->append(ast, initializer);
     }
-    return node;
+    return ast;
 }
 
-struct ASTNode *new_label(int number)
+ast_t *new_label(int number)
 {
     char buf[127];
     sprintf(buf, "label:%d", number);
-    struct ASTNode *node = __ASTNode_new(LABEL_N, buf);
-    return node;
+    ast_t *ast = ast_new(LABEL_KIND, buf);
+    return ast;
 }
 
-struct ASTNode *new_jump_false(struct ASTNode *condition, const char *value)
+ast_t *new_jump_false(ast_t *condition, const char *value)
 {
-    struct ASTNode *node = __ASTNode_new(JUMP_FALSE_N, value);
-    node->children = new_list();
-    node->children->append(node->children, condition, condition->del);
-    return node;
+    ast_t *ast = ast_new(JUMP_FALSE_KIND, value);
+    ast->children = new_list();
+    ast->append(ast, condition);
+    return ast;
 }
 
-struct ASTNode *new_jump(const char *value)
+ast_t *new_jump(const char *value)
 {
-    struct ASTNode *node = __ASTNode_new(JUMP_N, value);
-    return node;
+    ast_t *ast = ast_new(JUMP_KIND, value);
+    return ast;
 }
 
-struct ASTNode *new_scope(struct ASTNode *prt)
+ast_t *new_scope(ast_t *prt)
 {
-    struct ASTNode *node = __ASTNode_new(SCOPE_N, NULL);
-    node->prt = prt;
-    node->table = new_symbol_table();
-    node->children = new_list();
+    ast_t *ast = ast_new(SCOPE_KIND, NULL);
+    ast->prt = prt;
+    ast->children = new_list();
     if (prt != NULL)
     {
-        node->begin = prt->begin;
-        node->end = prt->end;
+        ast->var_table = new_symbol_table(prt->var_table);
+        ast->begin = prt->begin;
+        ast->end = prt->end;
     }
-    return node;
+    else
+    {
+        ast->var_table = new_symbol_table(NULL);
+    }
+    return ast;
 }
